@@ -325,6 +325,10 @@ public class Claim {
         return this.placeableFarmingBlocksList.contains(material);
     }
 	
+    public String allowBuild(Player player) {
+    	return allowBuild(player, Material.AIR);
+    }
+    
 	//build permission check
 	public String allowBuild(Player player, Material material)
 	{

@@ -2,7 +2,7 @@ name: GriefPreventionPlus
 main: net.kaikk.mc.gpp.GriefPreventionPlus
 softdepend: [Vault, Multiverse-Core, My Worlds, MystCraft, Transporter, TheUnderground, WorldGuard, WorldEdit]
 loadbefore: [TheUnderground, GriefPrevention]
-version: 10.7
+version: 10.7.1
 commands:
    abandonclaim:
       description: Deletes a claim.

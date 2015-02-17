@@ -555,7 +555,7 @@ public class CommandExec implements CommandExecutor {
 			//if no amount provided, just tell player value per block sold, and how many he can sell
 			if(args.length != 1)
 			{
-				GriefPreventionPlus.sendMessage(player, TextMode.Info, Messages.BlockSaleValue, String.valueOf(GriefPreventionPlus.instance.config_economy_claimBlocksSellValue), String.valueOf(availableBlocks));
+				GriefPreventionPlus.sendMessage(player, TextMode.Info, Messages.BlockSaleValue, String.valueOf(GriefPreventionPlus.instance.config_economy_claimBlocksSellValue), String.valueOf(Math.max(0, availableBlocks - GriefPreventionPlus.instance.config_claims_initialBlocks)));
 				return false;
 			}
 						
@@ -576,7 +576,7 @@ public class CommandExec implements CommandExecutor {
 			}
 			
 			//if he doesn't have enough blocks, tell him so
-			if(blockCount > availableBlocks)
+			if(blockCount > availableBlocks - GriefPreventionPlus.instance.config_claims_initialBlocks)
 			{
 				GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.NotEnoughBlocksForSale);
 			}
@@ -786,15 +786,16 @@ public class CommandExec implements CommandExecutor {
 			PlayerData playerData = gpp.dataStore.getPlayerData(otherPlayer.getUniqueId());
 			GriefPreventionPlus.sendMessage(player, TextMode.Instr, " " + playerData.getAccruedClaimBlocks() + " blocks from play +" + (playerData.getBonusClaimBlocks() + gpp.dataStore.getGroupBonusBlocks(otherPlayer.getUniqueId())) + " bonus = " + (playerData.getAccruedClaimBlocks() + playerData.getBonusClaimBlocks() + gpp.dataStore.getGroupBonusBlocks(otherPlayer.getUniqueId())) + " total.");
 			GriefPreventionPlus.sendMessage(player, TextMode.Instr, "Your Claims:");
-			for(int i = 0; i < playerData.getClaims().size(); i++)
-			{
-				Claim claim = playerData.getClaims().get(i);
-				GriefPreventionPlus.sendMessage(player, TextMode.Instr, GriefPreventionPlus.getfriendlyLocationString(claim.getLesserBoundaryCorner()) + " (-" + claim.getArea() + " blocks)");
-			}
+			if(playerData.getClaims().size() > 0) {
+				for(int i = 0; i < playerData.getClaims().size(); i++)
+				{
+					Claim claim = playerData.getClaims().get(i);
+					GriefPreventionPlus.sendMessage(player, TextMode.Instr, GriefPreventionPlus.getfriendlyLocationString(claim.getLesserBoundaryCorner()) + " (-" + claim.getArea() + " blocks)");
+				}
 			
-			if(playerData.getClaims().size() > 0)
+			
 				GriefPreventionPlus.sendMessage(player, TextMode.Instr, " = " + playerData.getRemainingClaimBlocks() + " blocks left to spend");
-			
+			}
 			//drop the data we just loaded, if the player isn't online
 			if(!otherPlayer.isOnline())
 				gpp.dataStore.clearCachedPlayerData(otherPlayer.getUniqueId());
