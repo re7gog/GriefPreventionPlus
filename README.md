@@ -4,6 +4,9 @@ While I was developing GriefPrevention-Cities, I found that GriefPrevention has 
 Feedback are needed! If you found an issue, please report it!
 Please use the "issues" page on Github!
 
+## Download
+All builds for my plugins can be found at this link: http://kaikk.net/mc/
+
 ###Installation
 - If you've installed GriefPrevention, remove GriefPrevention jar from plugins folder
 - Put GriefPreventionPlus jar into plugins folder
