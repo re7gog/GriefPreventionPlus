@@ -2,7 +2,7 @@ name: GriefPreventionPlus
 main: net.kaikk.mc.gpp.GriefPreventionPlus
 softdepend: [Vault, Multiverse-Core, My Worlds, MystCraft, Transporter, TheUnderground, WorldGuard, WorldEdit]
 loadbefore: [TheUnderground, GriefPrevention]
-version: 10.7.1
+version: 10.7.1a
 commands:
    abandonclaim:
       description: Deletes a claim.
@@ -45,7 +45,7 @@ commands:
    subdivideclaims:
       description: Switches the shovel tool to subdivision mode, used to subdivide your claims.
       usage: /SubdivideClaims
-      aliases: [sc, subdivideclaim]
+      aliases: [sc, sdc, subdivideclaim]
       permission: griefprevention.claims
    adjustbonusclaimblocks:
       description: Adds or subtracts bonus claim blocks for a player.

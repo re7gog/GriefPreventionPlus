@@ -209,6 +209,10 @@ public class PlayerData
     	return new Date(GriefPreventionPlus.instance.getServer().getOfflinePlayer(this.playerID).getLastPlayed());
     }
     
+    public long getTimeLastLogin() {
+    	return GriefPreventionPlus.instance.getServer().getOfflinePlayer(this.playerID).getLastPlayed();
+    }
+    
     private void loadDataFromSecondaryStorage()
     {
         //reach out to secondary storage to get any data there

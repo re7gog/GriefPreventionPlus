@@ -790,7 +790,7 @@ public class CommandExec implements CommandExecutor {
 				for(int i = 0; i < playerData.getClaims().size(); i++)
 				{
 					Claim claim = playerData.getClaims().get(i);
-					GriefPreventionPlus.sendMessage(player, TextMode.Instr, GriefPreventionPlus.getfriendlyLocationString(claim.getLesserBoundaryCorner()) + " (-" + claim.getArea() + " blocks)");
+					GriefPreventionPlus.sendMessage(player, TextMode.Instr, "ID: "+claim.id+" "+GriefPreventionPlus.getfriendlyLocationString(claim.getLesserBoundaryCorner()) + " (-" + claim.getArea() + " blocks)");
 				}
 			
 			

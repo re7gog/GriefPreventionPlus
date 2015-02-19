@@ -1575,7 +1575,7 @@ class PlayerEventHandler implements Listener
 					    PlayerData otherPlayerData = this.dataStore.getPlayerData(claim.ownerID);
 
 						Date now = new Date();
-						long daysElapsed = (now.getTime() - otherPlayerData.getLastLogin().getTime()) / (1000 * 60 * 60 * 24); 
+						long daysElapsed = (now.getTime() - otherPlayerData.getTimeLastLogin()) / (1000 * 60 * 60 * 24); 
 						
 						GriefPreventionPlus.sendMessage(player, TextMode.Info, Messages.PlayerOfflineTime, String.valueOf(daysElapsed));
 						
