@@ -195,7 +195,7 @@ public class DataStore
 						playerId="0";
 
 						if (ownerString.length()==36 && (tString=ownerString.replace("-", "")).length()==32) {
-							playerId=tString;
+							playerId="0x"+tString;
 						}
 					
 						String[] lesser = results.getString(3).split(";");
@@ -216,7 +216,7 @@ public class DataStore
 						if (results.getLong(9)==-1) { // claims
 							migratedClaims.put(results.getLong(1), claimId++);
 							nextParentId=(long)-1;
-							if (playerId.equals("0")) {
+							if (playerId.equals("0x0")) {
 								playerId=UUIDtoHexString(GriefPreventionPlus.UUID1); // administrative claims
 							}
 						} else { // subclaims
@@ -228,7 +228,7 @@ public class DataStore
 							continue;
 						}
 						
-						statement2.executeUpdate("INSERT INTO gpp_claims (owner, world, lesserX, lesserZ, greaterX, greaterZ, parentid) VALUES (0x"+playerId+", "+UUIDtoHexString(world.getUID())+", "+lesser[1]+", "+lesser[3]+", "+greater[1]+", "+greater[3]+", "+nextParentId+");");
+						statement2.executeUpdate("INSERT INTO gpp_claims (owner, world, lesserX, lesserZ, greaterX, greaterZ, parentid) VALUES ("+playerId+", "+UUIDtoHexString(world.getUID())+", "+lesser[1]+", "+lesser[3]+", "+greater[1]+", "+greater[3]+", "+nextParentId+");");
 						
 						i++;
 						
@@ -288,18 +288,40 @@ public class DataStore
 					}
 					
 					results = statement.executeQuery("SELECT name, accruedblocks, bonusblocks FROM griefprevention_playerdata;");
-
+					
+					class GppBlocks {
+						int a;
+						int b;
+						
+						GppBlocks(int a, int b) {
+							this.a=a;
+							this.b=b;
+						}
+					}
+					
+					Map<String, GppBlocks> gppblocks = new HashMap<String, GppBlocks>(); 
 					while(results.next()) {
 						String ownerString = results.getString(1);
 
 						if (ownerString.length()==36 && (tString=ownerString.replace("-", "")).length()==32) {
+							int a=0, b=0;
+							GppBlocks gppBlocksField = gppblocks.get(tString);
+							if (gppBlocksField!=null) {
+								a=gppBlocksField.a;
+								b=gppBlocksField.b;
+								GriefPreventionPlus.AddLogEntry("WARNING: Found duplicated key for "+tString);
+							}
+							
+							gppblocks.put(tString, new GppBlocks((results.getInt(2)==a ? a : results.getInt(2)+a), (results.getInt(3)==b ? b : results.getInt(3)+b)));
 							playerId=tString;
 						} else {
 							GriefPreventionPlus.AddLogEntry("Skipping GriefPrevention data for user "+ownerString+": no UUID.");
 							continue;
 						}
-						
-						statement2.executeUpdate("INSERT INTO gpp_playerdata VALUES (0x"+playerId+", "+results.getInt(2)+", "+results.getInt(3)+");");
+					}
+					
+					for (Entry<String, GppBlocks> gppbf : gppblocks.entrySet()) {
+						statement2.executeUpdate("INSERT INTO gpp_playerdata VALUES (0x"+gppbf.getKey()+", "+gppbf.getValue().a+", "+gppbf.getValue().b+");");
 						k++;
 					}
 					
