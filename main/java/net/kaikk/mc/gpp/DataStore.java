@@ -289,30 +289,21 @@ public class DataStore
 					
 					results = statement.executeQuery("SELECT name, accruedblocks, bonusblocks FROM griefprevention_playerdata;");
 					
-					class GppBlocks {
-						int a;
-						int b;
-						
-						GppBlocks(int a, int b) {
-							this.a=a;
-							this.b=b;
-						}
-					}
-					
 					Map<String, GppBlocks> gppblocks = new HashMap<String, GppBlocks>(); 
 					while(results.next()) {
 						String ownerString = results.getString(1);
 
 						if (ownerString.length()==36 && (tString=ownerString.replace("-", "")).length()==32) {
-							int a=0, b=0;
 							GppBlocks gppBlocksField = gppblocks.get(tString);
 							if (gppBlocksField!=null) {
-								a=gppBlocksField.a;
-								b=gppBlocksField.b;
+								int a=gppBlocksField.a;
+								int b=gppBlocksField.b;
 								GriefPreventionPlus.AddLogEntry("WARNING: Found duplicated key for "+tString);
+								gppblocks.put(tString, new GppBlocks((results.getInt(2)==a ? a : results.getInt(2)+a), (results.getInt(3)==b ? b : results.getInt(3)+b)));
+							} else {
+								gppblocks.put(tString, new GppBlocks(results.getInt(2), results.getInt(3)));
 							}
-							
-							gppblocks.put(tString, new GppBlocks((results.getInt(2)==a ? a : results.getInt(2)+a), (results.getInt(3)==b ? b : results.getInt(3)+b)));
+
 							playerId=tString;
 						} else {
 							GriefPreventionPlus.AddLogEntry("Skipping GriefPrevention data for user "+ownerString+": no UUID.");
@@ -1766,5 +1757,15 @@ public class DataStore
 	public static String UUIDtoHexString(UUID uuid) {
 		if (uuid==null) return "0";
 		return "0x"+org.apache.commons.lang.StringUtils.leftPad(Long.toHexString(uuid.getMostSignificantBits()), 16, "0")+org.apache.commons.lang.StringUtils.leftPad(Long.toHexString(uuid.getLeastSignificantBits()), 16, "0");
+	}
+}
+
+class GppBlocks {
+	int a;
+	int b;
+	
+	GppBlocks(int a, int b) {
+		this.a=a;
+		this.b=b;
 	}
 }
