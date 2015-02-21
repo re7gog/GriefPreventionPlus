@@ -861,7 +861,8 @@ public class GriefPreventionPlus extends JavaPlugin
     static String lookupPlayerName(UUID playerID) 
     {
         //parameter validation
-        if(playerID == null || playerID == UUID0) return "somebody";
+        if(playerID == null) return "somebody";
+        if(playerID == UUID0) return "public";
         if(playerID == UUID1) return "an administrator";
         
         //check the cache

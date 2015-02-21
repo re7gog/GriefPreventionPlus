@@ -216,7 +216,7 @@ public class DataStore
 						if (results.getLong(9)==-1) { // claims
 							migratedClaims.put(results.getLong(1), claimId++);
 							nextParentId=(long)-1;
-							if (playerId.equals("0x0")) {
+							if (playerId.equals("0")) {
 								playerId=UUIDtoHexString(GriefPreventionPlus.UUID1); // administrative claims
 							}
 						} else { // subclaims
@@ -241,11 +241,14 @@ public class DataStore
 								} else {
 									if (s.length()==36 && (tString=s.replace("-", "")).length()==32) {
 										statement2.executeUpdate("INSERT INTO gpp_permsplayer VALUES("+i+", 0x"+tString+", 2) ON DUPLICATE KEY UPDATE perm = perm | 2;");
+									} else if (s.equals("public")) {
+										statement2.executeUpdate("INSERT INTO gpp_permsplayer VALUES("+i+", "+UUIDtoHexString(GriefPreventionPlus.UUID0)+", 2) ON DUPLICATE KEY UPDATE perm = perm | 2;");
 									}
 								}
 								j++;
 							}
 						}
+						
 						// containers
 						if (!results.getString(6).isEmpty()) {
 							for(String s : results.getString(6).split(";")) {
@@ -254,11 +257,14 @@ public class DataStore
 								} else {
 									if (s.length()==36 && (tString=s.replace("-", "")).length()==32) {
 										statement2.executeUpdate("INSERT INTO gpp_permsplayer VALUES("+i+", 0x"+tString+", 4) ON DUPLICATE KEY UPDATE perm = perm | 4;");
+									} else if (s.equals("public")) {
+										statement2.executeUpdate("INSERT INTO gpp_permsplayer VALUES("+i+", "+UUIDtoHexString(GriefPreventionPlus.UUID0)+", 4) ON DUPLICATE KEY UPDATE perm = perm | 4;");
 									}
 								}
 								j++;
 							}
 						}
+						
 						// accessors
 						if (!results.getString(7).isEmpty()) {
 							for(String s : results.getString(7).split(";")) {
@@ -267,11 +273,14 @@ public class DataStore
 								} else {
 									if (s.length()==36 && (tString=s.replace("-", "")).length()==32) {
 										statement2.executeUpdate("INSERT INTO gpp_permsplayer VALUES("+i+", 0x"+tString+", 8) ON DUPLICATE KEY UPDATE perm = perm | 8;");
+									} else if (s.equals("public")) {
+										statement2.executeUpdate("INSERT INTO gpp_permsplayer VALUES("+i+", "+UUIDtoHexString(GriefPreventionPlus.UUID0)+", 8) ON DUPLICATE KEY UPDATE perm = perm | 8;");
 									}
 								}
 								j++;
 							}
 						}
+						
 						// managers
 						if (!results.getString(8).isEmpty()) {
 							for(String s : results.getString(8).split(";")) {
@@ -280,6 +289,8 @@ public class DataStore
 								} else {
 									if (s.length()==36 && (tString=s.replace("-", "")).length()==32) {
 										statement2.executeUpdate("INSERT INTO gpp_permsplayer VALUES("+i+", 0x"+tString+", 1) ON DUPLICATE KEY UPDATE perm = perm | 1;");
+									} else if (s.equals("public")) {
+										statement2.executeUpdate("INSERT INTO gpp_permsplayer VALUES("+i+", "+UUIDtoHexString(GriefPreventionPlus.UUID0)+", 1) ON DUPLICATE KEY UPDATE perm = perm | 1;");
 									}
 								}
 								j++;

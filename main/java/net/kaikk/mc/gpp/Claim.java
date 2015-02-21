@@ -668,17 +668,31 @@ public class Claim {
 	{
 		//loop through all the entries in the hash map
 		for(Entry<UUID, Integer> entry : this.permissionMapPlayers.entrySet()) {
-			if((entry.getValue() & ClaimPermission.MANAGE.perm)!=0) {
-				managers.add(GriefPreventionPlus.instance.getServer().getOfflinePlayer(entry.getKey()).getName());
+			if (entry.getKey().equals(GriefPreventionPlus.UUID0)) {
+				if((entry.getValue() & ClaimPermission.MANAGE.perm)!=0) {
+					managers.add("public");
+				}
+				
+				if((entry.getValue() & ClaimPermission.BUILD.perm)!=0) {
+					builders.add("public");
+				} else if((entry.getValue() & ClaimPermission.CONTAINER.perm)!=0) {
+					containers.add("public");
+				} else if((entry.getValue() & ClaimPermission.ACCESS.perm)!=0) {
+					accessors.add("public");
+				}
+			} else {
+				if((entry.getValue() & ClaimPermission.MANAGE.perm)!=0) {
+					managers.add(GriefPreventionPlus.instance.getServer().getOfflinePlayer(entry.getKey()).getName());
+				}
+				
+				if((entry.getValue() & ClaimPermission.BUILD.perm)!=0) {
+					builders.add(GriefPreventionPlus.instance.getServer().getOfflinePlayer(entry.getKey()).getName());
+				} else if((entry.getValue() & ClaimPermission.CONTAINER.perm)!=0) {
+					containers.add(GriefPreventionPlus.instance.getServer().getOfflinePlayer(entry.getKey()).getName());
+				} else if((entry.getValue() & ClaimPermission.ACCESS.perm)!=0) {
+					accessors.add(GriefPreventionPlus.instance.getServer().getOfflinePlayer(entry.getKey()).getName());
+				}
 			}
-			
-			if((entry.getValue() & ClaimPermission.BUILD.perm)!=0) {
-				builders.add(GriefPreventionPlus.instance.getServer().getOfflinePlayer(entry.getKey()).getName());
-			} else if((entry.getValue() & ClaimPermission.CONTAINER.perm)!=0) {
-				containers.add(GriefPreventionPlus.instance.getServer().getOfflinePlayer(entry.getKey()).getName());
-			} else if((entry.getValue() & ClaimPermission.ACCESS.perm)!=0) {
-				accessors.add(GriefPreventionPlus.instance.getServer().getOfflinePlayer(entry.getKey()).getName());
-			}			
 		}
 		
 		for(Entry<String, Integer> entry : this.permissionMapBukkit.entrySet()) {
