@@ -42,7 +42,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -61,9 +60,8 @@ public class DataStore
 	protected ConcurrentHashMap<String, Integer> permissionToBonusBlocksMap = new ConcurrentHashMap<String, Integer>();
 	
 	//in-memory cache for claim data
-	//ArrayList<Claim> claims = new ArrayList<Claim>();
 	ConcurrentHashMap<Integer, Claim> claims = new ConcurrentHashMap<Integer, Claim>();
-	ConcurrentHashMap<String, ArrayList<Claim>> chunksToClaimsMap = new ConcurrentHashMap<String, ArrayList<Claim>>();
+	Set<Claim> cachedClaims = new HashSet<Claim>();
 	
 	//in-memory cache for messages
 	private String [] messages;
@@ -641,18 +639,8 @@ public class DataStore
 		}
 		
 		this.claims.put(newClaim.id, newClaim);
-		ArrayList<String> chunkStrings = newClaim.getChunkStrings();
-		for(String chunkString : chunkStrings)
-		{
-		    ArrayList<Claim> claimsInChunk = this.chunksToClaimsMap.get(chunkString);
-		    if(claimsInChunk == null)
-		    {
-		        claimsInChunk = new ArrayList<Claim>();
-		        this.chunksToClaimsMap.put(chunkString, claimsInChunk);
-		    }
-
-		    claimsInChunk.add(newClaim);
-		}
+		
+		this.cachedClaims.add(newClaim);
 		
 		newClaim.inDataStore = true;
 		
@@ -910,19 +898,8 @@ public class DataStore
 		}
 		
 		//remove from memory
+		this.cachedClaims.remove(claim);
         this.claims.remove(claim.id);
-
-		
-		ArrayList<String> chunkStrings = claim.getChunkStrings();
-        for(String chunkString : chunkStrings) {
-            ArrayList<Claim> claimsInChunk = this.chunksToClaimsMap.get(chunkString);
-            for(int j = 0; j < claimsInChunk.size(); j++) {
-                if(claimsInChunk.get(j).id.equals(claim.id)) {
-                    claimsInChunk.remove(j);
-                    break;
-                }
-            }
-        }
 		
 		//remove from secondary storage
 		this.deleteClaimFromSecondaryStorage(claim);
@@ -977,12 +954,9 @@ public class DataStore
 		if(cachedClaim != null && cachedClaim.inDataStore && cachedClaim.contains(location, ignoreHeight, true)) return cachedClaim;
 		
 		//find a top level claim
-		String chunkID = this.getChunkString(location);
-		ArrayList<Claim> claimsInChunk = this.chunksToClaimsMap.get(chunkID);
-		if(claimsInChunk == null) return null;
 		
-		for(Claim claim : claimsInChunk)
-		{
+		// search in cached claims
+		for (Claim claim : this.cachedClaims) {
 		    if(claim.contains(location, ignoreHeight, false))
 		    {
 		        //when we find a top level claim, if the location is in one of its subdivisions,
@@ -997,6 +971,23 @@ public class DataStore
 		    }
 		}
 		
+		// search in all claims
+		for (Claim claim : this.claims.values()) {
+		    if(claim.contains(location, ignoreHeight, false))
+		    {
+		        this.cachedClaims.add(claim); // add this claim in cache
+		    	//when we find a top level claim, if the location is in one of its subdivisions,
+                //return the SUBDIVISION, not the top level claim
+                for(int j = 0; j < claim.children.size(); j++)
+                {
+                    Claim subdivision = claim.children.get(j);
+                    if(subdivision.contains(location, ignoreHeight, false)) return subdivision;
+                }                       
+                
+                return claim;
+		    }
+		}
+		
 		//if no claim found, return null
 		return null;
 	}
@@ -1006,12 +997,6 @@ public class DataStore
 	    return this.claims.get(id);
 	}
 	
-	
-	//gets a unique, persistent identifier string for a chunk
-	private String getChunkString(Location location)
-	{
-        return (location.getBlockX() >> 4) + location.getWorld().getName() + (location.getBlockZ() >> 4);
-    }
 
     //creates a claim.
 	//if the new claim would overlap an existing claim, returns a failure along with a reference to the existing claim
@@ -1407,9 +1392,12 @@ public class DataStore
 
 		if (claimCheck==null) {
 			// let's update this claim
+
 			String oldLoc = claim.locationToString();
+
 			claim.setLocation(claim.world, newx1, newz1, newx2, newz2);
 			this.dbUpdateLocation(claim);
+
 			GriefPreventionPlus.AddLogEntry(claim.getOwnerName()+" resized claim id "+claim.id+" from "+oldLoc+" to "+claim.locationToString());
 			return new ClaimResult(true, claim);
 		} else {
@@ -1729,21 +1717,10 @@ public class DataStore
     {
         Set<Claim> claims = new HashSet<Claim>();
         
-        Chunk lesserChunk = location.getWorld().getChunkAt(location.subtract(150, 0, 150));
-        Chunk greaterChunk = location.getWorld().getChunkAt(location.add(300, 0, 300));
-        
-        for(int chunk_x = lesserChunk.getX(); chunk_x <= greaterChunk.getX(); chunk_x++)
-        {
-            for(int chunk_z = lesserChunk.getZ(); chunk_z <= greaterChunk.getZ(); chunk_z++)
-            {
-                Chunk chunk = location.getWorld().getChunkAt(chunk_x, chunk_z);
-                String chunkID = this.getChunkString(chunk.getBlock(0,  0,  0).getLocation());
-                ArrayList<Claim> claimsInChunk = this.chunksToClaimsMap.get(chunkID);
-                if(claimsInChunk != null)
-                {
-                    claims.addAll(claimsInChunk);
-                }
-            }
+        for (Claim claim : this.claims.values()) {
+        	if ((claim.lesserX>location.getBlockX()-128&&claim.lesserX<location.getBlockX()+128) && (claim.lesserZ>location.getBlockZ()-128&&claim.lesserZ<location.getBlockZ()+128)) {
+        		claims.add(claim);
+        	}
         }
         
         return claims;
