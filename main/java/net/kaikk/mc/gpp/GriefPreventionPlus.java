@@ -309,6 +309,7 @@ public class GriefPreventionPlus extends JavaPlugin
 		
 		AddLogEntry("Cached " + playersCached + " recent players.");
 		
+		this.getCommand("claim").setExecutor(new CommandExec());
 		this.getCommand("abandonclaim").setExecutor(new CommandExec());
 		this.getCommand("abandontoplevelclaim").setExecutor(new CommandExec());
 		this.getCommand("ignoreclaims").setExecutor(new CommandExec());
