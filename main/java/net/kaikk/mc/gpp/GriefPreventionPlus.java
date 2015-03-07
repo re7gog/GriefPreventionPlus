@@ -100,6 +100,8 @@ public class GriefPreventionPlus extends JavaPlugin
 	public Material config_claims_investigationTool;				//which material will be used to investigate claims with a right click
 	public Material config_claims_modificationTool;	  				//which material will be used to create/resize claims with a right click
 	
+	public ArrayList<String> config_claims_commandsRequiringAccessTrust; //the list of slash commands requiring access trust when in a claim
+	
 	public ArrayList<World> config_siege_enabledWorlds;				//whether or not /siege is enabled on this server
 	public ArrayList<Material> config_siege_blocks;					//which blocks will be breakable in siege mode
 		
@@ -261,7 +263,7 @@ public class GriefPreventionPlus extends JavaPlugin
 		if(this.config_economy_claimBlocksPurchaseCost > 0 || this.config_economy_claimBlocksSellValue > 0)
 		{
 			//try to load Vault
-			GriefPreventionPlus.AddLogEntry("GriefPrevention requiresP Vault for economy integration.");
+			GriefPreventionPlus.AddLogEntry("GriefPrevention requires Vault for economy integration.");
 			GriefPreventionPlus.AddLogEntry("Attempting to load Vault...");
 			RegisteredServiceProvider<Economy> economyProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
 			GriefPreventionPlus.AddLogEntry("Vault loaded successfully!");
@@ -498,6 +500,7 @@ public class GriefPreventionPlus extends JavaPlugin
         this.config_claims_maxClaimsPerPlayer = config.getInt("GriefPrevention.Claims.MaximumNumberOfClaimsPerPlayer", 0);
         this.config_claims_respectWorldGuard = config.getBoolean("GriefPrevention.Claims.CreationRequiresWorldGuardBuildPermission", true);
         this.config_claims_portalsRequirePermission = config.getBoolean("GriefPrevention.Claims.PortalGenerationRequiresPermission", false);
+        String accessTrustSlashCommands = config.getString("GriefPrevention.Claims.CommandsRequiringAccessTrust", "/sethome");
         
         this.config_spam_enabled = config.getBoolean("GriefPrevention.Spam.Enabled", true);
         this.config_spam_loginCooldownSeconds = config.getInt("GriefPrevention.Spam.LoginCooldownSeconds", 60);
@@ -710,6 +713,7 @@ public class GriefPreventionPlus extends JavaPlugin
         outConfig.set("GriefPrevention.Claims.MaximumNumberOfClaimsPerPlayer", this.config_claims_maxClaimsPerPlayer);
         outConfig.set("GriefPrevention.Claims.CreationRequiresWorldGuardBuildPermission", this.config_claims_respectWorldGuard);
         outConfig.set("GriefPrevention.Claims.PortalGenerationRequiresPermission", this.config_claims_portalsRequirePermission);
+        outConfig.set("GriefPrevention.Claims.CommandsRequiringAccessTrust", accessTrustSlashCommands);
         
         outConfig.set("GriefPrevention.Spam.Enabled", this.config_spam_enabled);
         outConfig.set("GriefPrevention.Spam.LoginCooldownSeconds", this.config_spam_loginCooldownSeconds);
@@ -783,9 +787,17 @@ public class GriefPreventionPlus extends JavaPlugin
             AddLogEntry("Unable to write to the configuration file at \"" + DataStore.configFilePath + "\"");
         }
         
+        //try to parse the list of commands requiring access trust in land claims
+        this.config_claims_commandsRequiringAccessTrust = new ArrayList<String>();
+        String [] commands = accessTrustSlashCommands.split(";");
+        for(int i = 0; i < commands.length; i++)
+        {
+            this.config_claims_commandsRequiringAccessTrust.add(commands[i].trim());
+        }
+        
         //try to parse the list of commands which should be monitored for spam
         this.config_spam_monitorSlashCommands = new ArrayList<String>();
-        String [] commands = slashCommandsToMonitor.split(";");
+        commands = slashCommandsToMonitor.split(";");
         for(int i = 0; i < commands.length; i++)
         {
             this.config_spam_monitorSlashCommands.add(commands[i].trim());
@@ -821,6 +833,10 @@ public class GriefPreventionPlus extends JavaPlugin
         else if(configSetting.equalsIgnoreCase("Disabled"))
         {
             return ClaimsMode.Disabled;
+        }
+        else if(configSetting.equalsIgnoreCase("SurvivalRequiringClaims"))
+        {
+        	return ClaimsMode.SurvivalRequiringClaims;
         }
         else
         {
@@ -898,7 +914,6 @@ public class GriefPreventionPlus extends JavaPlugin
 		AddLogEntry("GriefPreventionPlus disabled.");
 	}
 	
-	//called when a player spawns, applies protection for that player if necessary
 	public void checkPvpProtectionNeeded(Player player)
 	{
 	    //if anti spawn camping feature is not enabled, do nothing
@@ -914,29 +929,43 @@ public class GriefPreventionPlus extends JavaPlugin
 		if(player.hasPermission("griefprevention.nopvpimmunity")) return;
 		
 		//check inventory for well, anything
-		PlayerInventory inventory = player.getInventory();
-		ItemStack [] armorStacks = inventory.getArmorContents();
-		
-		//check armor slots, stop if any items are found
-		for(int i = 0; i < armorStacks.length; i++)
+		if(GriefPreventionPlus.isInventoryEmpty(player))
 		{
-			if(!(armorStacks[i] == null || armorStacks[i].getType() == Material.AIR)) return;
+    		//if empty, apply immunity
+    		PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
+    		playerData.pvpImmune = true;
+    		
+    		//inform the player after he finishes respawning
+    		GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.PvPImmunityStart, 5L);
+    		
+    		//start a task to re-check this player's inventory every minute until his immunity is gone
+    		PvPImmunityValidationTask task = new PvPImmunityValidationTask(player);
+    		this.getServer().getScheduler().scheduleSyncDelayedTask(this, task, 1200L);
 		}
-		
-		//check other slots, stop if any items are found
-		ItemStack [] generalStacks = inventory.getContents();
-		for(int i = 0; i < generalStacks.length; i++)
-		{
-			if(!(generalStacks[i] == null || generalStacks[i].getType() == Material.AIR)) return;
-		}
-			
-		//otherwise, apply immunity
-		PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
-		playerData.pvpImmune = true;
-		
-		//inform the player after he finishes respawning
-		GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.PvPImmunityStart, 5L);
 	}
+	
+	static boolean isInventoryEmpty(Player player)
+	{
+	    PlayerInventory inventory = player.getInventory();
+        ItemStack [] armorStacks = inventory.getArmorContents();
+        
+        //check armor slots, stop if any items are found
+        for(int i = 0; i < armorStacks.length; i++)
+        {
+            if(!(armorStacks[i] == null || armorStacks[i].getType() == Material.AIR)) return false;
+        }
+        
+        //check other slots, stop if any items are found
+        ItemStack [] generalStacks = inventory.getContents();
+        for(int i = 0; i < generalStacks.length; i++)
+        {
+            if(!(generalStacks[i] == null || generalStacks[i].getType() == Material.AIR)) return false;
+        }
+        
+	    return true;
+    }
+	
+	
 	
 	//checks whether players siege in a world
 	public boolean siegeEnabledForWorld(World world)
@@ -1052,7 +1081,7 @@ public class GriefPreventionPlus extends JavaPlugin
 		if(claim == null)
 		{
 			//no building in the wilderness in creative mode
-			if(this.creativeRulesApply(location.getWorld()))
+			if(this.creativeRulesApply(location.getWorld()) || this.config_claims_worldModes.get(location.getWorld()) == ClaimsMode.SurvivalRequiringClaims)
 			{
 				String reason = this.dataStore.getMessage(Messages.NoBuildOutsideClaims);
 				if(player.hasPermission("griefprevention.ignoreclaims"))
@@ -1089,7 +1118,7 @@ public class GriefPreventionPlus extends JavaPlugin
 		if(claim == null)
 		{
 			//no building in the wilderness in creative mode
-			if(this.creativeRulesApply(location.getWorld()))
+			if(this.creativeRulesApply(location.getWorld()) || this.config_claims_worldModes.get(location.getWorld()) == ClaimsMode.SurvivalRequiringClaims)
 			{
 				String reason = this.dataStore.getMessage(Messages.NoBuildOutsideClaims);
 				if(player.hasPermission("griefprevention.ignoreclaims"))

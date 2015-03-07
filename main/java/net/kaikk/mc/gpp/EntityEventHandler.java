@@ -618,15 +618,6 @@ class EntityEventHandler implements Listener
 						return;
 					}
 				}
-
-				//FEATURE: prevent players who very recently participated in pvp combat from hiding inventory to protect it from looting
-				//FEATURE: prevent players who are in pvp combat from logging out to avoid being defeated
-
-				long now = Calendar.getInstance().getTimeInMillis();
-				defenderData.lastPvpTimestamp = now;
-				defenderData.lastPvpPlayer = attacker.getName();
-				attackerData.lastPvpTimestamp = now;
-				attackerData.lastPvpPlayer = defender.getName();
 			}		
 		}
 		
@@ -661,7 +652,13 @@ class EntityEventHandler implements Listener
                     //if attacker isn't a player, cancel
                     if(attacker == null)
                     {
-                        event.setCancelled(true);
+                    	//exception case
+                    	if(event.getEntity() instanceof Villager && damageSource != null && damageSource instanceof Monster)
+                    	{
+                    	    return;
+                    	}
+                    	
+                    	event.setCancelled(true);
                         return;
                     }
                     
@@ -781,6 +778,56 @@ class EntityEventHandler implements Listener
 				}
 			}
 		}
+	}
+	
+	//when an entity is damaged
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+	public void onEntityDamageMonitor (EntityDamageEvent event)
+	{
+	    //FEATURE: prevent players who very recently participated in pvp combat from hiding inventory to protect it from looting
+	    //FEATURE: prevent players who are in pvp combat from logging out to avoid being defeated
+	    
+	    if(event.getEntity().getType() != EntityType.PLAYER) return;
+	    
+	    Player defender = (Player)event.getEntity();
+	    
+	    //only interested in entities damaging entities (ignoring environmental damage)
+	    if(!(event instanceof EntityDamageByEntityEvent)) return;
+	    
+	    EntityDamageByEntityEvent subEvent = (EntityDamageByEntityEvent) event;
+	    
+	    //determine which player is attacking, if any
+	    Player attacker = null;
+	    Projectile arrow = null;
+	    Entity damageSource = subEvent.getDamager();
+	    
+	    if(damageSource != null)
+	    {
+	        if(damageSource instanceof Player)
+	        {
+	            attacker = (Player)damageSource;
+	        }
+	        else if(damageSource instanceof Projectile)
+	        {
+	            arrow = (Projectile)damageSource;
+	            if(arrow.getShooter() instanceof Player)
+	            {
+	                attacker = (Player)arrow.getShooter();
+	            }
+	        }
+	    }
+	    
+	    //if attacker not a player, do nothing
+	    if(attacker == null) return;
+	    
+	    PlayerData defenderData = this.dataStore.getPlayerData(defender.getUniqueId());
+	    PlayerData attackerData = this.dataStore.getPlayerData(attacker.getUniqueId());
+	    
+	    long now = Calendar.getInstance().getTimeInMillis();
+	    defenderData.lastPvpTimestamp = now;
+	    defenderData.lastPvpPlayer = attacker.getName();
+	    attackerData.lastPvpTimestamp = now;
+	    attackerData.lastPvpPlayer = defender.getName();
 	}
 	
 	//when a vehicle is damaged

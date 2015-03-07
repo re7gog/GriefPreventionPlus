@@ -45,6 +45,89 @@ public class CommandExec implements CommandExecutor {
 			player = (Player) sender;
 		}
 
+		//Commands added on GPP
+		//claim
+		if(cmd.getName().equalsIgnoreCase("claim")) {
+			if (args.length!=1) {
+				player.sendMessage("Specify a range in blocks");
+				return false;
+			}
+			try {
+				int range = Integer.valueOf(args[0]);
+				int side = (range*2)+1;
+				if (side<GriefPreventionPlus.instance.config_claims_minSize) {
+					GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.NewClaimTooSmall, String.valueOf(GriefPreventionPlus.instance.config_claims_minSize));
+					return false;
+				}
+				
+				int newClaimArea = side*side; 
+				PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
+				int remainingBlocks = playerData.getRemainingClaimBlocks();
+				if(newClaimArea > remainingBlocks)
+				{
+					GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.CreateClaimInsufficientBlocks, String.valueOf(newClaimArea - remainingBlocks));
+					PlayerEventHandler.tryAdvertiseAdminAlternatives(player);
+					return false;
+				}
+				
+				int	x=player.getLocation().getBlockX(),
+					z=player.getLocation().getBlockZ(),
+					x1=x-range,
+					x2=x+range,
+					z1=z-range,
+					z2=z+range;
+				
+				//try to create a new claim
+				ClaimResult result = this.dataStore.createClaim(
+						player.getWorld(), 
+						x1, x2, 
+						z1, z2, 
+						player.getUniqueId(),
+						null, null,
+						player);
+				
+				//if it didn't succeed, tell the player why
+				if(!result.succeeded)
+				{
+					if(result.claim != null)
+					{
+    				    GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.CreateClaimFailOverlapShort);
+    					
+    					Visualization visualization = Visualization.FromClaim(result.claim, player.getLocation().getBlockY(), VisualizationType.ErrorClaim, player.getLocation());
+    					Visualization.Apply(player, visualization);
+					}
+					else
+					{
+					    GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.CreateClaimFailOverlapRegion);
+					}
+    					
+					return false;
+				}
+				
+				//otherwise, advise him on the /trust command and show him his new claim
+				else
+				{					
+					GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.CreateClaimSuccess);
+					Visualization visualization = Visualization.FromClaim(result.claim, player.getLocation().getBlockY(), VisualizationType.Claim, player.getLocation());
+					Visualization.Apply(player, visualization);
+					playerData.lastShovelLocation = null;
+					
+					//if it's a big claim, tell the player about subdivisions
+					if(!player.hasPermission("griefprevention.adminclaims") && result.claim.getArea() >= 1000)
+		            {
+		                GriefPreventionPlus.sendMessage(player, TextMode.Info, Messages.BecomeMayor, 200L);
+		                GriefPreventionPlus.sendMessage(player, TextMode.Instr, Messages.SubdivisionVideo2, 201L, DataStore.SUBDIVISION_VIDEO_URL);
+		            }
+				}
+			} catch (NumberFormatException e) {
+				player.sendMessage("Specify a range in blocks");
+				return false;
+			}
+			
+			return true;
+		}
+		
+		//GP's commands
 		//abandonclaim
 		if(cmd.getName().equalsIgnoreCase("abandonclaim") && player != null)
 		{
@@ -635,50 +718,59 @@ public class CommandExec implements CommandExecutor {
 		//deleteclaim
 		else if(cmd.getName().equalsIgnoreCase("deleteclaim") && player != null)
 		{
+			Claim claim;
 			//determine which claim the player is standing in
-			Claim claim = gpp.dataStore.getClaimAt(player.getLocation(), true /*ignore height*/, null);
-			
-			if(claim == null)
-			{
-				GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.DeleteClaimMissing);
-			}
-			
-			else 
-			{
-				//deleting an admin claim additionally requires the adminclaims permission
-				if(!claim.isAdminClaim() || player.hasPermission("griefprevention.adminclaims"))
+			if (args.length==0) {
+				claim = gpp.dataStore.getClaimAt(player.getLocation(), true /*ignore height*/, null);
+				
+				if(claim == null)
 				{
-					PlayerData playerData = gpp.dataStore.getPlayerData(player.getUniqueId());
-					if(claim.children.size() > 0 && !playerData.warnedAboutMajorDeletion)
-					{
-						GriefPreventionPlus.sendMessage(player, TextMode.Warn, Messages.DeletionSubdivisionWarning);
-						playerData.warnedAboutMajorDeletion = true;
-					}
-					else
-					{
-						claim.removeSurfaceFluids(null);
-						gpp.dataStore.deleteClaim(claim, true);
-						
-						//if in a creative mode world, /restorenature the claim
-						if(GriefPreventionPlus.instance.creativeRulesApply(claim.world))
-						{
-							GriefPreventionPlus.instance.restoreClaim(claim, 0);
-						}
-						
-						GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.DeleteSuccess);
-						GriefPreventionPlus.AddLogEntry(player.getName() + " deleted " + claim.getOwnerName() + "'s claim at " + GriefPreventionPlus.getfriendlyLocationString(claim.getLesserBoundaryCorner()));
-						
-						//revert any current visualization
-						Visualization.Revert(player);
-						
-						playerData.warnedAboutMajorDeletion = false;
-					}
+					GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.DeleteClaimMissing);
+					return false;
+				}
+			} else { // GPP's feature: delete a claim by ID
+				try {
+					claim = gpp.dataStore.getClaim(Integer.valueOf(args[0]));
+				} catch (NumberFormatException e) {
+					player.sendMessage("Invalid ID");
+					return false;
+				}
+			}
+
+			//deleting an admin claim additionally requires the adminclaims permission
+			if(!claim.isAdminClaim() || player.hasPermission("griefprevention.adminclaims"))
+			{
+				PlayerData playerData = gpp.dataStore.getPlayerData(player.getUniqueId());
+				if(claim.children.size() > 0 && !playerData.warnedAboutMajorDeletion)
+				{
+					GriefPreventionPlus.sendMessage(player, TextMode.Warn, Messages.DeletionSubdivisionWarning);
+					playerData.warnedAboutMajorDeletion = true;
 				}
 				else
 				{
-					GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.CantDeleteAdminClaim);
+					claim.removeSurfaceFluids(null);
+					gpp.dataStore.deleteClaim(claim, true);
+					
+					//if in a creative mode world, /restorenature the claim
+					if(GriefPreventionPlus.instance.creativeRulesApply(claim.world))
+					{
+						GriefPreventionPlus.instance.restoreClaim(claim, 0);
+					}
+					
+					GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.DeleteSuccess);
+					GriefPreventionPlus.AddLogEntry(player.getName() + " deleted " + claim.getOwnerName() + "'s claim at " + GriefPreventionPlus.getfriendlyLocationString(claim.getLesserBoundaryCorner()));
+					
+					//revert any current visualization
+					Visualization.Revert(player);
+					
+					playerData.warnedAboutMajorDeletion = false;
 				}
 			}
+			else
+			{
+				GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.CantDeleteAdminClaim);
+			}
+			
 
 			return true;
 		}
@@ -884,7 +976,41 @@ public class CommandExec implements CommandExecutor {
 			
 			return true;			
 		}
-		
+		//setaccruedclaimblocks <player> <amount>
+		else if(cmd.getName().equalsIgnoreCase("setaccruedclaimblocks"))
+		{
+		    //requires exactly two parameters, the other player's name and the new amount
+		    if(args.length != 2) return false;
+		    
+		    //parse the adjustment amount
+		    int newAmount;         
+		    try
+		    {
+		        newAmount = Integer.parseInt(args[1]);
+		    }
+		    catch(NumberFormatException numberFormatException)
+		    {
+		        return false;  //causes usage to be displayed
+		    }
+		    
+		    //find the specified player
+		    OfflinePlayer targetPlayer = GriefPreventionPlus.instance.resolvePlayer(args[0]);
+		    if(targetPlayer == null)
+		    {
+		    	GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.PlayerNotFound2);
+		        return true;
+		    }
+		    
+		    //set player's blocks
+		    PlayerData playerData = this.dataStore.getPlayerData(targetPlayer.getUniqueId());
+		    playerData.setAccruedClaimBlocks(newAmount);
+		    this.dataStore.savePlayerData(targetPlayer.getUniqueId(), playerData);
+		    
+		    GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.SetClaimBlocksSuccess);
+		    if(player != null) GriefPreventionPlus.AddLogEntry(player.getName() + " set " + targetPlayer.getName() + "'s accrued claim blocks to " + newAmount + ".");
+		    
+		    return true;
+		}
 		//trapped
 		else if(cmd.getName().equalsIgnoreCase("trapped") && player != null)
 		{
@@ -987,6 +1113,13 @@ public class CommandExec implements CommandExecutor {
 			else
 			{
 				return false;
+			}
+			
+			//victim must not have the permission which makes him immune to siege
+			if(defender.hasPermission("griefprevention.siegeimmune"))
+			{
+			    GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.SiegeImmune);
+			     return true;
 			}
 			
 			//victim must not be under siege already

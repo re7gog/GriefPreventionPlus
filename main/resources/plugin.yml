@@ -2,8 +2,12 @@ name: GriefPreventionPlus
 main: net.kaikk.mc.gpp.GriefPreventionPlus
 softdepend: [Vault, Multiverse-Core, My Worlds, MystCraft, Transporter, TheUnderground, WorldGuard, WorldEdit]
 loadbefore: [TheUnderground, GriefPrevention]
-version: 10.7.1e
+version: 11.0.1
 commands:
+   claim:
+      description: Claim with a specified range around your position.
+      usage: /Claim [range]
+      permission: griefprevention.claims
    abandonclaim:
       description: Deletes a claim.
       usage: /AbandonClaim
@@ -52,6 +56,11 @@ commands:
       usage: /AdjustBonusClaimBlocks <player> <amount>
       permission: griefprevention.adjustclaimblocks
       aliases: acb
+   setaccruedclaimblocks:
+      description: Updates a player's accrued claim block total.
+      usage: /SetAccruedClaimBlocks <player> <amount>
+      permission: griefprevention.adjustclaimblocks
+      aliases: scb
    deleteclaim:
       description: Deletes the claim you're standing in, even if it's not your claim.
       usage: /DeleteClaim
@@ -169,6 +178,10 @@ permissions:
             griefprevention.overrideclaimcountlimit: true
             griefprevention.transferclaim: true
             griefprevention.claimslistother: true
+            griefprevention.siegeimmune: true
+    griefprevention.siegeimmune:
+        description: Makes a player immune to /Siege.
+        default: op
     griefprevention.givepet:
         description: Grants permission to use /GivePet.
         default: true

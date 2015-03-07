@@ -1,3 +1,15 @@
+####11.0.1
+Applied all GP's patches up to 11.0.1 except commits: 
+- 97c9347 Fixed a protection bug with pistons + slime blocks. (I can't apply this on MC 1.7 version)
+- e28bb8a Logging for suspicious bucket dumps. (I don't need this)
+
+Bug fix for getNearbyClaims.
+
+New commands:
+- Added /claim [range] - claim with a specified range around your position.
+- Added /deleteclaim [id] - delete a claim by id.
+
+
 ####10.6.3 - Initial release
 - Skipped GP 10.6.2 commit. Untrust in top level claims won't untrust in subdivisions.
 

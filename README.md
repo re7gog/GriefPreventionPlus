@@ -4,6 +4,11 @@ I wanted to develop a GriefPrevention extension for cities (Towny-like), but the
 Feedback are needed! If you found an issue, please report it!
 Please use the "issues" page on Github!
 
+I suggest you to check my other plugins, like GriefPreventionPlus-Cities, that adds cities to your server! Check it at http://github.com/KaiKikuchi/GriefPreventionPlus-Cities
+
+All DeVcoFTB's 1.7 modpacks run this plugin.
+Join us at http://www.devcoftb.com !
+
 ## Download
 All builds for my plugins can be found at this link: http://kaikk.net/mc/
 
@@ -21,7 +26,10 @@ Your GriefPrevention database won't be removed: you can rollback to GriefPrevent
 - Overall speed improvements
 - API improvements: all claims and subdivisions have an unique id
 - Less waste of resources (RAM)
+- You can use the /claim [range] command to claim land around your position!
+- Delete claims by id
 - Javadoc for extension developers! (planned)
+- A better integrated protection for modpacks (planned)
 
 ####Notice
 - GriefPrevention's extensions don't work with GriefPreventionPlus without some little change on the code. If needed, I will fork most important GriefPrevention's extension to make it work with GriefPreventionPlus! You can ask for it!
