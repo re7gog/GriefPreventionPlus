@@ -47,9 +47,8 @@ public class CommandExec implements CommandExecutor {
 
 		//Commands added on GPP
 		//claim
-		if(cmd.getName().equalsIgnoreCase("claim")) {
+		if(cmd.getName().equalsIgnoreCase("claim") && player != null) {
 			if (args.length!=1) {
-				player.sendMessage("Specify a range in blocks");
 				return false;
 			}
 			try {
@@ -57,7 +56,7 @@ public class CommandExec implements CommandExecutor {
 				int side = (range*2)+1;
 				if (side<GriefPreventionPlus.instance.config_claims_minSize) {
 					GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.NewClaimTooSmall, String.valueOf(GriefPreventionPlus.instance.config_claims_minSize));
-					return false;
+					return true;
 				}
 				
 				int newClaimArea = side*side; 
@@ -67,7 +66,7 @@ public class CommandExec implements CommandExecutor {
 				{
 					GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.CreateClaimInsufficientBlocks, String.valueOf(newClaimArea - remainingBlocks));
 					PlayerEventHandler.tryAdvertiseAdminAlternatives(player);
-					return false;
+					return true;
 				}
 				
 				int	x=player.getLocation().getBlockX(),
@@ -101,7 +100,7 @@ public class CommandExec implements CommandExecutor {
 					    GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.CreateClaimFailOverlapRegion);
 					}
     					
-					return false;
+					return true;
 				}
 				
 				//otherwise, advise him on the /trust command and show him his new claim
@@ -120,7 +119,6 @@ public class CommandExec implements CommandExecutor {
 		            }
 				}
 			} catch (NumberFormatException e) {
-				player.sendMessage("Specify a range in blocks");
 				return false;
 			}
 			

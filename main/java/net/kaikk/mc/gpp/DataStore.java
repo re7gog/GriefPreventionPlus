@@ -1719,6 +1719,11 @@ public class DataStore
     {
         Set<Claim> claims = new HashSet<Claim>();
         
+        Claim claimAt = this.getClaimAt(location, true, null);
+        if (claimAt!=null) {
+        	claims.add(claimAt);
+        }
+        
         for (Claim claim : this.claims.values()) {
         	if (location.getWorld().equals(claim.world) && (claim.lesserX>location.getBlockX()-128&&claim.lesserX<location.getBlockX()+128) && (claim.lesserZ>location.getBlockZ()-128&&claim.lesserZ<location.getBlockZ()+128)) {
         		claims.add(claim);
