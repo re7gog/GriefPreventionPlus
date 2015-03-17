@@ -112,8 +112,10 @@ public class BlockEventHandler implements Listener
 		for(int i = 0; i < event.getLines().length; i++)
 		{
 			String withoutSpaces = event.getLine(i).replace(" ", ""); 
-		    if(!withoutSpaces.isEmpty()) notEmpty = true;
-			lines.append("\n  " + event.getLine(i));
+		    if(!withoutSpaces.isEmpty()) { 
+		    	notEmpty = true;
+		    	lines.append(" " + event.getLine(i));
+		    }
 		}
 		
 		String signMessage = lines.toString();
@@ -122,7 +124,7 @@ public class BlockEventHandler implements Listener
 		PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
 		if(notEmpty && playerData.lastMessage != null && !playerData.lastMessage.equals(signMessage))
 		{		
-			GriefPreventionPlus.AddLogEntry("[Sign Placement] <" + player.getName() + "> " + " @ " + GriefPreventionPlus.getfriendlyLocationString(event.getBlock().getLocation()) + lines.toString());
+			GriefPreventionPlus.AddLogEntry(player.getName()+" placed at "+GriefPreventionPlus.getfriendlyLocationString(event.getBlock().getLocation())+" this sign: \n"+lines.toString());
 			playerData.lastMessage = signMessage;
 			
 			if(!player.hasPermission("griefprevention.eavesdrop"))
@@ -132,7 +134,7 @@ public class BlockEventHandler implements Listener
 				{
 					if(players[i].hasPermission("griefprevention.eavesdrop"))
 					{
-						players[i].sendMessage(ChatColor.GRAY + player.getName() + " sign @ " + GriefPreventionPlus.getfriendlyLocationString(event.getBlock().getLocation()) + " :" + signMessage);
+						players[i].sendMessage(ChatColor.AQUA + player.getName()+" placed at "+GriefPreventionPlus.getfriendlyLocationString(event.getBlock().getLocation())+" this sign: \n"+lines.toString());
 					}
 				}
 			}

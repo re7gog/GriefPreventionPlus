@@ -301,9 +301,9 @@ public class GriefPreventionPlus extends JavaPlugin
 		final long millisecondsPerDay = 1000 * 60 * 60 * 24;
 		for(OfflinePlayer player : offlinePlayers) {
 		    //if the player has been seen in the last 30 days, cache his name/UUID pair
-		    if((now - player.getLastPlayed())/millisecondsPerDay <= 30) {
-		        this.playerNameToIDMap.put(player.getName().toLowerCase(), player.getUniqueId());
-		        playersCached++;
+		    if((player.getUniqueId()!=null && player.getName() != null && (now - player.getLastPlayed())/millisecondsPerDay <= 30)) {
+	    		this.playerNameToIDMap.put(player.getName().toLowerCase(), player.getUniqueId());
+	    		playersCached++;
 		    }
 		}
 		
