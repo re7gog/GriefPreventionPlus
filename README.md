@@ -36,3 +36,9 @@ If you're using GriefPrevention file based storage, read this: https://github.co
 ####Notice
 - GriefPrevention's extensions don't work with GriefPreventionPlus without some little change on the code. If needed, I will fork most important GriefPrevention's extension to make it work with GriefPreventionPlus! You can ask for it!
 - GriefPrevention 10.6.2 commit is not applied. Untrust in top level claims won't untrust in subdivisions. You can remove a player from all your claims if you're not on a claim.
+
+##Support my life!
+I'm currently unemployed and I'm studying at University (Computer Science).
+I'll be unable to continue my studies soon because I need money.
+If you like this plugin and you run it fine on your server, please <a href='http://kaikikuchi.github.io/'>consider a donation</a>!
+Thank you very much!
