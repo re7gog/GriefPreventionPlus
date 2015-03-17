@@ -40,5 +40,5 @@ If you're using GriefPrevention file based storage, read this: https://github.co
 ##Support my life!
 I'm currently unemployed and I'm studying at University (Computer Science).
 I'll be unable to continue my studies soon because I need money.
-If you like this plugin and you run it fine on your server, please <a href='http://kaikikuchi.github.io/'>consider a donation</a>!
+If you like this plugin and you run it fine on your server, please <a href='http://kaikk.net/mc/#donate'>consider a donation</a>!
 Thank you very much!
