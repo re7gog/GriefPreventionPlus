@@ -19,6 +19,8 @@ All builds for my plugins can be found at this link: http://kaikk.net/mc/
 If an existing GriefPrevention database is found, a copy will migrate to GriefPreventionPlus.
 Your GriefPrevention database won't be removed: you can rollback to GriefPrevention if you need!
 
+If you're using GriefPrevention file based storage, read this: https://github.com/KaiKikuchi/GriefPreventionPlus/issues/7
+
 ###Major features
 - GriefPreventionPlus's MC1.7.10 version contains last fixes from GriefPrevention's MC1.8 version!
 - MySQL database is a requirement. Removed file based storage.
