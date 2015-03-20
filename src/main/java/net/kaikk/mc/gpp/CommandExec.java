@@ -296,7 +296,7 @@ public class CommandExec implements CommandExecutor {
 			
 			//confirm
 			GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.TransferSuccess);
-			GriefPreventionPlus.AddLogEntry(player.getName() + " transferred a claim at " + GriefPreventionPlus.getfriendlyLocationString(claim.getLesserBoundaryCorner()) + " to " + ownerName + ".");
+			GriefPreventionPlus.addLogEntry(player.getName() + " transferred a claim at " + GriefPreventionPlus.getfriendlyLocationString(claim.getLesserBoundaryCorner()) + " to " + ownerName + ".");
 			
 			return true;
 		}
@@ -396,7 +396,7 @@ public class CommandExec implements CommandExecutor {
 				if(args[0].equals("all")) { // clear all permissions from player's claims
 					gpp.dataStore.clearPermissionsOnPlayerClaims(player.getUniqueId());
 					
-					GriefPreventionPlus.AddLogEntry(player.getName()+" removed all permissions from his claims");
+					GriefPreventionPlus.addLogEntry(player.getName()+" removed all permissions from his claims");
 					
 					GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.UntrustEveryoneAllClaims);
 				} else {// remove specific permission from player's claims
@@ -406,11 +406,11 @@ public class CommandExec implements CommandExecutor {
 							return false;
 						}
 						gpp.dataStore.dropPermissionOnPlayerClaims(player.getUniqueId(), permBukkit);
-						GriefPreventionPlus.AddLogEntry(player.getName()+" removed "+args[0]+" permission from his claims");
+						GriefPreventionPlus.addLogEntry(player.getName()+" removed "+args[0]+" permission from his claims");
 						
 					} else if(args[0].equals("public")) { // public
 						gpp.dataStore.dropPermissionOnPlayerClaims(player.getUniqueId(), GriefPreventionPlus.UUID0);
-						GriefPreventionPlus.AddLogEntry(player.getName()+" removed public permission from his claims");
+						GriefPreventionPlus.addLogEntry(player.getName()+" removed public permission from his claims");
 					} else { // player?
 						OfflinePlayer otherPlayer = gpp.resolvePlayer(args[0]);
 						if (otherPlayer==null) {// player not found
@@ -418,7 +418,7 @@ public class CommandExec implements CommandExecutor {
 							return true;
 						}
 						gpp.dataStore.dropPermissionOnPlayerClaims(player.getUniqueId(), otherPlayer.getUniqueId());
-						GriefPreventionPlus.AddLogEntry(player.getName()+" removed "+otherPlayer.getName()+" permission from his claims");
+						GriefPreventionPlus.addLogEntry(player.getName()+" removed "+otherPlayer.getName()+" permission from his claims");
 					}
 					GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.UntrustIndividualAllClaims, args[0]);
 				}
@@ -432,7 +432,7 @@ public class CommandExec implements CommandExecutor {
 					claim.clearMemoryPermissions();
 					
 					GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.UntrustOwnerOnly, claim.getOwnerName());
-					GriefPreventionPlus.AddLogEntry(player.getName()+" removed all permissions from claim id "+claim.id);
+					GriefPreventionPlus.addLogEntry(player.getName()+" removed all permissions from claim id "+claim.id);
 				} else {
 					if(claim.allowGrantPermission(player) != null) {
 						GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.NoPermissionTrust, claim.getOwnerName());
@@ -453,11 +453,11 @@ public class CommandExec implements CommandExecutor {
 						
 						gpp.dataStore.dbUnsetPerm(claim.id, permBukkit);
 						claim.unsetPermission(permBukkit);
-						GriefPreventionPlus.AddLogEntry(player.getName()+" removed "+args[0]+" permission from claim id "+claim.id);
+						GriefPreventionPlus.addLogEntry(player.getName()+" removed "+args[0]+" permission from claim id "+claim.id);
 					} else if(args[0].equals("public")) { // public
 						gpp.dataStore.dbUnsetPerm(claim.id, GriefPreventionPlus.UUID0);
 						claim.unsetPermission(GriefPreventionPlus.UUID0);
-						GriefPreventionPlus.AddLogEntry(player.getName()+" removed public permission from claim id "+claim.id);
+						GriefPreventionPlus.addLogEntry(player.getName()+" removed public permission from claim id "+claim.id);
 					} else { // player?
 						OfflinePlayer otherPlayer = gpp.resolvePlayer(args[0]);
 						if (otherPlayer==null) {// player not found
@@ -473,7 +473,7 @@ public class CommandExec implements CommandExecutor {
 						
 						gpp.dataStore.dbUnsetPerm(claim.id, otherPlayer.getUniqueId());
 						claim.unsetPermission(otherPlayer.getUniqueId());
-						GriefPreventionPlus.AddLogEntry(player.getName()+" removed "+otherPlayer.getName()+" permission from claim id "+claim.id);
+						GriefPreventionPlus.addLogEntry(player.getName()+" removed "+otherPlayer.getName()+" permission from claim id "+claim.id);
 					}
 					GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.UntrustIndividualSingleClaim, args[0]);
 				}
@@ -547,16 +547,7 @@ public class CommandExec implements CommandExecutor {
 			
 			else
 			{
-				//determine max purchasable blocks
 				PlayerData playerData = gpp.dataStore.getPlayerData(player.getUniqueId());
-				int maxPurchasable = GriefPreventionPlus.instance.config_claims_maxAccruedBlocks - playerData.getAccruedClaimBlocks();
-				
-				//if the player is at his max, tell him so
-				if(maxPurchasable <= 0)
-				{
-					GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.ClaimBlockLimit);
-					return true;
-				}
 				
 				//try to parse number of blocks
 				int blockCount;
@@ -574,12 +565,6 @@ public class CommandExec implements CommandExecutor {
 					return false;
 				}
 				
-				//correct block count to max allowed
-				if(blockCount > maxPurchasable)
-				{
-					blockCount = maxPurchasable;
-				}
-				
 				//if the player can't afford his purchase, send error message
 				double balance = GriefPreventionPlus.economy.getBalance(player);				
 				double totalCost = blockCount * GriefPreventionPlus.instance.config_economy_claimBlocksPurchaseCost;				
@@ -595,7 +580,7 @@ public class CommandExec implements CommandExecutor {
 					GriefPreventionPlus.economy.withdrawPlayer(player, totalCost);
 					
 					//add blocks
-					playerData.setAccruedClaimBlocks(playerData.getAccruedClaimBlocks() + blockCount);
+					playerData.setBonusClaimBlocks(playerData.getBonusClaimBlocks() + blockCount);
 					gpp.dataStore.savePlayerData(player.getUniqueId(), playerData);
 					
 					//inform player
@@ -631,12 +616,12 @@ public class CommandExec implements CommandExecutor {
 			
 			//load player data
 			PlayerData playerData = gpp.dataStore.getPlayerData(player.getUniqueId());
-			int availableBlocks = playerData.getRemainingClaimBlocks();
+			int availableBlocks = playerData.getBonusClaimBlocks();
 			
 			//if no amount provided, just tell player value per block sold, and how many he can sell
 			if(args.length != 1)
 			{
-				GriefPreventionPlus.sendMessage(player, TextMode.Info, Messages.BlockSaleValue, String.valueOf(GriefPreventionPlus.instance.config_economy_claimBlocksSellValue), String.valueOf(Math.max(0, availableBlocks - GriefPreventionPlus.instance.config_claims_initialBlocks)));
+				GriefPreventionPlus.sendMessage(player, TextMode.Info, Messages.BlockSaleValue, String.valueOf(GriefPreventionPlus.instance.config_economy_claimBlocksSellValue), String.valueOf(availableBlocks));
 				return false;
 			}
 						
@@ -657,7 +642,7 @@ public class CommandExec implements CommandExecutor {
 			}
 			
 			//if he doesn't have enough blocks, tell him so
-			if(blockCount > availableBlocks - GriefPreventionPlus.instance.config_claims_initialBlocks)
+			if(blockCount > availableBlocks)
 			{
 				GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.NotEnoughBlocksForSale);
 			}
@@ -670,7 +655,7 @@ public class CommandExec implements CommandExecutor {
 				GriefPreventionPlus.economy.depositPlayer(player, totalValue);
 				
 				//subtract blocks
-				playerData.setAccruedClaimBlocks(playerData.getAccruedClaimBlocks() - blockCount);
+				playerData.setBonusClaimBlocks(playerData.getBonusClaimBlocks() - blockCount);
 				gpp.dataStore.savePlayerData(player.getUniqueId(), playerData);
 				
 				//inform player
@@ -756,7 +741,7 @@ public class CommandExec implements CommandExecutor {
 					}
 					
 					GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.DeleteSuccess);
-					GriefPreventionPlus.AddLogEntry(player.getName() + " deleted " + claim.getOwnerName() + "'s claim at " + GriefPreventionPlus.getfriendlyLocationString(claim.getLesserBoundaryCorner()));
+					GriefPreventionPlus.addLogEntry(player.getName() + " deleted " + claim.getOwnerName() + "'s claim at " + GriefPreventionPlus.getfriendlyLocationString(claim.getLesserBoundaryCorner()));
 					
 					//revert any current visualization
 					Visualization.Revert(player);
@@ -827,7 +812,7 @@ public class CommandExec implements CommandExecutor {
 			GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.DeleteAllSuccess, otherPlayer.getName());
 			if(player != null)
 			{
-				GriefPreventionPlus.AddLogEntry(player.getName() + " deleted all claims belonging to " + otherPlayer.getName() + ".");
+				GriefPreventionPlus.addLogEntry(player.getName() + " deleted all claims belonging to " + otherPlayer.getName() + ".");
 			
 				//revert any current visualization
 				Visualization.Revert(player);
@@ -918,7 +903,7 @@ public class CommandExec implements CommandExecutor {
 			GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.AllAdminDeleted);
 			if(player != null)
 			{
-				GriefPreventionPlus.AddLogEntry(player.getName() + " deleted all administrative claims.");
+				GriefPreventionPlus.addLogEntry(player.getName() + " deleted all administrative claims.");
 			
 				//revert any current visualization
 				Visualization.Revert(player);
@@ -951,7 +936,7 @@ public class CommandExec implements CommandExecutor {
 				int newTotal = gpp.dataStore.adjustGroupBonusBlocks(permissionIdentifier, adjustment);
 				
 				GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.AdjustGroupBlocksSuccess, permissionIdentifier, String.valueOf(adjustment), String.valueOf(newTotal));
-				if(player != null) GriefPreventionPlus.AddLogEntry(player.getName() + " adjusted " + permissionIdentifier + "'s bonus claim blocks by " + adjustment + ".");
+				if(player != null) GriefPreventionPlus.addLogEntry(player.getName() + " adjusted " + permissionIdentifier + "'s bonus claim blocks by " + adjustment + ".");
 				
 				return true;
 			}
@@ -970,7 +955,7 @@ public class CommandExec implements CommandExecutor {
 			gpp.dataStore.savePlayerData(targetPlayer.getUniqueId(), playerData);
 			
 			GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.AdjustBlocksSuccess, targetPlayer.getName(), String.valueOf(adjustment), String.valueOf(playerData.getBonusClaimBlocks()));
-			if(player != null) GriefPreventionPlus.AddLogEntry(player.getName() + " adjusted " + targetPlayer.getName() + "'s bonus claim blocks by " + adjustment + ".");
+			if(player != null) GriefPreventionPlus.addLogEntry(player.getName() + " adjusted " + targetPlayer.getName() + "'s bonus claim blocks by " + adjustment + ".");
 			
 			return true;			
 		}
@@ -1005,7 +990,7 @@ public class CommandExec implements CommandExecutor {
 		    this.dataStore.savePlayerData(targetPlayer.getUniqueId(), playerData);
 		    
 		    GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.SetClaimBlocksSuccess);
-		    if(player != null) GriefPreventionPlus.AddLogEntry(player.getName() + " set " + targetPlayer.getName() + "'s accrued claim blocks to " + newAmount + ".");
+		    if(player != null) GriefPreventionPlus.addLogEntry(player.getName() + " set " + targetPlayer.getName() + "'s accrued claim blocks to " + newAmount + ".");
 		    
 		    return true;
 		}
@@ -1215,7 +1200,7 @@ public class CommandExec implements CommandExecutor {
 		    }
 		    else
 		    {
-		        GriefPreventionPlus.AddLogEntry("Configuration updated.  If you have updated your Grief Prevention JAR, you still need to /reload or reboot your server.");
+		        GriefPreventionPlus.addLogEntry("Configuration updated.  If you have updated your Grief Prevention JAR, you still need to /reload or reboot your server.");
 		    }
 		    
 		    return true;
@@ -1297,7 +1282,7 @@ public class CommandExec implements CommandExecutor {
 		{
 			//delete it
 			claim.removeSurfaceFluids(null);
-			GriefPreventionPlus.AddLogEntry(player.getName()+" deleted claim id "+claim.id+" at "+claim.locationToString());
+			GriefPreventionPlus.addLogEntry(player.getName()+" deleted claim id "+claim.id+" at "+claim.locationToString());
 			this.dataStore.deleteClaim(claim, true);
 			
 			//if in a creative mode world, restore the claim area
@@ -1308,8 +1293,10 @@ public class CommandExec implements CommandExecutor {
 				GriefPreventionPlus.instance.restoreClaim(claim, 20L * 60 * 2);
 			}
 			
-			//adjust claim blocks
-			playerData.setAccruedClaimBlocks(playerData.getAccruedClaimBlocks() - (int)Math.ceil((claim.getArea() * (1 - gpp.config_claims_abandonReturnRatio))));
+			//adjust claim blocks when abandoning a top level claim
+			if(claim.parent == null) {
+				playerData.setAccruedClaimBlocks(playerData.getAccruedClaimBlocks() - (int)Math.ceil((claim.getArea() * (1 - gpp.config_claims_abandonReturnRatio))));
+			}
 			
 			//tell the player how many claim blocks he has left
 			int remainingBlocks = playerData.getRemainingClaimBlocks();
@@ -1347,12 +1334,12 @@ public class CommandExec implements CommandExecutor {
 				for (Claim c : playerData.getClaims()) {
 					c.setPermission(recipientName.substring(1, recipientName.length()-1), permissionLevel);
 				}
-				GriefPreventionPlus.AddLogEntry(player.getName()+" added "+recipientName+" permission to all his claims");
+				GriefPreventionPlus.addLogEntry(player.getName()+" added "+recipientName+" permission to all his claims");
 			} else if(recipientName.equals("public")) { // public
 				for (Claim c : playerData.getClaims()) {
 					c.setPermission(GriefPreventionPlus.UUID0, permissionLevel);
 				}
-				GriefPreventionPlus.AddLogEntry(player.getName()+" added public permission to all his claims");
+				GriefPreventionPlus.addLogEntry(player.getName()+" added public permission to all his claims");
 			} else { //player?
 				OfflinePlayer otherPlayer = gpp.resolvePlayer(recipientName);
 				if (otherPlayer==null) {// player not found
@@ -1363,7 +1350,7 @@ public class CommandExec implements CommandExecutor {
 				for (Claim c : playerData.getClaims()) {
 					c.setPermission(otherPlayer.getUniqueId(), permissionLevel);
 				}
-				GriefPreventionPlus.AddLogEntry(player.getName()+" added "+otherPlayer.getName()+" permission to all his claims");
+				GriefPreventionPlus.addLogEntry(player.getName()+" added "+otherPlayer.getName()+" permission to all his claims");
 			}
 		} else { // claim the player is standing in
 			if(claim.allowGrantPermission(player) != null) {
@@ -1401,17 +1388,17 @@ public class CommandExec implements CommandExecutor {
 					return;
 				}
 				claim.setPermission(recipientName.substring(1, recipientName.length()-1), permissionLevel);
-				GriefPreventionPlus.AddLogEntry(player.getName()+" added "+recipientName+" permission to claim id "+claim.id);
+				GriefPreventionPlus.addLogEntry(player.getName()+" added "+recipientName+" permission to claim id "+claim.id);
 			} else if(recipientName.equals("public")) { // public
 				claim.setPermission(GriefPreventionPlus.UUID0, permissionLevel);
-				GriefPreventionPlus.AddLogEntry(player.getName()+" added public permission to claim id "+claim.id);
+				GriefPreventionPlus.addLogEntry(player.getName()+" added public permission to claim id "+claim.id);
 			} else { //player?
 				OfflinePlayer otherPlayer = gpp.resolvePlayer(recipientName);
 				if (otherPlayer==null) {// player not found
 					GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.PlayerNotFound2);
 					return;
 				}
-				GriefPreventionPlus.AddLogEntry(player.getName()+" added "+otherPlayer.getName()+" permission to claim id "+claim.id);
+				GriefPreventionPlus.addLogEntry(player.getName()+" added "+otherPlayer.getName()+" permission to claim id "+claim.id);
 				claim.setPermission(otherPlayer.getUniqueId(), permissionLevel);
 			}
 		}

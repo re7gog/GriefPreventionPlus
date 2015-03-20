@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.bukkit.Achievement;
@@ -174,7 +173,7 @@ class PlayerEventHandler implements Listener
 		if(player.hasPermission("griefprevention.spam")) return false;
 		
 		boolean spam = false;
-		boolean muted = false;
+		String mutedReason = null;
 		
 		//prevent bots from chatting - require movement before talking for any newish players
         PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
@@ -186,7 +185,7 @@ class PlayerEventHandler implements Listener
             {
                 GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.NoChatUntilMove, 10L);
                 spam = true;
-                muted = true;
+                mutedReason = "pre-movement chat";
             }
             else
             {
@@ -206,11 +205,11 @@ class PlayerEventHandler implements Listener
 		
 		//always mute an exact match to the last chat message
 		long now = new Date().getTime();
-		if(message.equals(this.lastChatMessage) && now - this.lastChatMessageTimestamp < 750)
+		if(mutedReason != null && message.equals(this.lastChatMessage) && now - this.lastChatMessageTimestamp < 750)
 		{
 		    playerData.spamCount += ++this.duplicateMessageCount;
 		    spam = true;
-		    muted = true;
+		    mutedReason = "repeat message";
 		}
 		else
 		{
@@ -234,40 +233,30 @@ class PlayerEventHandler implements Listener
 		}
 		
 		//if it's very similar to the last message from the same player and within 10 seconds of that message
-		if(!muted && this.stringsAreSimilar(message, playerData.lastMessage) && now - playerData.lastMessageTimestamp.getTime() < 10000)
+		if(mutedReason == null && this.stringsAreSimilar(message, playerData.lastMessage) && now - playerData.lastMessageTimestamp.getTime() < 10000)
 		{
 			playerData.spamCount++;
 			spam = true;
-			muted = true;
+			mutedReason = "similar message";
 		}
 		
 		//filter IP addresses
-		if(!muted)
+		if(mutedReason == null)
 		{
-			Pattern ipAddressPattern = Pattern.compile("([0-9]{1,3}\\.){3}[0-9]{1,3}");
-			Matcher matcher = ipAddressPattern.matcher(message);
-			
 			//if it looks like an IP address
-			if(matcher.find())
+			if(GriefPreventionPlus.instance.containsBlockedIP(message))
 			{
-				//and it's not in the list of allowed IP addresses
-				if(!GriefPreventionPlus.instance.config_spam_allowedIpAddresses.contains(matcher.group()))
-				{
-					//log entry
-					GriefPreventionPlus.AddLogEntry("Muted IP address from " + player.getName() + ": " + message);
-					
-					//spam notation
-					playerData.spamCount++;
-					spam = true;
-					
-					//block message
-					muted = true;
-				}
+				//spam notation
+				playerData.spamCount+=5;
+				spam = true;
+
+				//block message
+				mutedReason = "IP address";
 			}
 		}
 		
 		//if the message was mostly non-alpha-numerics or doesn't include much whitespace, consider it a spam (probably ansi art or random text gibberish) 
-		if(!muted && message.length() > 5)
+		if(mutedReason == null && message.length() > 5)
 		{
 			int symbolsCount = 0;
 			int whitespaceCount = 0;
@@ -288,13 +277,13 @@ class PlayerEventHandler implements Listener
 			if(symbolsCount > message.length() / 2 || (message.length() > 15 && whitespaceCount < message.length() / 10))
 			{
 				spam = true;
-				if(playerData.spamCount > 0) muted = true;
+				if(playerData.spamCount > 0) mutedReason = "gibberish";
 				playerData.spamCount++;
 			}
 		}
 		
 		//very short messages close together are spam
-		if(!muted && message.length() < 5 && millisecondsSinceLastMessage < 3000)
+		if(mutedReason == null && message.length() < 5 && millisecondsSinceLastMessage < 3000)
 		{
 			spam = true;
 			playerData.spamCount++;
@@ -309,7 +298,7 @@ class PlayerEventHandler implements Listener
 				if(GriefPreventionPlus.instance.config_spam_banOffenders)
 				{
 					//log entry
-					GriefPreventionPlus.AddLogEntry("Banning " + player.getName() + " for spam.");
+					GriefPreventionPlus.addLogEntry("Banning " + player.getName() + " for spam.");
 					
 					//kick and ban
 					PlayerKickBanTask task = new PlayerKickBanTask(player, GriefPreventionPlus.instance.config_spam_banMessage);
@@ -318,7 +307,7 @@ class PlayerEventHandler implements Listener
 				else
 				{
 					//log entry
-					GriefPreventionPlus.AddLogEntry("Banning " + player.getName() + " for spam.");
+					GriefPreventionPlus.addLogEntry("Banning " + player.getName() + " for spam.");
 					
 					//just kick
 					PlayerKickBanTask task = new PlayerKickBanTask(player, null);
@@ -332,19 +321,21 @@ class PlayerEventHandler implements Listener
 			//anything above level 2, mute and warn
 			if(playerData.spamCount >= 4)
 			{
-				muted = true;
+				if(mutedReason == null) {
+					mutedReason = "too-frequent text";
+				}
 				if(!playerData.spamWarned)
 				{
 					GriefPreventionPlus.sendMessage(player, TextMode.Warn, GriefPreventionPlus.instance.config_spam_warningMessage, 10L);
-					GriefPreventionPlus.AddLogEntry("Warned " + player.getName() + " about spam penalties.");
+					GriefPreventionPlus.addLogEntry("Warned " + player.getName() + " about spam penalties.");
 					playerData.spamWarned = true;
 				}
 			}
 			
-			if(muted)
+			if(mutedReason != null)
 			{
 				//make a log entry
-				GriefPreventionPlus.AddLogEntry("Muted spam from " + player.getName() + ": " + message);
+				GriefPreventionPlus.addLogEntry("Muted " + mutedReason + " from " + player.getName() + ": " + message);
 				
 				//cancelling the event guarantees other players don't receive the message
 				return true;
@@ -622,7 +613,7 @@ class PlayerEventHandler implements Listener
 					//otherwise if that account is still banned, ban this account, too
 					else
 					{
-						GriefPreventionPlus.AddLogEntry("Auto-banned " + player.getName() + " because that account is using an IP address very recently used by banned player " + info.bannedAccountName + " (" + info.address.toString() + ").");
+						GriefPreventionPlus.addLogEntry("Auto-banned " + player.getName() + " because that account is using an IP address very recently used by banned player " + info.bannedAccountName + " (" + info.address.toString() + ").");
 						
 						//notify any online ops
 						for(Player targetPlayer : GriefPreventionPlus.instance.getServer().getOnlinePlayers()) {
@@ -1994,7 +1985,7 @@ class PlayerEventHandler implements Listener
 					//if resizing someone else's claim, make a log entry
 					if(!playerID.equals(playerData.claimResizing.ownerID) && playerData.claimResizing.parent == null)
 					{
-						GriefPreventionPlus.AddLogEntry(player.getName() + " resized " + playerData.claimResizing.getOwnerName() + "'s claim at " + playerData.claimResizing.locationToString() + ".");
+						GriefPreventionPlus.addLogEntry(player.getName() + " resized " + playerData.claimResizing.getOwnerName() + "'s claim at " + playerData.claimResizing.locationToString() + ".");
 					}
 					
 					//if increased to a sufficiently large size and no subdivisions yet, send subdivision instructions
@@ -2009,7 +2000,7 @@ class PlayerEventHandler implements Listener
 					{
 						GriefPreventionPlus.sendMessage(player, TextMode.Warn, Messages.UnclaimCleanupWarning);
 						GriefPreventionPlus.instance.restoreClaim(oldClaim, 20L * 60 * 2);  //2 minutes
-						GriefPreventionPlus.AddLogEntry(player.getName() + " shrank a claim @ " + GriefPreventionPlus.getfriendlyLocationString(playerData.claimResizing.getLesserBoundaryCorner()));
+						GriefPreventionPlus.addLogEntry(player.getName() + " shrank a claim @ " + GriefPreventionPlus.getfriendlyLocationString(playerData.claimResizing.getLesserBoundaryCorner()));
 					}
 					
 					//clean up

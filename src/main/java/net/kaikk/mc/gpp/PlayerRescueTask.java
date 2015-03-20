@@ -59,6 +59,6 @@ class PlayerRescueTask implements Runnable
 		Location destination = GriefPreventionPlus.instance.ejectPlayer(this.player);
 		
 		//log entry, in case admins want to investigate the "trap"
-		GriefPreventionPlus.AddLogEntry("Rescued trapped player " + player.getName() + " from " + GriefPreventionPlus.getfriendlyLocationString(this.location) + " to " + GriefPreventionPlus.getfriendlyLocationString(destination) + ".");		
+		GriefPreventionPlus.addLogEntry("Rescued trapped player " + player.getName() + " from " + GriefPreventionPlus.getfriendlyLocationString(this.location) + " to " + GriefPreventionPlus.getfriendlyLocationString(destination) + ".");		
 	}
 }

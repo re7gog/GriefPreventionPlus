@@ -85,7 +85,7 @@ class DeliverClaimBlocksTask implements Runnable
             }
             catch(Exception e)
             {
-                GriefPreventionPlus.AddLogEntry("Problem delivering claim blocks to player " + player.getName() + ":");
+                GriefPreventionPlus.addLogEntry("Problem delivering claim blocks to player " + player.getName() + ":");
                 e.printStackTrace();
             }
             

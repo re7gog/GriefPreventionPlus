@@ -113,7 +113,7 @@ public class DataStore
 		}
 		catch(Exception e)
 		{
-			GriefPreventionPlus.AddLogEntry("ERROR: Unable to load Java's mySQL database driver.  Check to make sure you've installed it properly.");
+			GriefPreventionPlus.addLogEntry("ERROR: Unable to load Java's mySQL database driver.  Check to make sure you've installed it properly.");
 			throw e;
 		}
 		
@@ -123,7 +123,7 @@ public class DataStore
 		}
 		catch(Exception e2)
 		{
-			GriefPreventionPlus.AddLogEntry("ERROR: Unable to connect to database.  Check your config file settings.");
+			GriefPreventionPlus.addLogEntry("ERROR: Unable to connect to database.  Check your config file settings.");
 			throw e2;
 		}
 		
@@ -172,7 +172,7 @@ public class DataStore
 				results = statement.executeQuery("SHOW TABLES LIKE 'griefprevention_claimdata';");
 				if (results.next()) {
 					// migration from griefprevention
-					GriefPreventionPlus.AddLogEntry("Migrating data from Grief Prevention. It may take some time.");
+					GriefPreventionPlus.addLogEntry("Migrating data from Grief Prevention. It may take some time.");
 					
 					// claims
 					results = statement.executeQuery("SELECT * FROM griefprevention_claimdata ORDER BY parentid ASC;");
@@ -199,13 +199,13 @@ public class DataStore
 						String[] lesser = results.getString(3).split(";");
 						String[] greater = results.getString(4).split(";");
 						if (lesser.length!=4 || greater.length!=4) { // wrong corners, skip this claim
-							GriefPreventionPlus.AddLogEntry("Skipping claim "+results.getLong(1)+": wrong corners");
+							GriefPreventionPlus.addLogEntry("Skipping claim "+results.getLong(1)+": wrong corners");
 							continue;
 						}
 						
 						World world = GriefPreventionPlus.instance.getServer().getWorld(lesser[0]);
 						if (world==null) { // this world doesn't exist, skip this claim
-							GriefPreventionPlus.AddLogEntry("Skipping claim "+results.getLong(1)+": world "+lesser[0]+" doesn't exist");
+							GriefPreventionPlus.addLogEntry("Skipping claim "+results.getLong(1)+": world "+lesser[0]+" doesn't exist");
 							continue;
 						}
 						
@@ -222,7 +222,7 @@ public class DataStore
 						}
 						
 						if (nextParentId==null) {
-							GriefPreventionPlus.AddLogEntry("Skipping orphan subclaim (parentid: "+results.getLong(9)+").");
+							GriefPreventionPlus.addLogEntry("Skipping orphan subclaim (parentid: "+results.getLong(9)+").");
 							continue;
 						}
 						
@@ -307,7 +307,7 @@ public class DataStore
 							if (gppBlocksField!=null) {
 								int a=gppBlocksField.a;
 								int b=gppBlocksField.b;
-								GriefPreventionPlus.AddLogEntry("WARNING: Found duplicated key for "+tString);
+								GriefPreventionPlus.addLogEntry("WARNING: Found duplicated key for "+tString);
 								gppblocks.put(tString, new GppBlocks((results.getInt(2)==a ? a : results.getInt(2)+a), (results.getInt(3)==b ? b : results.getInt(3)+b)));
 							} else {
 								gppblocks.put(tString, new GppBlocks(results.getInt(2), results.getInt(3)));
@@ -315,7 +315,7 @@ public class DataStore
 
 							playerId=tString;
 						} else {
-							GriefPreventionPlus.AddLogEntry("Skipping GriefPrevention data for user "+ownerString+": no UUID.");
+							GriefPreventionPlus.addLogEntry("Skipping GriefPrevention data for user "+ownerString+": no UUID.");
 							continue;
 						}
 					}
@@ -327,12 +327,12 @@ public class DataStore
 					
 					statement.close();
 					statement2.close();
-					GriefPreventionPlus.AddLogEntry("Migration complete. Claims: "+i+" - Permissions: "+j+" - PlayerData: "+k);
+					GriefPreventionPlus.addLogEntry("Migration complete. Claims: "+i+" - Permissions: "+j+" - PlayerData: "+k);
 				}
 			}
 		} catch(Exception e3) {
-			GriefPreventionPlus.AddLogEntry("ERROR: Unable to create the necessary database table.  Details:");
-			GriefPreventionPlus.AddLogEntry(e3.getMessage());
+			GriefPreventionPlus.addLogEntry("ERROR: Unable to create the necessary database table.  Details:");
+			GriefPreventionPlus.addLogEntry(e3.getMessage());
 			e3.printStackTrace();
 			throw e3;
 		}
@@ -359,7 +359,7 @@ public class DataStore
 
 			World world = GriefPreventionPlus.instance.getServer().getWorld(toUUID(results.getBytes(3)));
 			if (world==null) { // This world doesn't exist. Skip this claim.
-				GriefPreventionPlus.AddLogEntry("Skipping claim id "+id+" (world doesn't exist)");
+				GriefPreventionPlus.addLogEntry("Skipping claim id "+id+" (world doesn't exist)");
 				continue;
 			}
 			
@@ -385,7 +385,7 @@ public class DataStore
 				Claim topClaim = this.claims.get(parentid);
 				if (topClaim==null) {
 					// parent claim doesn't exist, skip this subclaim
-					GriefPreventionPlus.AddLogEntry("Orphan subclaim: "+claim.locationToString());
+					GriefPreventionPlus.addLogEntry("Orphan subclaim: "+claim.locationToString());
 					continue;
 				}
 				claim.parent=topClaim;
@@ -394,11 +394,11 @@ public class DataStore
 			}
 		}
 
-		GriefPreventionPlus.AddLogEntry(this.claims.size() + " total claims loaded.");
+		GriefPreventionPlus.addLogEntry(this.claims.size() + " total claims loaded.");
 		
 		//load up all the messages from messages.yml
 		this.loadMessages();
-		GriefPreventionPlus.AddLogEntry("Customizable messages loaded.");
+		GriefPreventionPlus.addLogEntry("Customizable messages loaded.");
 		
 		//load list of soft mutes
         this.loadSoftMutes();
@@ -406,7 +406,7 @@ public class DataStore
 		//try to hook into world guard
 		try {
 		    this.worldGuard = new WorldGuardWrapper();
-		    GriefPreventionPlus.AddLogEntry("Successfully hooked into WorldGuard.");
+		    GriefPreventionPlus.addLogEntry("Successfully hooked into WorldGuard.");
 		}
 		//if failed, world guard compat features will just be disabled.
 		catch(ClassNotFoundException exception){ }
@@ -437,7 +437,7 @@ public class DataStore
                     catch(Exception e)
                     {
                         playerID = null;
-                        GriefPreventionPlus.AddLogEntry("Failed to parse soft mute entry as a UUID: " + nextID);
+                        GriefPreventionPlus.addLogEntry("Failed to parse soft mute entry as a UUID: " + nextID);
                     }
                     
                     //push it into the map
@@ -452,7 +452,7 @@ public class DataStore
             }
             catch(Exception e)
             {
-                GriefPreventionPlus.AddLogEntry("Failed to read from the soft mute data file: " + e.toString());
+                GriefPreventionPlus.addLogEntry("Failed to read from the soft mute data file: " + e.toString());
                 e.printStackTrace();
             }
             
@@ -511,7 +511,7 @@ public class DataStore
         //if any problem, log it
         catch(Exception e)
         {
-            GriefPreventionPlus.AddLogEntry("Unexpected exception saving soft mute data: " + e.getMessage());
+            GriefPreventionPlus.addLogEntry("Unexpected exception saving soft mute data: " + e.getMessage());
             e.printStackTrace();
         }
         
@@ -576,8 +576,8 @@ public class DataStore
         }
         catch(SQLException e)
         {
-            GriefPreventionPlus.AddLogEntry("Unable to save data for group " + groupName + ".  Details:");
-            GriefPreventionPlus.AddLogEntry(e.getMessage());
+            GriefPreventionPlus.addLogEntry("Unable to save data for group " + groupName + ".  Details:");
+            GriefPreventionPlus.addLogEntry(e.getMessage());
         }
 	}
 	
@@ -635,7 +635,7 @@ public class DataStore
 		
 		if(writeToStorage) { // write the new claim on the db, so we get the id generated by the database
 		    this.dbNewClaim(newClaim);
-		    GriefPreventionPlus.AddLogEntry(newClaim.getOwnerName()+" made a new claim (id "+newClaim.id+") at "+newClaim.locationToString());
+		    GriefPreventionPlus.addLogEntry(newClaim.getOwnerName()+" made a new claim (id "+newClaim.id+") at "+newClaim.locationToString());
 		}
 		
 		this.claims.put(newClaim.id, newClaim);
@@ -701,8 +701,8 @@ public class DataStore
 			result.next();
 			claim.id = result.getInt(1);
 		} catch (SQLException e) {
-			GriefPreventionPlus.AddLogEntry("Unable to insert data for new claim at " + claim.locationToString() + ".  Details:");
-			GriefPreventionPlus.AddLogEntry(e.getMessage());
+			GriefPreventionPlus.addLogEntry("Unable to insert data for new claim at " + claim.locationToString() + ".  Details:");
+			GriefPreventionPlus.addLogEntry(e.getMessage());
 		}
 	}
 	
@@ -713,8 +713,8 @@ public class DataStore
 
 			statement.executeUpdate("UPDATE gpp_claims SET owner="+UUIDtoHexString(claim.ownerID)+" WHERE id="+claim.id);
 		} catch (SQLException e) {
-			GriefPreventionPlus.AddLogEntry("Unable to update owner for claim id " + claim.id + ".  Details:");
-			GriefPreventionPlus.AddLogEntry(e.getMessage());
+			GriefPreventionPlus.addLogEntry("Unable to update owner for claim id " + claim.id + ".  Details:");
+			GriefPreventionPlus.addLogEntry(e.getMessage());
 		}
 	}
 	
@@ -725,8 +725,8 @@ public class DataStore
 
 			statement.executeUpdate("UPDATE gpp_claims SET lesserX="+claim.getLesserBoundaryCorner().getBlockX()+", lesserZ="+claim.getLesserBoundaryCorner().getBlockZ()+", greaterX="+claim.getGreaterBoundaryCorner().getBlockX()+", greaterZ="+claim.getGreaterBoundaryCorner().getBlockZ()+" WHERE id="+claim.id);
 		} catch (SQLException e) {
-			GriefPreventionPlus.AddLogEntry("Unable to update location for claim id " + claim.id + ".  Details:");
-			GriefPreventionPlus.AddLogEntry(e.getMessage());
+			GriefPreventionPlus.addLogEntry("Unable to update location for claim id " + claim.id + ".  Details:");
+			GriefPreventionPlus.addLogEntry(e.getMessage());
 		}
 	}
 	
@@ -737,8 +737,8 @@ public class DataStore
 
 			statement.executeUpdate("INSERT INTO gpp_permsplayer VALUES ("+claimId+", "+UUIDtoHexString(playerId)+", "+perm+") ON DUPLICATE KEY UPDATE perm=perm | "+perm+";");
 		} catch (SQLException e) {
-			GriefPreventionPlus.AddLogEntry("Unable to set perms for claim id " + claimId + " player {"+playerId.toString()+"}.  Details:");
-			GriefPreventionPlus.AddLogEntry(e.getMessage());
+			GriefPreventionPlus.addLogEntry("Unable to set perms for claim id " + claimId + " player {"+playerId.toString()+"}.  Details:");
+			GriefPreventionPlus.addLogEntry(e.getMessage());
 		}
 	}
 	
@@ -749,8 +749,8 @@ public class DataStore
 
 			statement.executeUpdate("INSERT INTO gpp_permsbukkit VALUES ("+claimId+", \""+permString+"\", "+perm+") ON DUPLICATE KEY UPDATE perm=perm | "+perm+";");
 		} catch (SQLException e) {
-			GriefPreventionPlus.AddLogEntry("Unable to set perms for claim id " + claimId + " perm ["+permString+"].  Details:");
-			GriefPreventionPlus.AddLogEntry(e.getMessage());
+			GriefPreventionPlus.addLogEntry("Unable to set perms for claim id " + claimId + " perm ["+permString+"].  Details:");
+			GriefPreventionPlus.addLogEntry(e.getMessage());
 		}
 	}
 	
@@ -763,8 +763,8 @@ public class DataStore
 			statement.executeUpdate("DELETE FROM gpp_permsplayer WHERE claimid="+claimId+";");
 			statement.executeUpdate("DELETE FROM gpp_permsbukkit WHERE claimid="+claimId+";");
 		} catch (SQLException e) {
-			GriefPreventionPlus.AddLogEntry("Unable to unset perms for claim id " + claimId + ".  Details:");
-			GriefPreventionPlus.AddLogEntry(e.getMessage());
+			GriefPreventionPlus.addLogEntry("Unable to unset perms for claim id " + claimId + ".  Details:");
+			GriefPreventionPlus.addLogEntry(e.getMessage());
 		}
 	}
 	/** Unset all player claims' perms */
@@ -776,8 +776,8 @@ public class DataStore
 			statement.executeUpdate("DELETE p FROM gpp_permsplayer AS p INNER JOIN gpp_claims AS c ON p.claimid = c.id WHERE c.owner="+UUIDtoHexString(playerId)+";");
 			statement.executeUpdate("DELETE p FROM gpp_permsbukkit AS p INNER JOIN gpp_claims AS c ON p.claimid = c.id WHERE c.owner="+UUIDtoHexString(playerId)+";");
 		} catch (SQLException e) {
-			GriefPreventionPlus.AddLogEntry("Unable to unset perms for " + playerId.toString() + "'s claims.  Details:");
-			GriefPreventionPlus.AddLogEntry(e.getMessage());
+			GriefPreventionPlus.addLogEntry("Unable to unset perms for " + playerId.toString() + "'s claims.  Details:");
+			GriefPreventionPlus.addLogEntry(e.getMessage());
 		}
 	}
 	
@@ -789,8 +789,8 @@ public class DataStore
 
 			statement.executeUpdate("DELETE p FROM gpp_permsplayer AS p INNER JOIN gpp_claims AS c ON p.claimid = c.id WHERE c.owner="+UUIDtoHexString(owner)+" AND p.player="+UUIDtoHexString(playerId)+";");
 		} catch (SQLException e) {
-			GriefPreventionPlus.AddLogEntry("Unable to unset {"+playerId.toString()+"} perms from {" + owner.toString() + "}'s claims.  Details:");
-			GriefPreventionPlus.AddLogEntry(e.getMessage());
+			GriefPreventionPlus.addLogEntry("Unable to unset {"+playerId.toString()+"} perms from {" + owner.toString() + "}'s claims.  Details:");
+			GriefPreventionPlus.addLogEntry(e.getMessage());
 		}
 	}
 	
@@ -802,8 +802,8 @@ public class DataStore
 
 			statement.executeUpdate("DELETE p FROM gpp_permsbukkit AS p INNER JOIN gpp_claims AS c ON p.claimid = c.id WHERE c.owner="+UUIDtoHexString(owner)+" AND p.pname=\""+permString+"\";");
 		} catch (SQLException e) {
-			GriefPreventionPlus.AddLogEntry("Unable to unset ["+permString+"] perms from {" + owner.toString() + "}'s claims.  Details:");
-			GriefPreventionPlus.AddLogEntry(e.getMessage());
+			GriefPreventionPlus.addLogEntry("Unable to unset ["+permString+"] perms from {" + owner.toString() + "}'s claims.  Details:");
+			GriefPreventionPlus.addLogEntry(e.getMessage());
 		}
 	}
 	
@@ -815,8 +815,8 @@ public class DataStore
 
 			statement.executeUpdate("DELETE FROM gpp_permsplayer WHERE claimid="+claimId+" AND player="+UUIDtoHexString(playerId)+";");
 		} catch (SQLException e) {
-			GriefPreventionPlus.AddLogEntry("Unable to unset perms for claim id " + claimId + " player {"+playerId.toString()+"}.  Details:");
-			GriefPreventionPlus.AddLogEntry(e.getMessage());
+			GriefPreventionPlus.addLogEntry("Unable to unset perms for claim id " + claimId + " player {"+playerId.toString()+"}.  Details:");
+			GriefPreventionPlus.addLogEntry(e.getMessage());
 		}
 	}	
 	
@@ -828,8 +828,8 @@ public class DataStore
 
 			statement.executeUpdate("DELETE FROM gpp_permsbukkit WHERE claimid="+claimId+" AND pname=\""+permString+"\";");
 		} catch (SQLException e) {
-			GriefPreventionPlus.AddLogEntry("Unable to unset perms for claim id " + claimId + " perm ["+permString+"].  Details:");
-			GriefPreventionPlus.AddLogEntry(e.getMessage());
+			GriefPreventionPlus.addLogEntry("Unable to unset perms for claim id " + claimId + " perm ["+permString+"].  Details:");
+			GriefPreventionPlus.addLogEntry(e.getMessage());
 		}
 	}
 	
@@ -867,8 +867,8 @@ public class DataStore
 		}
 		catch(SQLException e)
 		{
-			GriefPreventionPlus.AddLogEntry("Unable to retrieve data for player " + playerID.toString() + ".  Details:");
-			GriefPreventionPlus.AddLogEntry(e.getMessage());
+			GriefPreventionPlus.addLogEntry("Unable to retrieve data for player " + playerID.toString() + ".  Details:");
+			GriefPreventionPlus.addLogEntry(e.getMessage());
 			e.printStackTrace();
 		}
 		
@@ -939,8 +939,8 @@ public class DataStore
 				statement.execute("DELETE FROM gpp_claims WHERE id="+claim.id+" OR parentid="+claim.id+";");
 			}
 		} catch(SQLException e) {
-			GriefPreventionPlus.AddLogEntry("Unable to delete data for claim " + claim.id + ".  Details:");
-			GriefPreventionPlus.AddLogEntry(e.getMessage());
+			GriefPreventionPlus.addLogEntry("Unable to delete data for claim " + claim.id + ".  Details:");
+			GriefPreventionPlus.addLogEntry(e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -1160,8 +1160,8 @@ public class DataStore
 			Statement statement = databaseConnection.createStatement();
 			statement.executeUpdate("INSERT INTO gpp_playerdata VALUES ("+UUIDtoHexString(playerData.playerID)+", \""+playerData.getAccruedClaimBlocks()+"\", "+playerData.getBonusClaimBlocks()+") ON DUPLICATE KEY UPDATE accruedblocks="+playerData.getAccruedClaimBlocks()+", bonusblocks="+playerData.getBonusClaimBlocks()+";");
 		} catch(SQLException e) {
-			GriefPreventionPlus.AddLogEntry("Unable to save data for player " + playerID.toString() + ".  Details:");
-			GriefPreventionPlus.AddLogEntry(e.getMessage());
+			GriefPreventionPlus.addLogEntry("Unable to save data for player " + playerID.toString() + ".  Details:");
+			GriefPreventionPlus.addLogEntry(e.getMessage());
 		}
 	}
 
@@ -1386,7 +1386,7 @@ public class DataStore
 		newClaim.parent=claim.parent;
 		newClaim.children=claim.children;
 
-		GriefPreventionPlus.AddLogEntry("resizeClaim "+newClaim.id+" cs:"+newClaim.children.size());
+		GriefPreventionPlus.addLogEntry("resizeClaim "+newClaim.id+" cs:"+newClaim.children.size());
 
 		Claim claimCheck = this.overlapsClaims(newClaim, claim, resizingPlayer);
 
@@ -1398,7 +1398,7 @@ public class DataStore
 			claim.setLocation(claim.world, newx1, newz1, newx2, newz2);
 			this.dbUpdateLocation(claim);
 
-			GriefPreventionPlus.AddLogEntry(claim.getOwnerName()+" resized claim id "+claim.id+" from "+oldLoc+" to "+claim.locationToString());
+			GriefPreventionPlus.addLogEntry(claim.getOwnerName()+" resized claim id "+claim.id+" from "+oldLoc+" to "+claim.locationToString());
 			return new ClaimResult(true, claim);
 		} else {
 			return new ClaimResult(false, claimCheck);
@@ -1612,7 +1612,7 @@ public class DataStore
 			//if default is missing, log an error and use some fake data for now so that the plugin can run
 			if(messageData == null)
 			{
-				GriefPreventionPlus.AddLogEntry("Missing message for " + messageID.name() + ".  Please contact the developer.");
+				GriefPreventionPlus.addLogEntry("Missing message for " + messageID.name() + ".  Please contact the developer.");
 				messageData = new CustomizableMessage(messageID, "Missing message!  ID: " + messageID.name() + ".  Please contact a server admin.", null);
 			}
 			
@@ -1634,7 +1634,7 @@ public class DataStore
 		}
 		catch(IOException exception)
 		{
-			GriefPreventionPlus.AddLogEntry("Unable to write to the configuration file at \"" + DataStore.messagesFilePath + "\"");
+			GriefPreventionPlus.addLogEntry("Unable to write to the configuration file at \"" + DataStore.messagesFilePath + "\"");
 		}
 		
 		defaults.clear();

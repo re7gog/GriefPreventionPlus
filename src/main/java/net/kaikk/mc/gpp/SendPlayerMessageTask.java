@@ -41,7 +41,7 @@ class SendPlayerMessageTask implements Runnable
 	{
 		if(player == null)
 		{
-		    GriefPreventionPlus.AddLogEntry(color + message);
+		    GriefPreventionPlus.addLogEntry(color + message);
 		    return;
 		}
 	    

@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import net.milkbowl.vault.economy.Economy;
 
@@ -43,7 +45,6 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.PluginManager;
@@ -131,6 +132,7 @@ public class GriefPreventionPlus extends JavaPlugin
 	public double config_economy_claimBlocksPurchaseCost;			//cost to purchase a claim block.  set to zero to disable purchase.
 	public double config_economy_claimBlocksSellValue;				//return on a sold claim block.  set to zero to disable sale.
 	
+	public boolean config_blockClaimExplosions;                     //whether explosions may destroy claimed blocks
 	public boolean config_blockSurfaceCreeperExplosions;			//whether creeper explosions near or above the surface destroy blocks
 	public boolean config_blockSurfaceOtherExplosions;				//whether non-creeper explosions near or above the surface destroy blocks
 	public boolean config_blockSkyTrees;							//whether players can build trees on platforms in the sky
@@ -184,17 +186,17 @@ public class GriefPreventionPlus extends JavaPlugin
 	public static final int NOTIFICATION_SECONDS = 20;
 	
 	//adds a server log entry
-	public static synchronized void AddLogEntry(String entry) {
+	public static synchronized void addLogEntry(String entry) {
 		log.info("[GriefPreventionPlus] " + entry);
 	}
 	
 	public void onLoad() {
 		// check if Grief Prevention is loaded
 		if (this.getServer().getPluginManager().getPlugin("GriefPrevention") != null) {
-			AddLogEntry("-- WARNING  --");
-			AddLogEntry("-- SHUTDOWN --");
-			AddLogEntry("Remove GriefPrevention.jar (do not delete data folder)");
-			AddLogEntry("--------------");
+			addLogEntry("-- WARNING  --");
+			addLogEntry("-- SHUTDOWN --");
+			addLogEntry("Remove GriefPrevention.jar (do not delete data folder)");
+			addLogEntry("--------------");
 			this.getServer().shutdown();
 			this.getServer().getPluginManager().clearPlugins();
 			return;
@@ -203,12 +205,12 @@ public class GriefPreventionPlus extends JavaPlugin
 	
 	//initializes well...   everything
 	public void onEnable() { 		
-		AddLogEntry("boot start.");
+		addLogEntry("boot start.");
 		instance = this;
 
 		this.loadConfig();
 		
-		AddLogEntry("Finished loading configuration.");
+		addLogEntry("Finished loading configuration.");
 		
 		//when datastore initializes, it loads player and claim data, and posts some stats to the log
 		if(this.databaseUrl.length() > 0)
@@ -219,24 +221,24 @@ public class GriefPreventionPlus extends JavaPlugin
 
 				this.dataStore = databaseStore;
 			} catch(Exception e) {
-				AddLogEntry(e.getMessage());
+				addLogEntry(e.getMessage());
 				e.printStackTrace();
-				AddLogEntry("-- WARNING  --");
-				AddLogEntry("-- SHUTDOWN --");
-				AddLogEntry("I can't connect to the database! Update the database config settings to resolve the issue. The server will shutdown to avoid claim griefing.");
-				AddLogEntry("--------------");
+				addLogEntry("-- WARNING  --");
+				addLogEntry("-- SHUTDOWN --");
+				addLogEntry("I can't connect to the database! Update the database config settings to resolve the issue. The server will shutdown to avoid claim griefing.");
+				addLogEntry("--------------");
 				this.getServer().shutdown();
 				this.getServer().getPluginManager().clearPlugins();
 				return;
 			}			
 		} else {
-			AddLogEntry("-- WARNING  --");
-			AddLogEntry("Database settings are required! Update the database config settings to resolve the issue. Grief Prevention Plus disabled.");
-			AddLogEntry("--------------");
+			addLogEntry("-- WARNING  --");
+			addLogEntry("Database settings are required! Update the database config settings to resolve the issue. Grief Prevention Plus disabled.");
+			addLogEntry("--------------");
 			return;
 		}
 
-		AddLogEntry("Finished loading data.");
+		addLogEntry("Finished loading data.");
 		
 		//unless claim block accrual is disabled, start the recurring per 5 minute event to give claim blocks to online players
 		//20L ~ 1 second
@@ -259,13 +261,15 @@ public class GriefPreventionPlus extends JavaPlugin
 		
 		//player events for MC 1.8
 		try {
-			Class<?> playerInteractAtEntityEvent = Class.forName("PlayerInteractAtEntityEvent");
-			Listener.class.getMethod("onPlayerInteractAtEntity", playerInteractAtEntityEvent);
+			Class.forName("org.bukkit.event.player.PlayerInteractAtEntityEvent");
 			playerEventHandler18 = new EventHandler18();
 			pluginManager.registerEvents(playerEventHandler18, this);
 			
 			isBukkit18=true;
-		} catch (NoSuchMethodException | SecurityException | ClassNotFoundException e) { }
+			addLogEntry("Oh, you're running Bukkit 1.8+!");
+		} catch (ClassNotFoundException e) {
+			addLogEntry("You're running Bukkit 1.7!");
+		}
 		
 		//block events
 		BlockEventHandler blockEventHandler = new BlockEventHandler(this.dataStore);
@@ -279,13 +283,13 @@ public class GriefPreventionPlus extends JavaPlugin
 		if(this.config_economy_claimBlocksPurchaseCost > 0 || this.config_economy_claimBlocksSellValue > 0)
 		{
 			//try to load Vault
-			GriefPreventionPlus.AddLogEntry("GriefPrevention requires Vault for economy integration.");
-			GriefPreventionPlus.AddLogEntry("Attempting to load Vault...");
+			GriefPreventionPlus.addLogEntry("GriefPrevention requires Vault for economy integration.");
+			GriefPreventionPlus.addLogEntry("Attempting to load Vault...");
 			RegisteredServiceProvider<Economy> economyProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
-			GriefPreventionPlus.AddLogEntry("Vault loaded successfully!");
+			GriefPreventionPlus.addLogEntry("Vault loaded successfully!");
 			
 			//ask Vault to hook into an economy plugin
-			GriefPreventionPlus.AddLogEntry("Looking for a Vault-compatible economy plugin...");
+			GriefPreventionPlus.addLogEntry("Looking for a Vault-compatible economy plugin...");
 			if (economyProvider != null) 
 	        {
 	        	GriefPreventionPlus.economy = economyProvider.getProvider();
@@ -293,21 +297,21 @@ public class GriefPreventionPlus extends JavaPlugin
 	            //on success, display success message
 				if(GriefPreventionPlus.economy != null)
 		        {
-	            	GriefPreventionPlus.AddLogEntry("Hooked into economy: " + GriefPreventionPlus.economy.getName() + ".");  
-	            	GriefPreventionPlus.AddLogEntry("Ready to buy/sell claim blocks!");
+	            	GriefPreventionPlus.addLogEntry("Hooked into economy: " + GriefPreventionPlus.economy.getName() + ".");  
+	            	GriefPreventionPlus.addLogEntry("Ready to buy/sell claim blocks!");
 		        }
 		        
 				//otherwise error message
 				else
 		        {
-		        	GriefPreventionPlus.AddLogEntry("ERROR: Vault was unable to find a supported economy plugin.  Either install a Vault-compatible economy plugin, or set both of the economy config variables to zero.");
+		        	GriefPreventionPlus.addLogEntry("ERROR: Vault was unable to find a supported economy plugin.  Either install a Vault-compatible economy plugin, or set both of the economy config variables to zero.");
 		        }	            
 	        }
 			
 			//another error case
 			else
 			{
-				GriefPreventionPlus.AddLogEntry("ERROR: Vault was unable to find a supported economy plugin.  Either install a Vault-compatible economy plugin, or set both of the economy config variables to zero.");
+				GriefPreventionPlus.addLogEntry("ERROR: Vault was unable to find a supported economy plugin.  Either install a Vault-compatible economy plugin, or set both of the economy config variables to zero.");
 			}
 		}
 		
@@ -323,7 +327,7 @@ public class GriefPreventionPlus extends JavaPlugin
 		    }
 		}
 		
-		AddLogEntry("Cached " + playersCached + " recent players.");
+		addLogEntry("Cached " + playersCached + " recent players.");
 		
 		this.getCommand("claim").setExecutor(new CommandExec());
 		this.getCommand("abandonclaim").setExecutor(new CommandExec());
@@ -364,7 +368,7 @@ public class GriefPreventionPlus extends JavaPlugin
 		CleanupUnusedClaimsTask task2 = new CleanupUnusedClaimsTask();
 		this.getServer().getScheduler().scheduleSyncRepeatingTask(this, task2, 20L * 60 * 2, 20L * 60 * 5);
 		
-		AddLogEntry("Boot finished.");
+		addLogEntry("Boot finished.");
 	}
 	
 	void loadConfig()
@@ -420,7 +424,7 @@ public class GriefPreventionPlus extends JavaPlugin
                 }
                 else
                 {
-                    GriefPreventionPlus.AddLogEntry("Error: Invalid claim mode \"" + configSetting + "\".  Options are Survival, Creative, and Disabled.");
+                    GriefPreventionPlus.addLogEntry("Error: Invalid claim mode \"" + configSetting + "\".  Options are Survival, Creative, and Disabled.");
                     this.config_claims_worldModes.put(world, ClaimsMode.Creative);
                 }
             }
@@ -540,6 +544,7 @@ public class GriefPreventionPlus extends JavaPlugin
         this.config_lockDeathDropsInPvpWorlds = config.getBoolean("GriefPrevention.ProtectItemsDroppedOnDeath.PvPWorlds", false);
         this.config_lockDeathDropsInNonPvpWorlds = config.getBoolean("GriefPrevention.ProtectItemsDroppedOnDeath.NonPvPWorlds", true);
         
+        this.config_blockClaimExplosions = config.getBoolean("GriefPrevention.BlockLandClaimExplosions", true);
         this.config_blockSurfaceCreeperExplosions = config.getBoolean("GriefPrevention.BlockSurfaceCreeperExplosions", true);
         this.config_blockSurfaceOtherExplosions = config.getBoolean("GriefPrevention.BlockSurfaceOtherExplosions", true);
         this.config_blockSkyTrees = config.getBoolean("GriefPrevention.LimitSkyTrees", true);
@@ -597,7 +602,7 @@ public class GriefPreventionPlus extends JavaPlugin
         this.config_claims_investigationTool = Material.getMaterial(investigationToolMaterialName);
         if(this.config_claims_investigationTool == null)
         {
-            GriefPreventionPlus.AddLogEntry("ERROR: Material " + investigationToolMaterialName + " not found.  Defaulting to the stick.  Please update your config.yml.");
+            GriefPreventionPlus.addLogEntry("ERROR: Material " + investigationToolMaterialName + " not found.  Defaulting to the stick.  Please update your config.yml.");
             this.config_claims_investigationTool = Material.STICK;
         }
         
@@ -611,7 +616,7 @@ public class GriefPreventionPlus extends JavaPlugin
         this.config_claims_modificationTool = Material.getMaterial(modificationToolMaterialName);
         if(this.config_claims_modificationTool == null)
         {
-            GriefPreventionPlus.AddLogEntry("ERROR: Material " + modificationToolMaterialName + " not found.  Defaulting to the golden shovel.  Please update your config.yml.");
+            GriefPreventionPlus.addLogEntry("ERROR: Material " + modificationToolMaterialName + " not found.  Defaulting to the golden shovel.  Please update your config.yml.");
             this.config_claims_modificationTool = Material.GOLD_SPADE;
         }
         
@@ -633,7 +638,7 @@ public class GriefPreventionPlus extends JavaPlugin
             World world = this.getServer().getWorld(worldName);
             if(world == null)
             {
-                AddLogEntry("Error: Siege Configuration: There's no world named \"" + worldName + "\".  Please update your config.yml.");
+                addLogEntry("Error: Siege Configuration: There's no world named \"" + worldName + "\".  Please update your config.yml.");
             }
             else
             {
@@ -679,7 +684,7 @@ public class GriefPreventionPlus extends JavaPlugin
             Material material = Material.getMaterial(blockName);
             if(material == null)
             {
-                GriefPreventionPlus.AddLogEntry("Siege Configuration: Material not found: " + blockName + ".");
+                GriefPreventionPlus.addLogEntry("Siege Configuration: Material not found: " + blockName + ".");
             }
             else
             {
@@ -760,6 +765,7 @@ public class GriefPreventionPlus extends JavaPlugin
         outConfig.set("GriefPrevention.ProtectItemsDroppedOnDeath.PvPWorlds", this.config_lockDeathDropsInPvpWorlds);
         outConfig.set("GriefPrevention.ProtectItemsDroppedOnDeath.NonPvPWorlds", this.config_lockDeathDropsInNonPvpWorlds);
         
+        outConfig.set("GriefPrevention.BlockLandClaimExplosions", this.config_blockClaimExplosions);
         outConfig.set("GriefPrevention.BlockSurfaceCreeperExplosions", this.config_blockSurfaceCreeperExplosions);
         outConfig.set("GriefPrevention.BlockSurfaceOtherExplosions", this.config_blockSurfaceOtherExplosions);
         outConfig.set("GriefPrevention.LimitSkyTrees", this.config_blockSkyTrees);
@@ -801,7 +807,7 @@ public class GriefPreventionPlus extends JavaPlugin
         }
         catch(IOException exception)
         {
-            AddLogEntry("Unable to write to the configuration file at \"" + DataStore.configFilePath + "\"");
+            addLogEntry("Unable to write to the configuration file at \"" + DataStore.configFilePath + "\"");
         }
         
         //try to parse the list of commands requiring access trust in land claims
@@ -927,7 +933,7 @@ public class GriefPreventionPlus extends JavaPlugin
 			this.dataStore.close();
 		}
 		
-		AddLogEntry("GriefPreventionPlus disabled.");
+		addLogEntry("GriefPreventionPlus disabled.");
 	}
 	
 	public void checkPvpProtectionNeeded(Player player)
@@ -1037,7 +1043,7 @@ public class GriefPreventionPlus extends JavaPlugin
 		
 	    if(player == null)
 		{
-			GriefPreventionPlus.AddLogEntry(color + message);
+			GriefPreventionPlus.addLogEntry(color + message);
 		}
 		else
 		{
@@ -1210,7 +1216,7 @@ public class GriefPreventionPlus extends JavaPlugin
 			if(materialInfo == null)
 			{
 				//show error in log
-				GriefPreventionPlus.AddLogEntry("ERROR: Unable to read a material entry from the config file.  Please update your config.yml.");
+				GriefPreventionPlus.addLogEntry("ERROR: Unable to read a material entry from the config file.  Please update your config.yml.");
 				
 				//update string, which will go out to config file to help user find the error entry
 				if(!stringsToParse.get(i).contains("can't"))
@@ -1252,4 +1258,23 @@ public class GriefPreventionPlus extends JavaPlugin
         
         return result;
     }
+	
+	public boolean containsBlockedIP(String message)
+	{
+	    message = message.replace("\r\n", "");
+	    Pattern ipAddressPattern = Pattern.compile("([0-9]{1,3}\\.){3}[0-9]{1,3}");
+	    Matcher matcher = ipAddressPattern.matcher(message);
+	    
+	    //if it looks like an IP address
+	    if(matcher.find())
+	    {
+	        //and it's not in the list of allowed IP addresses
+	        if(!config_spam_allowedIpAddresses.contains(matcher.group()))
+	        {
+	            return true;
+	        }
+	    }
+	    
+	    return false;
+	}
 }

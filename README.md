@@ -1,5 +1,5 @@
 # GriefPreventionPlus
-I wanted to develop a GriefPrevention extension for cities (Towny-like), but the way GriefPrevention stores data limits extension possibilities. I changed the database structure and the way it stored data. GriefPreventionPlus offers better performances, data integrity, extension capabilities, it is currently for MC1.7.10 only and I applied all GriefPrevention's last updates!
+I wanted to develop a GriefPrevention extension for cities (Towny-like), but the way GriefPrevention stores data limits extension possibilities. I changed the database structure and the way it stored data. GriefPreventionPlus offers better performances, data integrity, extension capabilities, it is currently supports MC1.7.10 and MC1.8.3. A partial support for MC1.6.4 is currently planned. I applied all GriefPrevention's last updates!
 
 Feedback are needed! If you found an issue, please report it!
 Please use the "issues" page on Github!
@@ -22,7 +22,7 @@ Your GriefPrevention database won't be removed: you can rollback to GriefPrevent
 If you're using GriefPrevention file based storage, read this: https://github.com/KaiKikuchi/GriefPreventionPlus/issues/7
 
 ###Major features
-- GriefPreventionPlus's MC1.7.10 version contains last fixes from GriefPrevention's MC1.8 version!
+- Get GriefPrevention's last updates on your MC 1.7.10 server!
 - MySQL database is a requirement. Removed file based storage.
 - Drastically improved database performances and reduced size: bigger servers will notice it!
 - Overall speed improvements

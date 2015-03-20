@@ -249,7 +249,7 @@ class EntityEventHandler implements Listener
 			
 			claim = this.dataStore.getClaimAt(block.getLocation(), false, claim); 
 			//if the block is claimed, remove it from the list of destroyed blocks
-			if(claim != null && !claim.areExplosivesAllowed)
+			if(claim != null && !claim.areExplosivesAllowed  && GriefPreventionPlus.instance.config_blockClaimExplosions)
 			{
 				blocks.remove(i--);
 			}
@@ -796,6 +796,9 @@ class EntityEventHandler implements Listener
 	    
 	    EntityDamageByEntityEvent subEvent = (EntityDamageByEntityEvent) event;
 	    
+	  //if not in a pvp rules world, do nothing
+	    if(!GriefPreventionPlus.instance.config_pvp_enabledWorlds.contains(defender.getWorld())) return;
+	    
 	    //determine which player is attacking, if any
 	    Player attacker = null;
 	    Projectile arrow = null;
@@ -822,12 +825,13 @@ class EntityEventHandler implements Listener
 	    
 	    PlayerData defenderData = this.dataStore.getPlayerData(defender.getUniqueId());
 	    PlayerData attackerData = this.dataStore.getPlayerData(attacker.getUniqueId());
-	    
-	    long now = Calendar.getInstance().getTimeInMillis();
-	    defenderData.lastPvpTimestamp = now;
-	    defenderData.lastPvpPlayer = attacker.getName();
-	    attackerData.lastPvpTimestamp = now;
-	    attackerData.lastPvpPlayer = defender.getName();
+	    if(attacker != defender) {
+		    long now = Calendar.getInstance().getTimeInMillis();
+		    defenderData.lastPvpTimestamp = now;
+		    defenderData.lastPvpPlayer = attacker.getName();
+		    attackerData.lastPvpTimestamp = now;
+		    attackerData.lastPvpPlayer = defender.getName();
+	    }
 	}
 	
 	//when a vehicle is damaged
