@@ -129,12 +129,11 @@ public class BlockEventHandler implements Listener
 			
 			if(!player.hasPermission("griefprevention.eavesdrop"))
 			{
-				Player [] players = GriefPreventionPlus.instance.getServer().getOnlinePlayers();
-				for(int i = 0; i < players.length; i++)
-				{
-					if(players[i].hasPermission("griefprevention.eavesdrop"))
+				//Player [] players = GriefPreventionPlus.instance.getServer().getOnlinePlayers();
+				for (Player targetPlayer : GriefPreventionPlus.instance.getServer().getOnlinePlayers()) {
+					if(targetPlayer.hasPermission("griefprevention.eavesdrop"))
 					{
-						players[i].sendMessage(ChatColor.AQUA + player.getName()+" placed at "+GriefPreventionPlus.getfriendlyLocationString(event.getBlock().getLocation())+" this sign: \n"+lines.toString());
+						targetPlayer.sendMessage(ChatColor.AQUA + player.getName()+" placed at "+GriefPreventionPlus.getfriendlyLocationString(event.getBlock().getLocation())+" this sign: \n"+lines.toString());
 					}
 				}
 			}
@@ -464,7 +463,12 @@ public class BlockEventHandler implements Listener
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onBlockPistonRetract (BlockPistonRetractEvent event)
 	{
-	    //we only care about sticky pistons retracting
+	    //if MC1.8, EventHandler18 will handle this 
+		if (GriefPreventionPlus.isBukkit18) {
+			return;
+		}
+		
+		//we only care about sticky pistons retracting
 		if(!event.isSticky()) return;
 		
 		//pulling up is always safe

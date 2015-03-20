@@ -43,6 +43,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.PluginManager;
@@ -168,6 +169,11 @@ public class GriefPreventionPlus extends JavaPlugin
 	/** UUID 1 is used for administrative claims */
 	public final static UUID UUID1 = new UUID(0,1);
 	
+	PlayerEventHandler playerEventHandler;
+	EventHandler18 playerEventHandler18;
+	
+	public static boolean isBukkit18 = false;
+	
 	//reference to the economy plugin, if economy integration is enabled
 	public static Economy economy = null;					
 	
@@ -248,9 +254,19 @@ public class GriefPreventionPlus extends JavaPlugin
 		PluginManager pluginManager = this.getServer().getPluginManager();
 		
 		//player events
-		PlayerEventHandler playerEventHandler = new PlayerEventHandler(this.dataStore, this);
+		playerEventHandler = new PlayerEventHandler(this.dataStore);
 		pluginManager.registerEvents(playerEventHandler, this);
-
+		
+		//player events for MC 1.8
+		try {
+			Class<?> playerInteractAtEntityEvent = Class.forName("PlayerInteractAtEntityEvent");
+			Listener.class.getMethod("onPlayerInteractAtEntity", playerInteractAtEntityEvent);
+			playerEventHandler18 = new EventHandler18();
+			pluginManager.registerEvents(playerEventHandler18, this);
+			
+			isBukkit18=true;
+		} catch (NoSuchMethodException | SecurityException | ClassNotFoundException e) { }
+		
 		//block events
 		BlockEventHandler blockEventHandler = new BlockEventHandler(this.dataStore);
 		pluginManager.registerEvents(blockEventHandler, this);
@@ -902,10 +918,9 @@ public class GriefPreventionPlus extends JavaPlugin
 	{ 
 		if (this.dataStore!=null) {
 			//save data for any online players
-			Player [] players = this.getServer().getOnlinePlayers();
-			for(int i = 0; i < players.length; i++)
+			for(Player player : this.getServer().getOnlinePlayers())
 			{
-				UUID playerID = players[i].getUniqueId();
+				UUID playerID = player.getUniqueId();
 				PlayerData playerData = this.dataStore.getPlayerData(playerID);
 				this.dataStore.savePlayerDataSync(playerID, playerData);
 			}
@@ -979,29 +994,19 @@ public class GriefPreventionPlus extends JavaPlugin
 	{
 		//look for a suitable location
 		Location candidateLocation = player.getLocation();
-		while(true)
-		{
-			Claim claim = null;
+		Claim claim = null;
+		
+		do {
 			claim = GriefPreventionPlus.instance.dataStore.getClaimAt(candidateLocation, false, null);
-			
-			//if there's a claim here, keep looking
-			if(claim != null)
-			{
-				candidateLocation = new Location(claim.world, claim.lesserX - 1, 0, claim.lesserZ - 1);
-				continue;
-			}
-			
-			//otherwise find a safe place to teleport the player
-			else
-			{
-				//find a safe height, a couple of blocks above the surface
-				GuaranteeChunkLoaded(candidateLocation);
-				Block highestBlock = candidateLocation.getWorld().getHighestBlockAt(candidateLocation.getBlockX(), candidateLocation.getBlockZ());
-				Location destination = new Location(highestBlock.getWorld(), highestBlock.getX(), highestBlock.getY() + 2, highestBlock.getZ());
-				player.teleport(destination);			
-				return destination;
-			}			
-		}
+			candidateLocation = new Location(claim.world, claim.lesserX - 1, 0, claim.lesserZ - 1);
+		} while (claim!=null);
+		
+		//find a safe height, a couple of blocks above the surface
+		GuaranteeChunkLoaded(candidateLocation);
+		Block highestBlock = candidateLocation.getWorld().getHighestBlockAt(candidateLocation.getBlockX(), candidateLocation.getBlockZ());
+		Location destination = new Location(highestBlock.getWorld(), highestBlock.getX(), highestBlock.getY() + 2, highestBlock.getZ());
+		player.teleport(destination);			
+		return destination;
 	}
 	
 	//ensures a piece of the managed world is loaded into server memory

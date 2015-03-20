@@ -69,7 +69,7 @@ import org.bukkit.util.BlockIterator;
 class PlayerEventHandler implements Listener 
 {
 	private DataStore dataStore;
-	
+
 	//list of temporarily banned ip's
 	private ArrayList<IpBanInfo> tempBannedIps = new ArrayList<IpBanInfo>();
 	
@@ -83,8 +83,7 @@ class PlayerEventHandler implements Listener
 	private Pattern howToClaimPattern = null;
 	
 	//typical constructor, yawn
-	PlayerEventHandler(DataStore dataStore, GriefPreventionPlus plugin)
-	{
+	PlayerEventHandler(DataStore dataStore){
 		this.dataStore = dataStore;
 	}
 	
@@ -429,11 +428,9 @@ class PlayerEventHandler implements Listener
 			}
 			
 			String logMessage = logMessageBuilder.toString();
-			
-			Player [] players = GriefPreventionPlus.instance.getServer().getOnlinePlayers();
-			for(int i = 0; i < players.length; i++)
+
+			for(Player player : GriefPreventionPlus.instance.getServer().getOnlinePlayers())
 			{
-				Player player = players[i];
 				if(player.hasPermission("griefprevention.eavesdrop") && !player.getName().equalsIgnoreCase(args[1]))
 				{
 					player.sendMessage(ChatColor.GRAY + logMessage);
@@ -628,12 +625,9 @@ class PlayerEventHandler implements Listener
 						GriefPreventionPlus.AddLogEntry("Auto-banned " + player.getName() + " because that account is using an IP address very recently used by banned player " + info.bannedAccountName + " (" + info.address.toString() + ").");
 						
 						//notify any online ops
-						Player [] players = GriefPreventionPlus.instance.getServer().getOnlinePlayers();
-						for(int k = 0; k < players.length; k++)
-						{
-							if(players[k].isOp())
-							{
-								GriefPreventionPlus.sendMessage(players[k], TextMode.Success, Messages.AutoBanNotify, player.getName(), info.bannedAccountName);
+						for(Player targetPlayer : GriefPreventionPlus.instance.getServer().getOnlinePlayers()) {
+							if(targetPlayer.isOp()) {
+								GriefPreventionPlus.sendMessage(targetPlayer, TextMode.Success, Messages.AutoBanNotify, player.getName(), info.bannedAccountName);
 							}
 						}
 						
@@ -923,19 +917,6 @@ class PlayerEventHandler implements Listener
 		}
 	}
 	
-	//when a player interacts with a specific part of entity...
-    /* 1.8
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-    public void onPlayerInteractAtEntity(PlayerInteractAtEntityEvent event)
-    {
-        //treat it the same as interacting with an entity in general
-        if(event.getRightClicked().getType() == EntityType.ARMOR_STAND)
-        {
-            this.onPlayerInteractEntity((PlayerInteractEntityEvent)event);
-        }
-    }
-	*/
-	
 	//when a player interacts with an entity...
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onPlayerInteractEntity(PlayerInteractEntityEvent event)
@@ -990,7 +971,7 @@ class PlayerEventHandler implements Listener
         }
 
         //don't allow interaction with item frames or armor stands in claimed areas without build permission
-		if(/*1.8 entity.getType() == EntityType.ARMOR_STAND || */entity instanceof Hanging)
+		if((GriefPreventionPlus.isBukkit18 && MC18Helper.isArmorStatue(entity) ) || entity instanceof Hanging)
 		{
 			String noBuildReason = GriefPreventionPlus.instance.allowBuild(player, entity.getLocation(), Material.ITEM_FRAME); 
 			if(noBuildReason != null)
@@ -1386,12 +1367,8 @@ class PlayerEventHandler implements Listener
 		else if( clickedBlock != null && 
 		        
 		        (GriefPreventionPlus.instance.config_claims_lockWoodenDoors && (
-	                        clickedBlockType == Material.WOODEN_DOOR   /*1.8||
-	                         clickedBlockType == Material.ACACIA_DOOR   || 
-	                        clickedBlockType == Material.BIRCH_DOOR    ||
-	                        clickedBlockType == Material.JUNGLE_DOOR   ||
-                            clickedBlockType == Material.SPRUCE_DOOR   ||
-	                        clickedBlockType == Material.DARK_OAK_DOOR*/)) ||
+	                        clickedBlockType == Material.WOODEN_DOOR ||
+	                        (GriefPreventionPlus.isBukkit18 && MC18Helper.isDoor(clickedBlockType)))) ||
 		        
                 (GriefPreventionPlus.instance.config_claims_preventButtonsSwitches && clickedBlockType == Material.BED_BLOCK) ||
 		        
@@ -1399,12 +1376,8 @@ class PlayerEventHandler implements Listener
 		                    clickedBlockType == Material.TRAP_DOOR)) ||
 				
                 (GriefPreventionPlus.instance.config_claims_lockFenceGates && (
-    				        clickedBlockType == Material.FENCE_GATE        /*1.8  ||
-    				        clickedBlockType == Material.ACACIA_FENCE_GATE   || 
-                            clickedBlockType == Material.BIRCH_FENCE_GATE    ||
-                            clickedBlockType == Material.JUNGLE_FENCE_GATE   ||
-                            clickedBlockType == Material.SPRUCE_FENCE_GATE   ||
-                            clickedBlockType == Material.DARK_OAK_FENCE_GATE*/)))
+    				        clickedBlockType == Material.FENCE_GATE ||
+    				        (GriefPreventionPlus.isBukkit18 && MC18Helper.isFence(clickedBlockType)))))
 		{
 		    if(playerData == null) playerData = this.dataStore.getPlayerData(player.getUniqueId());
 		    Claim claim = this.dataStore.getClaimAt(clickedBlock.getLocation(), false, playerData.lastClaim);
@@ -1467,8 +1440,8 @@ class PlayerEventHandler implements Listener
 		                clickedBlockType == Material.NOTE_BLOCK || 
 		                clickedBlockType == Material.DIODE_BLOCK_ON || 
 		                clickedBlockType == Material.DIODE_BLOCK_OFF) ||
-		                clickedBlockType == Material.DAYLIGHT_DETECTOR /*1.8 ||
-		                clickedBlockType == Material.DAYLIGHT_DETECTOR_INVERTED*/
+		                clickedBlockType == Material.DAYLIGHT_DETECTOR ||
+		                (GriefPreventionPlus.isBukkit18 && MC18Helper.isInvDS(clickedBlockType))
 		        )
 		{
 		    if(playerData == null) playerData = this.dataStore.getPlayerData(player.getUniqueId());
@@ -1496,7 +1469,7 @@ class PlayerEventHandler implements Listener
 			Material materialInHand = itemInHand.getType();		
 			
 			//if it's bonemeal or armor stand, check for build permission (ink sac == bone meal, must be a Bukkit bug?)
-			if(clickedBlock != null && (materialInHand == Material.INK_SACK /*1.8 || materialInHand == Material.ARMOR_STAND*/))
+			if(clickedBlock != null && (materialInHand == Material.INK_SACK || (GriefPreventionPlus.isBukkit18 && MC18Helper.isArmorStatue(materialInHand))))
 			{
 				String noBuildReason = GriefPreventionPlus.instance.allowBuild(player, clickedBlock.getLocation(), clickedBlockType);
 				if(noBuildReason != null)
