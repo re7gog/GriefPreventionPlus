@@ -49,7 +49,7 @@ commands:
    subdivideclaims:
       description: Switches the shovel tool to subdivision mode, used to subdivide your claims.
       usage: /SubdivideClaims
-      aliases: [sc, sdc, subdivideclaim]
+      aliases: [sdc, subdivideclaim]
       permission: griefprevention.claims
    adjustbonusclaimblocks:
       description: Adds or subtracts bonus claim blocks for a player.
