@@ -2,7 +2,7 @@ name: GriefPreventionPlus
 main: net.kaikk.mc.gpp.GriefPreventionPlus
 softdepend: [Vault, Multiverse-Core, My Worlds, MystCraft, Transporter, TheUnderground, WorldGuard, WorldEdit]
 loadbefore: [TheUnderground, GriefPrevention]
-version: 11.1
+version: 11.1a
 commands:
    claim:
       description: Claim with a specified range around your position.
@@ -155,6 +155,10 @@ commands:
       description: Allows an administrator to get technical information about blocks in the world and items in hand.
       usage: /GPBlockInfo
       permission: griefprevention.gpblockinfo
+   clearorphanclaims:
+      description: Clear orphan claims from the database
+      usage: /ClearOrphanClaims
+      permission: griefprevention.clearorphanclaims
 permissions:
     griefprevention.createclaims:
         description: Grants permission to create claims.
@@ -179,6 +183,10 @@ permissions:
             griefprevention.transferclaim: true
             griefprevention.claimslistother: true
             griefprevention.siegeimmune: true
+            griefprevention.clearorphanclaims: true
+    griefprevention.clearorphanclaims:
+        description: Clear orphan claims from the database
+        default: op
     griefprevention.siegeimmune:
         description: Makes a player immune to /Siege.
         default: op

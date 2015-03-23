@@ -378,7 +378,7 @@ public class DataStore
 			}
 
 			Claim claim = new Claim(world, results.getInt(4), results.getInt(5), results.getInt(6), results.getInt(7), owner, permissionMapPlayers, permissionMapBukkit, id);
-			
+			// TODO
 			if (parentid==-1) {
 				this.addClaim(claim, false);
 			} else {
@@ -1732,6 +1732,28 @@ public class DataStore
         
         return claims;
     }
+	
+	int clearOrphanClaims() {
+		int count = 0;
+		try {
+			this.refreshDataConnection();
+			Statement statement = databaseConnection.createStatement();
+			Statement statement2 = databaseConnection.createStatement();
+			ResultSet results = statement.executeQuery("SELECT * FROM gpp_claims;");
+
+			while(results.next()) {
+				World world = GriefPreventionPlus.instance.getServer().getWorld(toUUID(results.getBytes(3)));
+				if (world==null || GriefPreventionPlus.instance.getServer().getOfflinePlayer(toUUID(results.getBytes(2)))==null || (results.getInt(8)!=-1 && this.getClaim(results.getInt(8))==null)) {
+					statement2.executeUpdate("DELETE FROM gpp_claims WHERE id="+results.getInt(1));
+					count++;
+				}
+			}
+		} catch(SQLException e) {
+			GriefPreventionPlus.addLogEntry("SQL Error during clear orphan claims. Details: "+e.getMessage());
+		}
+		
+		return count;
+	}
 	
 	public static UUID toUUID(byte[] bytes) {
 	    if (bytes.length != 16) {

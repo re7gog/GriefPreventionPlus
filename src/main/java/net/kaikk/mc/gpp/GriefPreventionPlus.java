@@ -330,6 +330,8 @@ public class GriefPreventionPlus extends JavaPlugin
 		addLogEntry("Cached " + playersCached + " recent players.");
 		
 		this.getCommand("claim").setExecutor(new CommandExec());
+		this.getCommand("clearorphanclaims").setExecutor(new CommandExec());
+		
 		this.getCommand("abandonclaim").setExecutor(new CommandExec());
 		this.getCommand("abandontoplevelclaim").setExecutor(new CommandExec());
 		this.getCommand("ignoreclaims").setExecutor(new CommandExec());
@@ -363,10 +365,8 @@ public class GriefPreventionPlus extends JavaPlugin
 		this.getCommand("givepet").setExecutor(new CommandExec());
 		this.getCommand("gpblockinfo").setExecutor(new CommandExec());
 
-		
 		//start recurring cleanup scan for unused claims belonging to inactive players
-		CleanupUnusedClaimsTask task2 = new CleanupUnusedClaimsTask();
-		this.getServer().getScheduler().scheduleSyncRepeatingTask(this, task2, 20L * 60 * 2, 20L * 60 * 5);
+		new CleanupUnusedClaimsTask(this).runTaskLater(instance, 200L);
 		
 		addLogEntry("Boot finished.");
 	}

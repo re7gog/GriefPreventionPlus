@@ -125,6 +125,12 @@ public class CommandExec implements CommandExecutor {
 			return true;
 		}
 		
+		if(cmd.getName().equalsIgnoreCase("clearorphanclaims")) {
+			GriefPreventionPlus.sendMessage(player, TextMode.Success, "Removed "+GriefPreventionPlus.instance.dataStore.clearOrphanClaims()+" orphan claims.");
+			return true;
+		}
+		
+		
 		//GP's commands
 		//abandonclaim
 		if(cmd.getName().equalsIgnoreCase("abandonclaim") && player != null)

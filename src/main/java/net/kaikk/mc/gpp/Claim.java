@@ -905,7 +905,7 @@ public class Claim {
 							score += 10;
 						} else if (block.getType() != Material.DIRT && block.getType() != Material.STONE && block.getType() != Material.COBBLESTONE && block.getType() != Material.WOOD && block.getType() != Material.BEDROCK && block.getType() != Material.GRAVEL) {
 							score += .5;
-						}						
+						}
 					}
 				}
 				
@@ -974,7 +974,7 @@ public class Claim {
     }
     
 	public String locationToString() {
-		return this.world.getName()+"["+this.lesserX+","+this.lesserZ+"~"+this.greaterX+","+this.greaterZ+"]";
+		return "["+this.world.getName()+", "+this.lesserX+","+this.lesserZ+"~"+this.greaterX+","+this.greaterZ+"]";
 	}
 	
 	/** check if this player has that permission on this claim 
