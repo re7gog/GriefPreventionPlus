@@ -165,6 +165,8 @@ public class GriefPreventionPlus extends JavaPlugin
 	private String databaseUserName;
 	private String databasePassword;
 	
+	Restrictor restrictor;
+	
 	/** UUID 0 is used for "public" permission and subclaims */ 
 	public final static UUID UUID0 = new UUID(0,0);
 	
@@ -331,6 +333,7 @@ public class GriefPreventionPlus extends JavaPlugin
 		
 		this.getCommand("claim").setExecutor(new CommandExec());
 		this.getCommand("clearorphanclaims").setExecutor(new CommandExec());
+		this.getCommand("gpprestrictor").setExecutor(new CommandExec());
 		
 		this.getCommand("abandonclaim").setExecutor(new CommandExec());
 		this.getCommand("abandontoplevelclaim").setExecutor(new CommandExec());
@@ -367,6 +370,8 @@ public class GriefPreventionPlus extends JavaPlugin
 
 		//start recurring cleanup scan for unused claims belonging to inactive players
 		new CleanupUnusedClaimsTask(this).runTaskLater(instance, 200L);
+		
+		this.restrictor = new Restrictor();
 		
 		addLogEntry("Boot finished.");
 	}

@@ -49,7 +49,6 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Tameable;
 import org.bukkit.entity.ThrownPotion;
 import org.bukkit.entity.Villager;
-
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -63,6 +62,7 @@ import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
+import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.ExpBottleEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.PotionSplashEvent;
@@ -90,9 +90,27 @@ class EntityEventHandler implements Listener
 		this.dataStore = dataStore;
 	}
 	
+	
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+	public void onEntityShootBowEvent (EntityShootBowEvent event)
+	{
+		GriefPreventionPlus.addLogEntry("EntityShootBowEvent: F0");
+		if (event.getEntityType()==EntityType.PLAYER) {
+			Player player = (Player) event.getEntity();
+			//GriefPreventionPlus.addLogEntry("EntityShootBowEvent: F1 - "+player.getItemInHand().getTypeId()+":"+player.getItemInHand().getData().getData()+" "+Material.getMaterial(player.getItemInHand().getTypeId()).toString());
+			
+			// GPP target claim protection
+			if (!GriefPreventionPlus.instance.restrictor.checkRanged(player, null)) {
+				GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.NoPermissionForCommand);
+				GriefPreventionPlus.addLogEntry(player.getName()+" tried to shoot with "+player.getItemInHand().getTypeId()+":"+player.getItemInHand().getData().getData()+" from "+player.getLocation().toString());
+				event.setCancelled(true);
+			}
+		}
+	}
+	
 	//don't allow endermen to change blocks
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-	public void onEntityChangeBLock(EntityChangeBlockEvent event)
+	public void onEntityChangeBlock(EntityChangeBlockEvent event)
 	{
 	    if(!GriefPreventionPlus.instance.config_endermenMoveBlocks && event.getEntityType() == EntityType.ENDERMAN)
 		{

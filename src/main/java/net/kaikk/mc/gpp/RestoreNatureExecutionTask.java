@@ -14,7 +14,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
  
 package net.kaikk.mc.gpp;
 
@@ -58,7 +58,7 @@ class RestoreNatureExecutionTask implements Runnable
 	{
 		//apply changes to the world, but ONLY to unclaimed blocks
 		//note that the edge of the results is not applied (the 1-block-wide band around the outside of the chunk)
-		//those data were sent to the processing thread for referernce purposes, but aren't part of the area selected for restoration
+		//those data were sent to the processing thread for reference purposes, but aren't part of the area selected for restoration
 		Claim cachedClaim = null;
 		for(int x = 1; x < this.snapshots.length - 1; x++)
 		{
@@ -77,8 +77,18 @@ class RestoreNatureExecutionTask implements Runnable
 							break;
 						}
 						
-						currentBlock.setTypeId(blockUpdate.typeId);
-						currentBlock.setData(blockUpdate.data);
+						try {
+							currentBlock.setTypeId(blockUpdate.typeId);
+							currentBlock.setData(blockUpdate.data);
+						} catch (Exception e) {
+							try {
+								currentBlock.setType(Material.AIR);
+								currentBlock.setData((byte) 0);
+							} catch (Exception e1) {
+								e1.printStackTrace();
+								return;
+							}
+						}
 					}
 				}
 			}

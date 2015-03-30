@@ -61,7 +61,7 @@ public class DataStore
 	
 	//in-memory cache for claim data
 	ConcurrentHashMap<Integer, Claim> claims = new ConcurrentHashMap<Integer, Claim>();
-	Set<Claim> cachedClaims = new HashSet<Claim>();
+	ConcurrentHashMap<Long, Set<Claim>> posClaims = new ConcurrentHashMap<Long, Set<Claim>>(); 
 	
 	//in-memory cache for messages
 	private String [] messages;
@@ -85,8 +85,7 @@ public class DataStore
     
     //world guard reference, if available
     private WorldGuardWrapper worldGuard = null;
-    
-    
+
 	private Connection databaseConnection = null;
 	
 	private String databaseUrl;
@@ -640,7 +639,7 @@ public class DataStore
 		
 		this.claims.put(newClaim.id, newClaim);
 		
-		this.cachedClaims.add(newClaim);
+		this.posClaimsAdd(newClaim);
 		
 		newClaim.inDataStore = true;
 		
@@ -898,9 +897,9 @@ public class DataStore
 		}
 		
 		//remove from memory
-		this.cachedClaims.remove(claim);
+		this.posClaimsRemove(claim);
         this.claims.remove(claim.id);
-		
+        
 		//remove from secondary storage
 		this.deleteClaimFromSecondaryStorage(claim);
 		
@@ -954,42 +953,22 @@ public class DataStore
 		if(cachedClaim != null && cachedClaim.inDataStore && cachedClaim.contains(location, ignoreHeight, true)) return cachedClaim;
 		
 		//find a top level claim
-		
-		// search in cached claims
-		for (Claim claim : this.cachedClaims) {
-		    if(claim.contains(location, ignoreHeight, false))
-		    {
-		        //when we find a top level claim, if the location is in one of its subdivisions,
-                //return the SUBDIVISION, not the top level claim
-                for(int j = 0; j < claim.children.size(); j++)
-                {
-                    Claim subdivision = claim.children.get(j);
-                    if(subdivision.contains(location, ignoreHeight, false)) return subdivision;
-                }                       
-                    
-                return claim;
-		    }
+		Claim claim = this.posClaimsGet(location);
+		if (claim!=null) {
+			if (!(ignoreHeight || claim.contains(location, ignoreHeight, false))) {
+				return null;
+			}
+			
+			//when we find a top level claim, if the location is in one of its subdivisions,
+            //return the SUBDIVISION, not the top level claim
+			for(Claim subdivision : claim.children) {
+				if(subdivision.contains(location, ignoreHeight, false)) {
+					return subdivision;
+				}
+			}
 		}
 		
-		// search in all claims
-		for (Claim claim : this.claims.values()) {
-		    if(claim.contains(location, ignoreHeight, false))
-		    {
-		        this.cachedClaims.add(claim); // add this claim in cache
-		    	//when we find a top level claim, if the location is in one of its subdivisions,
-                //return the SUBDIVISION, not the top level claim
-                for(int j = 0; j < claim.children.size(); j++)
-                {
-                    Claim subdivision = claim.children.get(j);
-                    if(subdivision.contains(location, ignoreHeight, false)) return subdivision;
-                }                       
-                
-                return claim;
-		    }
-		}
-		
-		//if no claim found, return null
-		return null;
+		return claim;
 	}
 	
 	/**get a claim by ID*/
@@ -1386,18 +1365,19 @@ public class DataStore
 		newClaim.parent=claim.parent;
 		newClaim.children=claim.children;
 
-		GriefPreventionPlus.addLogEntry("resizeClaim "+newClaim.id+" cs:"+newClaim.children.size());
-
 		Claim claimCheck = this.overlapsClaims(newClaim, claim, resizingPlayer);
 
 		if (claimCheck==null) {
 			// let's update this claim
-
+			
+			this.posClaimsRemove(claim);
 			String oldLoc = claim.locationToString();
-
+			
 			claim.setLocation(claim.world, newx1, newz1, newx2, newz2);
 			this.dbUpdateLocation(claim);
-
+			
+			this.posClaimsAdd(claim);
+			
 			GriefPreventionPlus.addLogEntry(claim.getOwnerName()+" resized claim id "+claim.id+" from "+oldLoc+" to "+claim.locationToString());
 			return new ClaimResult(true, claim);
 		} else {
@@ -1717,7 +1697,9 @@ public class DataStore
     //gets all the claims "near" a location
 	Set<Claim> getNearbyClaims(Location location)
     {
-        Set<Claim> claims = new HashSet<Claim>();
+		return this.posClaimsGet(location, 128);
+		
+		/*Set<Claim> claims = new HashSet<Claim>();
         
         Claim claimAt = this.getClaimAt(location, true, null);
         if (claimAt!=null) {
@@ -1730,7 +1712,7 @@ public class DataStore
         	}
         }
         
-        return claims;
+        return claims;*/
     }
 	
 	int clearOrphanClaims() {
@@ -1753,6 +1735,95 @@ public class DataStore
 		}
 		
 		return count;
+	}
+	
+	void posClaimsAdd(Claim claim) {
+		int lx = claim.getLesserBoundaryCorner().getBlockX()>>8;
+		int lz = claim.getLesserBoundaryCorner().getBlockZ()>>8;
+		
+		int gx = claim.getGreaterBoundaryCorner().getBlockX()>>8;
+		int gz = claim.getGreaterBoundaryCorner().getBlockZ()>>8;
+
+		for(int i=lx; i<=gx; i++) {
+			for (int j=lz; j<=gz; j++) {
+				Set<Claim> claimSet = this.posClaims.get(from2int(i,j));
+				if (claimSet==null) {
+					claimSet=new HashSet<Claim>();
+					this.posClaims.put(from2int(i,j), claimSet);
+				}
+				claimSet.add(claim);
+			}
+		}
+	}
+	
+	void posClaimsRemove(Claim claim) {
+		int lx = claim.getLesserBoundaryCorner().getBlockX()>>8;
+		int lz = claim.getLesserBoundaryCorner().getBlockZ()>>8;
+		
+		int gx = claim.getGreaterBoundaryCorner().getBlockX()>>8;
+		int gz = claim.getGreaterBoundaryCorner().getBlockZ()>>8;
+
+		for(int i=lx; i<=gx; i++) {
+			for (int j=lz; j<=gz; j++) {
+				Set<Claim> claimSet = this.posClaims.get(from2int(i,j));
+				if (claimSet!=null) {
+					claimSet.remove(claim);
+				}
+			}
+		}
+	}
+	
+	Claim posClaimsGet(Location loc) {
+		Set<Claim> claimSet = this.posClaims.get(from2int(loc.getBlockX()>>8, loc.getBlockZ()>>8));
+		if (claimSet!=null) {
+			for(Claim claim : claimSet) {
+				if (claim.contains(loc, true, false)) {
+					return claim;
+				}
+			}
+		}
+		return null;
+	}
+	
+	// This method will return a set with all claims on the specified range
+	Set<Claim> posClaimsGet(Location loc, int blocksRange) {
+		int lx = loc.getBlockX()-blocksRange;
+		int lz = loc.getBlockZ()-blocksRange;
+		
+		int gx = loc.getBlockX()+blocksRange;
+		int gz = loc.getBlockZ()+blocksRange;
+		
+		Claim validArea=new Claim(loc.getWorld(), lx, lz, gx, gz, null, null, null, 0);
+		
+		lx=lx>>8;
+		lz=lz>>8;
+		gx=gx>>8;
+		gz=gz>>8;
+
+		Set<Claim> claims = new HashSet<Claim>();
+		
+		for(int i=lx; i<=gx; i++) {
+			for (int j=lz; j<=gz; j++) {
+				Set<Claim> claimSet = this.posClaims.get(from2int(i,j));
+				if (claimSet!=null) {
+					for (Claim claim : claimSet) {
+						if (claim.overlaps(validArea)) {
+							claims.add(claim);
+						}
+					}
+				}
+			}
+		}
+		return claims;
+	}
+	
+	static long from2int(int x, int z) {
+		return (long) x << 32 | z & 0xFFFFFFFFL;
+	}
+	
+	static int[] fromLongTo2int(long l) {
+		int[] r = {(int) (l >> 32), (int) l};
+		return r;
 	}
 	
 	public static UUID toUUID(byte[] bytes) {

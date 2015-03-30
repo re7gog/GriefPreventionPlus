@@ -20,6 +20,8 @@
 package net.kaikk.mc.gpp;
 
 import java.util.ArrayList;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.ChatColor;
@@ -126,10 +128,114 @@ public class CommandExec implements CommandExecutor {
 		}
 		
 		if(cmd.getName().equalsIgnoreCase("clearorphanclaims")) {
-			GriefPreventionPlus.sendMessage(player, TextMode.Success, "Removed "+GriefPreventionPlus.instance.dataStore.clearOrphanClaims()+" orphan claims.");
+			if (player!=null) {
+				GriefPreventionPlus.sendMessage(player, TextMode.Success, "Removed "+GriefPreventionPlus.instance.dataStore.clearOrphanClaims()+" orphan claims.");
+				GriefPreventionPlus.addLogEntry(player.getName()+" cleared orphan claims.");
+			} else {
+				sender.sendMessage("Removed "+GriefPreventionPlus.instance.dataStore.clearOrphanClaims()+" orphan claims.");
+			}
+			
 			return true;
 		}
 		
+		if(cmd.getName().equalsIgnoreCase("gpprestrictor")) {
+			if (args.length<2) {
+				sender.sendMessage("Usage:\n"
+								+ "/gppr (ranged|aoe) add [range] [ignoreMetadata:true|false] [world]\n"
+								+ "/gppr (ranged|aoe) remove (listId)\n"
+								+ "/gppr (ranged|aoe) list");
+
+				return true;
+			}
+			
+			if (args[1].equalsIgnoreCase("add")) {
+				if (player==null) {
+					sender.sendMessage("This can't be run by console.");
+					return false;
+				}
+				
+				ItemStack inHand = player.getItemInHand();
+				if (inHand==null) {
+					GriefPreventionPlus.sendMessage(player, TextMode.Err, "You don't have any item in your hand");
+					return false;
+				}
+				
+				int range;
+				
+				if (args.length>2) {
+					try {
+						range = Integer.parseInt(args[2]);
+					} catch (NumberFormatException e) {
+						GriefPreventionPlus.sendMessage(player, TextMode.Err, "Invalid range");
+						return false;
+					}
+					
+					if (range>320) {
+						range=320;
+					}
+				} else {
+					range=100;
+				}
+				
+				int id = inHand.getTypeId();
+				byte data=-1;
+				if (args.length<=3 || !args[3].equalsIgnoreCase("true")) {
+					data=inHand.getData().getData();
+				}
+				
+				String world=null;
+				if (args.length>4) {
+					world=args[4];
+				}
+				
+				if (args[0].equalsIgnoreCase("ranged")) {
+					GriefPreventionPlus.instance.restrictor.addRanged(id, data, range, world);
+					sender.sendMessage("Added "+id+":"+data+" ["+range+"] to ranged items blacklist"+(world!=null ? " for world "+world : ""));
+				} else if (args[0].equalsIgnoreCase("aoe")) {
+					GriefPreventionPlus.instance.restrictor.addAoe(id, data, range, world);
+					sender.sendMessage("Added "+id+":"+data+" ["+range+"] to AoE items blacklist"+(world!=null ? " for world "+world : ""));
+				} else {
+					sender.sendMessage("Usage: /gppr (ranged|aoe) add [range] [ignoreMetadata:true|false] [world]");
+				}
+
+				return true;
+			}
+			
+			if (args[1].equalsIgnoreCase("remove")) {
+				if (args.length!=3) {
+					sender.sendMessage("Usage: /gppr (ranged|aoe) remove (listId)");
+					return false;
+				}
+				
+				try {
+					int i = Integer.parseInt(args[2]);
+					if (args[0].equalsIgnoreCase("ranged")) {
+						GriefPreventionPlus.instance.restrictor.removeRanged(i);
+						sender.sendMessage("The restriction for the specified item has been removed.");
+					} else if (args[0].equalsIgnoreCase("aoe")) {
+						GriefPreventionPlus.instance.restrictor.removeAoe(i);
+						sender.sendMessage("The restriction for the specified item has been removed.");
+					} else {
+						sender.sendMessage("Usage: /gppr (ranged|aoe) remove (listId)");
+					}
+				} catch (NumberFormatException e) {
+					GriefPreventionPlus.sendMessage(player, TextMode.Err, "Invalid range");
+				}
+				return true;
+			}
+
+			if (args[1].equalsIgnoreCase("list")) {
+				if (args[0].equalsIgnoreCase("ranged")) {
+					sender.sendMessage(GriefPreventionPlus.instance.restrictor.listRanged());
+				} else if (args[0].equalsIgnoreCase("aoe")) {
+					sender.sendMessage(GriefPreventionPlus.instance.restrictor.listAoe());
+				} else {
+					sender.sendMessage(GriefPreventionPlus.instance.restrictor.listRanged());
+					sender.sendMessage(GriefPreventionPlus.instance.restrictor.listAoe());
+				}
+			}
+			return true;
+		}
 		
 		//GP's commands
 		//abandonclaim

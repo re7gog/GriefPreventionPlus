@@ -674,6 +674,16 @@ class PlayerEventHandler implements Listener
 		//these are related to locking dropped items on death to prevent theft
 		playerData.dropsAreUnlocked = false;
 		playerData.receivedDropUnlockAdvertisement = false;
+		
+		// Log when a player has been killed in his own claim
+		Player player = event.getEntity();
+		Player killer = player.getKiller();
+		if (killer!=null) {
+			Claim claim = GriefPreventionPlus.instance.dataStore.getClaimAt(player.getLocation(), true, playerData.lastClaim);
+			if (claim!=null) {
+				GriefPreventionPlus.addLogEntry(player.getName()+" has been killed on claim id "+claim.id+" by "+killer.getName());
+			}
+		}
 	}
 	
 	//when a player gets kicked...
@@ -1246,14 +1256,13 @@ class PlayerEventHandler implements Listener
 	}
 	
 	//when a player interacts with the world
-	@EventHandler(priority = EventPriority.LOWEST)
+	@SuppressWarnings("deprecation")
+	@EventHandler(priority = EventPriority.HIGH)
 	void onPlayerInteract(PlayerInteractEvent event)
 	{
-	    //not interested in left-click-on-air actions
+		//not interested in left-click-on-air actions
 	    Action action = event.getAction();
-	    if(action == Action.LEFT_CLICK_AIR) return;
-	    if(action == Action.PHYSICAL) return;
-        
+	    
 	    Player player = event.getPlayer();
 		Block clickedBlock = event.getClickedBlock(); //null returned here means interacting with air
 		
@@ -1266,6 +1275,26 @@ class PlayerEventHandler implements Listener
 		{
 		    clickedBlockType = Material.AIR;
 		}
+
+		// GriefPreventionPlus - items grief protection
+		if (!player.hasPermission("griefprevention.restrictor.bypass")) {
+			// check only in worlds where claims are enabled
+	        if(GriefPreventionPlus.instance.claimsEnabledForWorld(player.getWorld())) {
+				if (!GriefPreventionPlus.instance.restrictor.checkRanged(player, clickedBlock) ||
+					!GriefPreventionPlus.instance.restrictor.checkAoe(player, clickedBlock)) {
+					GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.NoPermissionForCommand);
+					GriefPreventionPlus.addLogEntry(player.getName()+" tried to use "+player.getItemInHand().getTypeId()+":"+player.getItemInHand().getData().getData()+" at "+player.getLocation().toString());
+					event.setCancelled(true);
+					
+					player.getWorld().dropItemNaturally(player.getLocation(), player.getItemInHand());
+					player.setItemInHand(null);
+					return;
+				}
+	        }
+		}
+		
+		if(action == Action.LEFT_CLICK_AIR) return;
+		if(action == Action.PHYSICAL) return;
 		
 		//don't care about left-clicking on most blocks, this is probably a break action
         PlayerData playerData = null;
@@ -2244,9 +2273,6 @@ class PlayerEventHandler implements Listener
 				}
 			}
 		}
-		
-		
-		
 	}
 	
 	//educates a player about /adminclaims and /acb, if he can use them 

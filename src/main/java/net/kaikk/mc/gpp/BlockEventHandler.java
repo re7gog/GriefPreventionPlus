@@ -189,6 +189,9 @@ public class BlockEventHandler implements Listener
 				{
 					GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.PlayerTooCloseForFire, otherPlayer.getName());
 					placeEvent.setCancelled(true);
+					
+					player.getWorld().dropItemNaturally(player.getLocation(), player.getItemInHand());
+					player.setItemInHand(null);
 					return;
 				}					
 			}
@@ -196,6 +199,16 @@ public class BlockEventHandler implements Listener
 		
 		//don't track in worlds where claims are not enabled
         if(!GriefPreventionPlus.instance.claimsEnabledForWorld(placeEvent.getBlock().getWorld())) return;
+		
+        // GriefPreventionPlus - items grief protection
+		if (!player.hasPermission("griefprevention.restrictor.bypass")) {
+			if (!GriefPreventionPlus.instance.restrictor.checkAoe(player, block)) {
+				GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.NoPermissionForCommand);
+				GriefPreventionPlus.addLogEntry(player.getName()+" tried to place "+player.getItemInHand().getTypeId()+":"+player.getItemInHand().getData().getData()+" at "+block.getLocation().toString());
+				placeEvent.setCancelled(true);
+				return;
+			}
+		}
 		
 		//make sure the player is allowed to build at the location
 		String noBuildReason = GriefPreventionPlus.instance.allowBuild(player, block.getLocation(), block.getType());
@@ -629,8 +642,10 @@ public class BlockEventHandler implements Listener
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onBlockFromTo (BlockFromToEvent spreadEvent)
 	{
-	    //always allow fluids to flow straight down
-        if(spreadEvent.getFace() == BlockFace.DOWN) return;
+	    if (spreadEvent==null) return;
+
+	    //always allow fluids to flow straight down or up (Thermal Expansion's Energized Glowstone)
+        if(spreadEvent.getFace() == BlockFace.DOWN || spreadEvent.getFace() == BlockFace.UP) return;
         
 	    //don't track in worlds where claims are not enabled
 		if(!GriefPreventionPlus.instance.claimsEnabledForWorld(spreadEvent.getBlock().getWorld())) return;

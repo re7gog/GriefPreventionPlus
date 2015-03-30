@@ -2,7 +2,7 @@ name: GriefPreventionPlus
 main: net.kaikk.mc.gpp.GriefPreventionPlus
 softdepend: [Vault, Multiverse-Core, My Worlds, MystCraft, Transporter, TheUnderground, WorldGuard, WorldEdit]
 loadbefore: [TheUnderground, GriefPrevention]
-version: 11.1a
+version: 11.1c
 commands:
    claim:
       description: Claim with a specified range around your position.
@@ -159,6 +159,10 @@ commands:
       description: Clear orphan claims from the database
       usage: /ClearOrphanClaims
       permission: griefprevention.clearorphanclaims
+   gpprestrictor:
+      description: Manages GriefPreventionPlus' restrictor
+      aliases: [gppr]
+      permission: griefprevention.restrictor.manage
 permissions:
     griefprevention.createclaims:
         description: Grants permission to create claims.
@@ -184,6 +188,13 @@ permissions:
             griefprevention.claimslistother: true
             griefprevention.siegeimmune: true
             griefprevention.clearorphanclaims: true
+            griefprevention.restrictor.manage: true
+    griefprevention.restrictor.manage:
+        description: Manages GriefPreventionPlus' restrictor
+        default: op
+    griefprevention.restrictor.bypass:
+        description: Bypass GriefPreventionPlus' restrictor
+        default: false
     griefprevention.clearorphanclaims:
         description: Clear orphan claims from the database
         default: op
