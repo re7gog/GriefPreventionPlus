@@ -19,19 +19,21 @@ All builds for my plugins can be found at this link: http://kaikk.net/mc/
 If an existing GriefPrevention database is found, a copy will migrate to GriefPreventionPlus.
 Your GriefPrevention database won't be removed: you can rollback to GriefPrevention if you need!
 
-If you're using GriefPrevention file based storage, read this: https://github.com/KaiKikuchi/GriefPreventionPlus/issues/7
+If you're using GriefPrevention file based storage, read this: https://github.com/KaiKikuchi/GriefPreventionPlus/issues/11
 
 ###Major features
 - Get GriefPrevention's last updates on your MC 1.7.10 server!
 - MySQL database is a requirement. Removed file based storage.
 - Drastically improved database performances and reduced size: bigger servers will notice it!
-- Overall speed improvements
+- Overall performance improvements
+- Integrated item restrictor (/gppr): it block can block lots of ranged items/weapons too!
 - API improvements: all claims and subdivisions have an unique id
 - Less waste of resources (RAM)
 - You can use the /claim [range] command to claim land around your position!
 - Delete claims by id
+- Log entry when a player on a claim is killed by another player
 - Javadoc for extension developers! (planned)
-- A better integrated protection for modpacks (planned)
+
 
 ####Notice
 - GriefPrevention's extensions don't work with GriefPreventionPlus without some little change on the code. If needed, I will fork most important GriefPrevention's extension to make it work with GriefPreventionPlus! You can ask for it!
