@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>net.kaikk.mc</groupId>
   <artifactId>GriefPreventionPlus</artifactId>
-  <version>11.1c</version>
+  <version>11.1e</version>
    <build>
       <plugins>
           <plugin>

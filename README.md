@@ -32,6 +32,7 @@ If you're using GriefPrevention file based storage, read this: https://github.co
 - You can use the /claim [range] command to claim land around your position!
 - Delete claims by id
 - Log entry when a player on a claim is killed by another player
+- Trust FakePlayers (add a # before the player name: /trust #[CoFH])
 - Javadoc for extension developers! (planned)
 
 

@@ -20,8 +20,6 @@
 package net.kaikk.mc.gpp;
 
 import java.util.ArrayList;
-import java.util.Map.Entry;
-import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.ChatColor;
@@ -494,6 +492,8 @@ public class CommandExec implements CommandExecutor {
 			// if a permissionBukkit
 			if(args[0].startsWith("[") && args[0].endsWith("]")) {
 				permBukkit=args[0].substring(1, args[0].length()-1);
+			} else if (args[0].startsWith("#")) {
+				permBukkit=args[0];
 			}
 			
 			//determine which claim the player is standing in
@@ -1425,8 +1425,7 @@ public class CommandExec implements CommandExecutor {
 	}
 
 	//helper method keeps the trust commands consistent and eliminates duplicate code
-	void handleTrustCommand(Player player, ClaimPermission permissionLevel, String recipientName) 
-	{
+	void handleTrustCommand(Player player, ClaimPermission permissionLevel, String recipientName) {
 		//determine which claim the player is standing in
 		Claim claim = this.dataStore.getClaimAt(player.getLocation(), true /*ignore height*/, null);
 		
@@ -1437,21 +1436,22 @@ public class CommandExec implements CommandExecutor {
 				GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.GrantPermissionNoClaim);
 				return;
 			}
-			if(recipientName.startsWith("[") && recipientName.endsWith("]")) { // permissionbukkit
+			
+			if(recipientName.startsWith("#") || (recipientName.startsWith("[") && recipientName.endsWith("]"))) { // permissionbukkit
 				if(recipientName.length()<3) {
 					GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.InvalidPermissionID);
 					return;
 				}
 				
 				for (Claim c : playerData.getClaims()) {
-					c.setPermission(recipientName.substring(1, recipientName.length()-1), permissionLevel);
+					c.setPermission(recipientName, permissionLevel);
 				}
-				GriefPreventionPlus.addLogEntry(player.getName()+" added "+recipientName+" permission to all his claims");
+				GriefPreventionPlus.addLogEntry(player.getName()+" added "+recipientName+" permission ("+(permissionLevel.toString())+") to all his claims");
 			} else if(recipientName.equals("public")) { // public
 				for (Claim c : playerData.getClaims()) {
 					c.setPermission(GriefPreventionPlus.UUID0, permissionLevel);
 				}
-				GriefPreventionPlus.addLogEntry(player.getName()+" added public permission to all his claims");
+				GriefPreventionPlus.addLogEntry(player.getName()+" added public permission ("+(permissionLevel.toString())+") to all his claims");
 			} else { //player?
 				OfflinePlayer otherPlayer = gpp.resolvePlayer(recipientName);
 				if (otherPlayer==null) {// player not found
@@ -1462,7 +1462,7 @@ public class CommandExec implements CommandExecutor {
 				for (Claim c : playerData.getClaims()) {
 					c.setPermission(otherPlayer.getUniqueId(), permissionLevel);
 				}
-				GriefPreventionPlus.addLogEntry(player.getName()+" added "+otherPlayer.getName()+" permission to all his claims");
+				GriefPreventionPlus.addLogEntry(player.getName()+" added "+otherPlayer.getName()+" permission ("+(permissionLevel.toString())+") to all his claims");
 			}
 		} else { // claim the player is standing in
 			if(claim.allowGrantPermission(player) != null) {
@@ -1494,23 +1494,23 @@ public class CommandExec implements CommandExecutor {
 				return;
 			}
 			
-			if(recipientName.startsWith("[") && recipientName.endsWith("]")) { // permissionbukkit
+			if(recipientName.startsWith("#") || recipientName.startsWith("[") && recipientName.endsWith("]")) { // permissionbukkit
 				if(recipientName.length()<3) {
 					GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.InvalidPermissionID);
 					return;
 				}
-				claim.setPermission(recipientName.substring(1, recipientName.length()-1), permissionLevel);
-				GriefPreventionPlus.addLogEntry(player.getName()+" added "+recipientName+" permission to claim id "+claim.id);
+				claim.setPermission(recipientName, permissionLevel);
+				GriefPreventionPlus.addLogEntry(player.getName()+" added "+recipientName+" permission ("+(permissionLevel.toString())+") to claim id "+claim.id);
 			} else if(recipientName.equals("public")) { // public
 				claim.setPermission(GriefPreventionPlus.UUID0, permissionLevel);
-				GriefPreventionPlus.addLogEntry(player.getName()+" added public permission to claim id "+claim.id);
+				GriefPreventionPlus.addLogEntry(player.getName()+" added public permission ("+(permissionLevel.toString())+") to claim id "+claim.id);
 			} else { //player?
 				OfflinePlayer otherPlayer = gpp.resolvePlayer(recipientName);
 				if (otherPlayer==null) {// player not found
 					GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.PlayerNotFound2);
 					return;
 				}
-				GriefPreventionPlus.addLogEntry(player.getName()+" added "+otherPlayer.getName()+" permission to claim id "+claim.id);
+				GriefPreventionPlus.addLogEntry(player.getName()+" added "+otherPlayer.getName()+" permission ("+(permissionLevel.toString())+") to claim id "+claim.id);
 				claim.setPermission(otherPlayer.getUniqueId(), permissionLevel);
 			}
 		}

@@ -2,7 +2,7 @@ name: GriefPreventionPlus
 main: net.kaikk.mc.gpp.GriefPreventionPlus
 softdepend: [Vault, Multiverse-Core, My Worlds, MystCraft, Transporter, TheUnderground, WorldGuard, WorldEdit]
 loadbefore: [TheUnderground, GriefPrevention]
-version: 11.1c
+version: 11.1e
 commands:
    claim:
       description: Claim with a specified range around your position.

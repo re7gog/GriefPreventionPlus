@@ -1962,7 +1962,7 @@ class PlayerEventHandler implements Listener
 				{				
 					//temporary claim instance, just for checking contains()
 					Claim newClaim = new Claim(oldClaim.world, newlx, newlz,newgx, newgz,
-							null, null, null, null);
+							null, null, null, null, null);
 					
 					//if the new claim is smaller
 					if(!newClaim.contains(oldClaim.getLesserBoundaryCorner(), true, false) || !newClaim.contains(oldClaim.getGreaterBoundaryCorner(), true, false))
@@ -2187,7 +2187,7 @@ class PlayerEventHandler implements Listener
 				GriefPreventionPlus.sendMessage(player, TextMode.Instr, Messages.ClaimStart);
 				
 				//show him where he's working
-				Visualization visualization = Visualization.FromClaim(new Claim(clickedBlock.getLocation(), clickedBlock.getLocation(), null, null, null, null), clickedBlock.getY(), VisualizationType.RestoreNature, player.getLocation());
+				Visualization visualization = Visualization.FromClaim(new Claim(clickedBlock.getLocation(), clickedBlock.getLocation(), null, null, null, null, null), clickedBlock.getY(), VisualizationType.RestoreNature, player.getLocation());
 				Visualization.Apply(player, visualization);
 			}
 			

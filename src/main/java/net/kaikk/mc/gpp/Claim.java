@@ -59,6 +59,7 @@ public class Claim {
 	//permissions for this claim
 	private ConcurrentHashMap<UUID, Integer> permissionMapPlayers = new ConcurrentHashMap<UUID, Integer>();
 	private ConcurrentHashMap<String, Integer> permissionMapBukkit = new ConcurrentHashMap<String, Integer>();
+	private ConcurrentHashMap<String, Integer> permissionMapFakePlayer = new ConcurrentHashMap<String, Integer>();
 	
 	//whether or not this claim is in the data store
 	//if a claim instance isn't in the data store, it isn't "active" - players can't interract with it 
@@ -83,7 +84,7 @@ public class Claim {
 	public boolean doorsOpen = false;
 	
 	//main constructor.  note that only creating a claim instance does nothing - a claim must be added to the data store to be effective
-	Claim(World world, int lesserX, int lesserZ, int greaterX, int greaterZ, UUID ownerID, HashMap<UUID, Integer> permissionMapPlayers, HashMap<String, Integer> permissionMapBukkit, Integer id)
+	Claim(World world, int lesserX, int lesserZ, int greaterX, int greaterZ, UUID ownerID, HashMap<UUID, Integer> permissionMapPlayers, HashMap<String, Integer> permissionMapBukkit, HashMap<String, Integer> permissionMapFakePlayer, Integer id)
 	{
 		this.modifiedDate = new Date();
 
@@ -103,10 +104,14 @@ public class Claim {
 		if (permissionMapBukkit!=null) {
 			this.permissionMapBukkit.putAll(permissionMapBukkit);
 		}
+		
+		if (permissionMapFakePlayer!=null) {
+			this.permissionMapFakePlayer.putAll(permissionMapFakePlayer);
+		}
 	}
 	
 	/** use this constructor if you stored Location, otherwise use the other constructor  */
-	Claim(Location lesserCorner, Location greaterCorner, UUID ownerID, HashMap<UUID, Integer> permissionMapPlayers, HashMap<String, Integer> permissionMapBukkit, Integer id)
+	Claim(Location lesserCorner, Location greaterCorner, UUID ownerID, HashMap<UUID, Integer> permissionMapPlayers, HashMap<String, Integer> permissionMapBukkit, HashMap<String, Integer> permissionMapFakePlayer, Integer id)
 	{
 		this.modifiedDate = new Date();
 
@@ -125,6 +130,10 @@ public class Claim {
 		}
 		if (permissionMapBukkit!=null) {
 			this.permissionMapBukkit.putAll(permissionMapBukkit);
+		}
+		
+		if (permissionMapFakePlayer!=null) {
+			this.permissionMapFakePlayer.putAll(permissionMapFakePlayer);
 		}
 	}
 	
@@ -270,7 +279,7 @@ public class Claim {
 		Claim claim = new Claim
 			(this.world, this.lesserX - howNear, this.lesserZ - howNear,
 			  this.greaterX + howNear, this.greaterZ + howNear,
-			 null, null, null, null);
+			 null, null, null, null, null);
 		
 		return claim.contains(location, false, true);
 	}
@@ -422,6 +431,12 @@ public class Claim {
 		// check if the player has an explicit permissionBukkit permission
 		for (Entry<String, Integer> e : this.permissionMapBukkit.entrySet()) {
 			if ((e.getValue() & level.perm)!=0 && player.hasPermission(e.getKey())) {
+				return true;
+			}
+		}
+		
+		for (Entry<String, Integer> e : this.permissionMapFakePlayer.entrySet()) {
+			if ((e.getValue() & level.perm)!=0 && player.getName().equals(e.getKey())) {
 				return true;
 			}
 		}
@@ -582,11 +597,14 @@ public class Claim {
 	}
 	
 	//grants a permission for a bukkit permission
-	public Integer getPermission(String permissionBukkit)
+	public Integer getPermission(String target)
 	{
-		Integer perm = this.permissionMapBukkit.get(permissionBukkit);
+		Integer perm = this.permissionMapBukkit.get(target);
 		if (perm==null) {
-			perm=0;
+			perm = this.permissionMapFakePlayer.get(target);
+			if (perm==null) {
+				perm=0;
+			}
 		}
 		return perm;
 	}
@@ -612,14 +630,17 @@ public class Claim {
 		GriefPreventionPlus.instance.dataStore.dbSetPerm(this.id, playerID, permissionLevel.perm);
 	}
 	
-	//grants a permission for a bukkit permission
-	public void setPermission(String permissionBukkit, ClaimPermission permissionLevel)
+	//grants a permission for a bukkit permission or fakeplayer
+	public void setPermission(String target, ClaimPermission permissionLevel)
 	{
-		Integer currentPermission = this.getPermission(permissionBukkit);
-		
-		this.permissionMapBukkit.put(permissionBukkit,  currentPermission | permissionLevel.perm);
-		
-		GriefPreventionPlus.instance.dataStore.dbSetPerm(this.id, permissionBukkit, permissionLevel.perm);
+		Integer targetPermission = this.getPermission(target);
+		if (target.startsWith("#")) {
+			this.permissionMapFakePlayer.put(target.substring(1),  targetPermission | permissionLevel.perm);
+			GriefPreventionPlus.instance.dataStore.dbSetPerm(this.id, target, permissionLevel.perm);
+		} else if (target.startsWith("[") && target.endsWith("]")) {
+			this.permissionMapBukkit.put(target.substring(1, target.length()-1),  targetPermission | permissionLevel.perm);
+			GriefPreventionPlus.instance.dataStore.dbSetPerm(this.id, target.substring(1, target.length()-1), permissionLevel.perm);
+		}
 	}
 	
 	/** (this won't affect the database)
@@ -630,10 +651,14 @@ public class Claim {
 	}
 	
 	/** (this won't affect the database)
-	 * revokes a permission for a bukkit permission*/
-	void unsetPermission(String permissionBukkit)
+	 * revokes a permission for a bukkit permission or fakeplayer*/
+	void unsetPermission(String target)
 	{
-		this.permissionMapBukkit.remove(permissionBukkit);
+		if (target.startsWith("#")) {
+			this.permissionMapFakePlayer.remove(target.substring(1));
+		} else {
+			this.permissionMapBukkit.remove(target);
+		}
 	}
 	
 	/** (this won't affect the database)
@@ -642,6 +667,7 @@ public class Claim {
 	{
 		this.permissionMapPlayers.clear();
 		this.permissionMapBukkit.clear();
+		this.permissionMapFakePlayer.clear();
 	}
 	
 	/** revokes a permission for a bukkit permission */
@@ -706,6 +732,20 @@ public class Claim {
 				containers.add("["+entry.getKey()+"]");
 			} else if((entry.getValue() & ClaimPermission.ACCESS.perm)!=0) {
 				accessors.add("["+entry.getKey()+"]");
+			}
+		}
+		
+		for(Entry<String, Integer> entry : this.permissionMapFakePlayer.entrySet()) {
+			if((entry.getValue() & ClaimPermission.MANAGE.perm)!=0) {
+				managers.add("#"+entry.getKey());
+			}
+			
+			if((entry.getValue() & ClaimPermission.BUILD.perm)!=0) {
+				builders.add("#"+entry.getKey());
+			} else if((entry.getValue() & ClaimPermission.CONTAINER.perm)!=0) {
+				containers.add("#"+entry.getKey());
+			} else if((entry.getValue() & ClaimPermission.ACCESS.perm)!=0) {
+				accessors.add("#"+entry.getKey());
 			}
 		}
 	}

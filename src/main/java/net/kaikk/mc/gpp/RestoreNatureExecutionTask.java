@@ -77,16 +77,14 @@ class RestoreNatureExecutionTask implements Runnable
 							break;
 						}
 						
-						try {
-							currentBlock.setTypeId(blockUpdate.typeId);
-							currentBlock.setData(blockUpdate.data);
-						} catch (Exception e) {
+						if (currentBlock.getTypeId()>200) {
+							currentBlock.setType(Material.AIR);
+						} else {
 							try {
-								currentBlock.setType(Material.AIR);
-								currentBlock.setData((byte) 0);
-							} catch (Exception e1) {
-								e1.printStackTrace();
-								return;
+								currentBlock.setTypeId(blockUpdate.typeId);
+								currentBlock.setData(blockUpdate.data);
+							} catch (Exception e) {
+								e.printStackTrace();
 							}
 						}
 					}
@@ -122,7 +120,7 @@ class RestoreNatureExecutionTask implements Runnable
 		//show visualization to player who started the restoration
 		if(player != null)
 		{
-			Claim claim = new Claim(lesserCorner, greaterCorner, null, null, null, null);
+			Claim claim = new Claim(lesserCorner, greaterCorner, null, null, null, null, null);
 			Visualization visualization = Visualization.FromClaim(claim, player.getLocation().getBlockY(), VisualizationType.RestoreNature, player.getLocation());
 			Visualization.Apply(player, visualization);
 		}

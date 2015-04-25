@@ -355,6 +355,7 @@ public class DataStore
 			UUID owner=null;
 			HashMap<UUID, Integer> permissionMapPlayers = new HashMap<UUID, Integer>();
 			HashMap<String, Integer> permissionMapBukkit = new HashMap<String, Integer>();
+			HashMap<String, Integer> permissionMapFakePlayer = new HashMap<String, Integer>();
 
 			World world = GriefPreventionPlus.instance.getServer().getWorld(toUUID(results.getBytes(3)));
 			if (world==null) { // This world doesn't exist. Skip this claim.
@@ -373,11 +374,15 @@ public class DataStore
 			
 			resultsPerms = statementPerms.executeQuery("SELECT pname, perm FROM gpp_permsbukkit WHERE claimid="+id+";");
 			while(resultsPerms.next()) {
-				permissionMapBukkit.put(resultsPerms.getString(1), resultsPerms.getInt(2));
+				if (resultsPerms.getString(1).startsWith("#")) {
+					permissionMapFakePlayer.put(resultsPerms.getString(1).substring(1), resultsPerms.getInt(2));
+				} else {
+					permissionMapBukkit.put(resultsPerms.getString(1), resultsPerms.getInt(2));
+				}
 			}
 
-			Claim claim = new Claim(world, results.getInt(4), results.getInt(5), results.getInt(6), results.getInt(7), owner, permissionMapPlayers, permissionMapBukkit, id);
-			// TODO
+			Claim claim = new Claim(world, results.getInt(4), results.getInt(5), results.getInt(6), results.getInt(7), owner, permissionMapPlayers, permissionMapBukkit, permissionMapFakePlayer, id);
+			
 			if (parentid==-1) {
 				this.addClaim(claim, false);
 			} else {
@@ -1017,6 +1022,7 @@ public class DataStore
 			bigx, bigz,
 			ownerID,
 			null,
+			null, 
 			null,
 			id);
 		
@@ -1361,7 +1367,7 @@ public class DataStore
 	see CreateClaim() for details on return value*/
 	synchronized public ClaimResult resizeClaim(Claim claim, int newx1, int newz1, int newx2, int newz2, Player resizingPlayer) {
 		//create a fake claim with new coords
-		Claim newClaim = new Claim(claim.world, newx1, newz1, newx2, newz2, claim.ownerID, null, null, claim.id);
+		Claim newClaim = new Claim(claim.world, newx1, newz1, newx2, newz2, claim.ownerID, null, null, null, claim.id);
 		newClaim.parent=claim.parent;
 		newClaim.children=claim.children;
 
@@ -1793,7 +1799,7 @@ public class DataStore
 		int gx = loc.getBlockX()+blocksRange;
 		int gz = loc.getBlockZ()+blocksRange;
 		
-		Claim validArea=new Claim(loc.getWorld(), lx, lz, gx, gz, null, null, null, 0);
+		Claim validArea=new Claim(loc.getWorld(), lx, lz, gx, gz, null, null, null, null, 0);
 		
 		lx=lx>>8;
 		lz=lz>>8;
