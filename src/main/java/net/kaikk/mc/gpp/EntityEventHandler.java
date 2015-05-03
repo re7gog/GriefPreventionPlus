@@ -94,10 +94,8 @@ class EntityEventHandler implements Listener
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
 	public void onEntityShootBowEvent (EntityShootBowEvent event)
 	{
-		GriefPreventionPlus.addLogEntry("EntityShootBowEvent: F0");
 		if (event.getEntityType()==EntityType.PLAYER) {
 			Player player = (Player) event.getEntity();
-			//GriefPreventionPlus.addLogEntry("EntityShootBowEvent: F1 - "+player.getItemInHand().getTypeId()+":"+player.getItemInHand().getData().getData()+" "+Material.getMaterial(player.getItemInHand().getTypeId()).toString());
 			
 			// GPP target claim protection
 			if (!GriefPreventionPlus.instance.restrictor.checkRanged(player, null)) {
