@@ -1,5 +1,11 @@
 # GriefPreventionPlus
-I wanted to develop a GriefPrevention extension for cities (Towny-like), but the way GriefPrevention stores data limits extension possibilities. I changed the database structure and the way it stored data. GriefPreventionPlus offers better performances, data integrity, extension capabilities, it is currently supports MC1.7.10 and MC1.8.3. A partial support for MC1.6.4 is currently planned. I applied all GriefPrevention's last updates!
+I wanted to develop a GriefPrevention extension for cities (Towny-like), but the way GriefPrevention stores data limits extension possibilities.
+
+I changed the database structure and the way it stored data. GriefPreventionPlus offers better performances, data integrity, extension capabilities, it is currently supports MC1.7.10 and MC1.8.3.
+
+There's a MC1.6.4 version too (thanks to @CappyT and @dedo1911) (UUIDProvider is required)
+
+I applied all GriefPrevention's last updates!
 
 Feedback are needed! If you found an issue, please report it!
 Please use the "issues" page on Github!
