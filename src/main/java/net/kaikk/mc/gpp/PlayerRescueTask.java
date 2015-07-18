@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
 package net.kaikk.mc.gpp;
 
 import org.bukkit.Location;
@@ -24,41 +24,41 @@ import org.bukkit.entity.Player;
 //tries to rescue a trapped player from a claim where he doesn't have permission to save himself
 //related to the /trapped slash command
 //this does run in the main thread, so it's okay to make non-thread-safe calls
-class PlayerRescueTask implements Runnable 
-{
-	//original location where /trapped was used
-	private Location location;
-	
-	//player data
-	private Player player;
-	
-	public PlayerRescueTask(Player player, Location location)
-	{
+class PlayerRescueTask implements Runnable {
+	// original location where /trapped was used
+	private final Location location;
+
+	// player data
+	private final Player player;
+
+	public PlayerRescueTask(Player player, Location location) {
 		this.player = player;
-		this.location = location;		
+		this.location = location;
 	}
-	
+
 	@Override
-	public void run()
-	{
-		//if he logged out, don't do anything
-		if(!player.isOnline()) return;
-		
-		//he no longer has a pending /trapped slash command, so he can try to use it again now
-		PlayerData playerData = GriefPreventionPlus.instance.dataStore.getPlayerData(player.getUniqueId());
-		playerData.pendingTrapped = false;
-		
-		//if the player moved three or more blocks from where he used /trapped, admonish him and don't save him
-		if(player.getLocation().distance(this.location) > 3)
-		{
-			GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.RescueAbortedMoved);
+	public void run() {
+		// if he logged out, don't do anything
+		if (!this.player.isOnline()) {
 			return;
 		}
-		
-		//otherwise find a place to teleport him
-		Location destination = GriefPreventionPlus.instance.ejectPlayer(this.player);
-		
-		//log entry, in case admins want to investigate the "trap"
-		GriefPreventionPlus.addLogEntry("Rescued trapped player " + player.getName() + " from " + GriefPreventionPlus.getfriendlyLocationString(this.location) + " to " + GriefPreventionPlus.getfriendlyLocationString(destination) + ".");		
+
+		// he no longer has a pending /trapped slash command, so he can try to
+		// use it again now
+		final PlayerData playerData = GriefPreventionPlus.getInstance().getDataStore().getPlayerData(this.player.getUniqueId());
+		playerData.pendingTrapped = false;
+
+		// if the player moved three or more blocks from where he used /trapped,
+		// admonish him and don't save him
+		if (this.player.getLocation().distance(this.location) > 3) {
+			GriefPreventionPlus.sendMessage(this.player, TextMode.Err, Messages.RescueAbortedMoved);
+			return;
+		}
+
+		// otherwise find a place to teleport him
+		final Location destination = GriefPreventionPlus.getInstance().ejectPlayer(this.player);
+
+		// log entry, in case admins want to investigate the "trap"
+		GriefPreventionPlus.addLogEntry("Rescued trapped player " + this.player.getName() + " from " + GriefPreventionPlus.getfriendlyLocationString(this.location) + " to " + GriefPreventionPlus.getfriendlyLocationString(destination) + ".");
 	}
 }

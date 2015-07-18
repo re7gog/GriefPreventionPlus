@@ -28,31 +28,23 @@ public class MC18Helper {
 	static boolean isArmorStatue(Entity entity) {
 		return (entity.getType() == EntityType.ARMOR_STAND);
 	}
-	
+
 	static boolean isArmorStatue(EntityType entity) {
 		return (entity == EntityType.ARMOR_STAND);
 	}
-	
+
 	static boolean isArmorStatue(Material material) {
 		return (material == Material.ARMOR_STAND);
 	}
-	
+
 	static boolean isDoor(Material material) {
-       return (material == Material.ACACIA_DOOR   ||
-       material == Material.BIRCH_DOOR    ||
-       material == Material.JUNGLE_DOOR   ||
-       material == Material.SPRUCE_DOOR   ||
-       material == Material.DARK_OAK_DOOR);
+		return ((material == Material.ACACIA_DOOR) || (material == Material.BIRCH_DOOR) || (material == Material.JUNGLE_DOOR) || (material == Material.SPRUCE_DOOR) || (material == Material.DARK_OAK_DOOR));
 	}
-	
+
 	static boolean isFence(Material material) {
-       return (material == Material.ACACIA_FENCE_GATE   || 
-               material == Material.BIRCH_FENCE_GATE    ||
-               material == Material.JUNGLE_FENCE_GATE   ||
-               material == Material.SPRUCE_FENCE_GATE   ||
-               material == Material.DARK_OAK_FENCE_GATE);
+		return ((material == Material.ACACIA_FENCE_GATE) || (material == Material.BIRCH_FENCE_GATE) || (material == Material.JUNGLE_FENCE_GATE) || (material == Material.SPRUCE_FENCE_GATE) || (material == Material.DARK_OAK_FENCE_GATE));
 	}
-	
+
 	static boolean isInvDS(Material material) {
 		return material == Material.DAYLIGHT_DETECTOR_INVERTED;
 	}

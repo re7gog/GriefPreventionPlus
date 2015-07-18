@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
 package net.kaikk.mc.gpp;
 
 import org.bukkit.entity.Player;
@@ -23,36 +23,30 @@ import org.bukkit.entity.Player;
 //kicks or bans a player
 //need a task for this because async threads (like the chat event handlers) can't kick or ban.
 //but they CAN schedule a task to run in the main thread to do that job
-class PlayerKickBanTask implements Runnable 
-{
-	//player to kick or ban
-	private Player player;
-	
-	//ban message.  if null, don't ban
-	private String banReason;
-	
-	public PlayerKickBanTask(Player player, String banReason)
-	{
+@SuppressWarnings("deprecation")
+class PlayerKickBanTask implements Runnable {
+	// player to kick or ban
+	private final Player player;
+
+	// ban message. if null, don't ban
+	private final String banReason;
+
+	public PlayerKickBanTask(Player player, String banReason) {
 		this.player = player;
-		this.banReason = banReason;		
+		this.banReason = banReason;
 	}
-	
+
 	@Override
-	public void run()
-	{
-		if(this.banReason != null)
-		{		
-			//ban
+	public void run() {
+		if (this.banReason != null) {
+			// ban
 			this.player.setBanned(true);
-		
-			//kick
-			if(this.player.isOnline())
-			{
+
+			// kick
+			if (this.player.isOnline()) {
 				this.player.kickPlayer(this.banReason);
 			}
-		}	
-		else if(this.player.isOnline())
-		{
+		} else if (this.player.isOnline()) {
 			this.player.kickPlayer("");
 		}
 	}

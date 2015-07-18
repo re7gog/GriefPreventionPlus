@@ -2,7 +2,7 @@ name: GriefPreventionPlus
 main: net.kaikk.mc.gpp.GriefPreventionPlus
 softdepend: [Vault, Multiverse-Core, My Worlds, MystCraft, Transporter, TheUnderground, WorldGuard, WorldEdit]
 loadbefore: [TheUnderground, GriefPrevention]
-version: 11.1f
+version: 12.3
 commands:
    claim:
       description: Claim with a specified range around your position.
@@ -37,9 +37,14 @@ commands:
       aliases: ct
       permission: griefprevention.claims
    accesstrust:
-      description: Grants a player entry to your claim(s) and use of your bed.
+      description: Grants a player access to levers and doors in your claim(s) and use of your bed.
       usage: /AccessTrust <player>.  Grants a player access to your bed, buttons, and levers.
       aliases: at
+      permission: griefprevention.claims
+   entrytrust:
+      description: Grants a player entry to your claim(s).
+      usage: /EntryTrust <player>.  Grants a player access your claim.
+      aliases: et
       permission: griefprevention.claims
    permissiontrust:
       description: Grants a player permission to grant his level of permission to others.
@@ -112,9 +117,6 @@ commands:
       description: Lists permissions for the claim you're standing in.
       usage: /TrustList
       permission: griefprevention.claims
-   siege:
-      description: Initiates a siege versus another player.
-      usage: /Siege <playerName>
    ignoreclaims:
       description: Toggles ignore claims mode.
       usage: /IgnoreClaims
@@ -159,10 +161,11 @@ commands:
       description: Clear orphan claims from the database
       usage: /ClearOrphanClaims
       permission: griefprevention.clearorphanclaims
-   gpprestrictor:
-      description: Manages GriefPreventionPlus' restrictor
-      aliases: [gppr]
-      permission: griefprevention.restrictor.manage
+   claimarea:
+      description: Claims an area at specified world, coordinate and range
+      usage: /ClaimArea [worldname] [x] [z] [range]
+      aliases: [carea]
+      permission: griefprevention.claimarea
 permissions:
     griefprevention.createclaims:
         description: Grants permission to create claims.
@@ -186,20 +189,17 @@ permissions:
             griefprevention.overrideclaimcountlimit: true
             griefprevention.transferclaim: true
             griefprevention.claimslistother: true
-            griefprevention.siegeimmune: true
             griefprevention.clearorphanclaims: true
-            griefprevention.restrictor.manage: true
-    griefprevention.restrictor.manage:
-        description: Manages GriefPreventionPlus' restrictor
+            griefprevention.claimarea: true
+            griefprevention.bypassentryprotection: true
+    griefprevention.claimarea:
+        description: Grants permission to use /ClaimArea
         default: op
-    griefprevention.restrictor.bypass:
-        description: Bypass GriefPreventionPlus' restrictor
-        default: false
+    griefprevention.bypassentryprotection:
+        description: Bypass all claims entry protection
+        default: op
     griefprevention.clearorphanclaims:
         description: Clear orphan claims from the database
-        default: op
-    griefprevention.siegeimmune:
-        description: Makes a player immune to /Siege.
         default: op
     griefprevention.givepet:
         description: Grants permission to use /GivePet.

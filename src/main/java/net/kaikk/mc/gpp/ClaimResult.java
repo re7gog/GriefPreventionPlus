@@ -18,21 +18,37 @@
 
 package net.kaikk.mc.gpp;
 
-public class ClaimResult 
-{
-	//whether or not the creation succeeded (it would fail if the new claim overlapped another existing claim)
-	public boolean succeeded;
-	
-	//when succeeded, this is a reference to the new claim
-	//when failed, this is a reference to the pre-existing, conflicting claim
-	public Claim claim;
-	
+public class ClaimResult {
+	// whether or not the creation succeeded (it would fail if the new claim
+	// overlapped another existing claim)
+	private boolean succeeded;
+
+	// when succeeded, this is a reference to the new claim
+	// when failed, this is a reference to the pre-existing, conflicting claim
+	private Claim claim;
+
 	ClaimResult() {
-		
+
 	}
-	
+
 	ClaimResult(boolean succeeded, Claim claim) {
-		this.succeeded=succeeded;
-		this.claim=claim;
+		this.setSucceeded(succeeded);
+		this.setClaim(claim);
+	}
+
+	public Claim getClaim() {
+		return this.claim;
+	}
+
+	public boolean isSucceeded() {
+		return this.succeeded;
+	}
+
+	public void setClaim(Claim claim) {
+		this.claim = claim;
+	}
+
+	public void setSucceeded(boolean succeeded) {
+		this.succeeded = succeeded;
 	}
 }

@@ -2,7 +2,6 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>net.kaikk.mc</groupId>
   <artifactId>GriefPreventionPlus</artifactId>
-  <version>11.1f</version>
    <build>
       <plugins>
           <plugin>
@@ -33,4 +32,5 @@
            <scope>provided</scope>
        </dependency>
    </dependencies>
+   <version>12.3</version>
 </project>

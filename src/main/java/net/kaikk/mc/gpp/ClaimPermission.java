@@ -16,19 +16,15 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
 package net.kaikk.mc.gpp;
 
 //lower value = higher permissions
-public enum ClaimPermission 
-{
-	MANAGE (1),
-	BUILD (2),
-	CONTAINER (4),
-	ACCESS (8);
+public enum ClaimPermission {
+	MANAGE(1), BUILD(2), CONTAINER(4), ACCESS(8), ENTRY(16);
 	public final int perm;
 
 	ClaimPermission(int perm) {
-		this.perm=perm;
+		this.perm = perm;
 	}
 }

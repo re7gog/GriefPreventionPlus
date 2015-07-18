@@ -18,16 +18,30 @@
 
 package net.kaikk.mc.gpp;
 
-public class CustomizableMessage 
-{
-	public Messages id;
-	public String text;
-	public String notes;
-	
-	public CustomizableMessage(Messages id, String text, String notes)
-	{
+public class CustomizableMessage {
+	private final Messages id;
+	private final String text;
+	private String notes;
+
+	public CustomizableMessage(Messages id, String text, String notes) {
 		this.id = id;
 		this.text = text;
+		this.notes = notes;
+	}
+
+	public Messages getId() {
+		return this.id;
+	}
+
+	public String getNotes() {
+		return this.notes;
+	}
+
+	public String getText() {
+		return this.text;
+	}
+
+	public void setNotes(String notes) {
 		this.notes = notes;
 	}
 }

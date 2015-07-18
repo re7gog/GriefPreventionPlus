@@ -16,25 +16,32 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package net.kaikk.mc.gpp;
+package net.kaikk.mc.gpp.visualization;
 
-import java.util.ArrayList;
+import net.kaikk.mc.gpp.PlayerData;
 
 import org.bukkit.entity.Player;
 
-//information about an ongoing siege
-public class SiegeData
-{
-	public Player defender;
-	public Player attacker;
-	public ArrayList<Claim> claims;
-	public int checkupTaskID;
-	
-	public SiegeData(Player attacker, Player defender, Claim claim)
-	{
-		this.defender = defender;
-		this.attacker = attacker;
-		this.claims = new ArrayList<Claim>();
-		this.claims.add(claim);
+//applies a visualization for a player by sending him block change packets
+class VisualizationReversionTask implements Runnable {
+	private final Visualization visualization;
+	private final Player player;
+	private final PlayerData playerData;
+
+	public VisualizationReversionTask(Player player, PlayerData playerData, Visualization visualization) {
+		this.visualization = visualization;
+		this.playerData = playerData;
+		this.player = player;
+	}
+
+	@Override
+	public void run() {
+		// don't do anything if the player's current visualization is different
+		// from the one scheduled to revert
+		if (this.playerData.currentVisualization != this.visualization) {
+			return;
+		}
+
+		Visualization.Revert(this.player);
 	}
 }
