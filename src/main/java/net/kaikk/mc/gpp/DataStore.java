@@ -32,6 +32,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -279,20 +280,25 @@ public class DataStore {
 
 	// deletes all claims owned by a player
 	synchronized public void deleteClaimsForPlayer(UUID playerID, boolean deleteCreativeClaims) {
+		List<Claim> claimsToRemove = new ArrayList<Claim>();
 		for (final Claim claim : this.claims.values()) {
 			if (((playerID == claim.getOwnerID()) || ((playerID != null) && playerID.equals(claim.getOwnerID()))) && (deleteCreativeClaims || !GriefPreventionPlus.getInstance().creativeRulesApply(claim.getWorldUID()))) {
 				// fire event
 				final ClaimDeletedEvent event = new ClaimDeletedEvent(claim, Reason.DELETEALL);
 				GriefPreventionPlus.getInstance().getServer().getPluginManager().callEvent(event);
 				if (!event.isCancelled()) {
-					claim.removeSurfaceFluids(null);
-					this.deleteClaim(claim);
-
-					// if in a creative mode world, delete the claim
-					if (GriefPreventionPlus.getInstance().creativeRulesApply(claim.getWorldUID())) {
-						GriefPreventionPlus.getInstance().restoreClaim(claim, 0);
-					}
+					claimsToRemove.add(claim);
 				}
+			}
+		}
+		
+		for (final Claim claim : claimsToRemove) {
+			claim.removeSurfaceFluids(null);
+			this.deleteClaim(claim);
+
+			// if in a creative mode world, delete the claim
+			if (GriefPreventionPlus.getInstance().creativeRulesApply(claim.getWorldUID())) {
+				GriefPreventionPlus.getInstance().restoreClaim(claim, 0);
 			}
 		}
 	}
