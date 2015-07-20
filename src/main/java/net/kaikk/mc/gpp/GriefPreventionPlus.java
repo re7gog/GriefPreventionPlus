@@ -457,6 +457,7 @@ public class GriefPreventionPlus extends JavaPlugin {
 		this.getCommand("gpreload").setExecutor(commandExec);
 		this.getCommand("givepet").setExecutor(commandExec);
 		this.getCommand("gpblockinfo").setExecutor(commandExec);
+		this.getCommand("claimarea").setExecutor(commandExec);
 
 		// start recurring cleanup scan for unused claims belonging to inactive
 		// players
