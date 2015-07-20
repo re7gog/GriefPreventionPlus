@@ -84,6 +84,293 @@ public class DataStore {
 		this.initialize();
 	}
 
+	// initialization!
+	void initialize() throws Exception {
+		try {
+			// load the java driver for mySQL
+			Class.forName("com.mysql.jdbc.Driver");
+		} catch (final Exception e) {
+			GriefPreventionPlus.addLogEntry("ERROR: Unable to load Java's mySQL database driver.  Check to make sure you've installed it properly.");
+			throw e;
+		}
+
+		try {
+			this.refreshDataConnection();
+		} catch (final Exception e2) {
+			GriefPreventionPlus.addLogEntry("ERROR: Unable to connect to database.  Check your config file settings.");
+			throw e2;
+		}
+
+		try {
+			final Statement statement = this.databaseConnection.createStatement();
+
+			ResultSet results = statement.executeQuery("SHOW TABLES LIKE 'gpp_claims'");
+			if (!results.next()) {
+				statement.execute("CREATE TABLE IF NOT EXISTS gpp_claims (" + "id int(11) NOT NULL AUTO_INCREMENT," + "owner binary(16) NOT NULL COMMENT 'UUID'," + "world binary(16) NOT NULL COMMENT 'UUID'," + "lesserX mediumint(9) NOT NULL," + "lesserZ mediumint(9) NOT NULL," + "greaterX mediumint(9) NOT NULL," + "greaterZ mediumint(9) NOT NULL," + "parentid int(11) NOT NULL," + "PRIMARY KEY (id));");
+
+				statement.execute("CREATE TABLE IF NOT EXISTS gpp_groupdata (" + "gname varchar(100) NOT NULL," + "blocks int(11) NOT NULL," + "UNIQUE KEY gname (gname));");
+
+				statement.execute("CREATE TABLE IF NOT EXISTS gpp_permsbukkit (" + "claimid int(11) NOT NULL," + "pname varchar(80) NOT NULL," + "perm tinyint(4) NOT NULL," + "PRIMARY KEY (claimid,pname)," + "KEY claimid (claimid));");
+
+				statement.execute("CREATE TABLE IF NOT EXISTS gpp_permsplayer (" + "claimid int(11) NOT NULL," + "player binary(16) NOT NULL COMMENT 'UUID'," + "perm tinyint(4) NOT NULL," + "PRIMARY KEY (claimid,player)," + "KEY claimid (claimid));");
+
+				statement.execute("CREATE TABLE IF NOT EXISTS gpp_playerdata (" + "player binary(16) NOT NULL COMMENT 'UUID'," + "accruedblocks int(11) NOT NULL," + "bonusblocks int(11) NOT NULL," + "PRIMARY KEY (player));");
+
+				results = statement.executeQuery("SHOW TABLES LIKE 'griefprevention_claimdata';");
+				if (results.next()) {
+					// migration from griefprevention
+					GriefPreventionPlus.addLogEntry("Migrating data from Grief Prevention. It may take some time.");
+
+					// claims
+					results = statement.executeQuery("SELECT * FROM griefprevention_claimdata ORDER BY parentid ASC;");
+					final Statement statement2 = this.databaseConnection.createStatement();
+
+					String tString;
+					String playerId;
+					long i = 0;
+					long j = 0;
+					long k = 0;
+
+					long claimId = 1;
+					Long nextParentId;
+
+					final HashMap<Long, Long> migratedClaims = new HashMap<Long, Long>();
+					while (results.next()) {
+						final String ownerString = results.getString(2);
+						playerId = "0";
+
+						if ((ownerString.length() == 36) && ((tString = ownerString.replace("-", "")).length() == 32)) {
+							playerId = "0x" + tString;
+						}
+
+						final String[] lesser = results.getString(3).split(";");
+						final String[] greater = results.getString(4).split(";");
+						if ((lesser.length != 4) || (greater.length != 4)) { // wrong
+							// corners,
+							// skip
+							// this
+							// claim
+							GriefPreventionPlus.addLogEntry("Skipping claim " + results.getLong(1) + ": wrong corners");
+							continue;
+						}
+
+						final World world = GriefPreventionPlus.getInstance().getServer().getWorld(lesser[0]);
+						if (world == null) { // this world doesn't exist, skip
+							// this claim
+							GriefPreventionPlus.addLogEntry("Skipping claim " + results.getLong(1) + ": world " + lesser[0] + " doesn't exist");
+							continue;
+						}
+
+						// insert this claim in new claims table
+
+						if (results.getLong(9) == -1) { // claims
+							migratedClaims.put(results.getLong(1), claimId++);
+							nextParentId = (long) -1;
+							if (playerId.equals("0")) {
+								playerId = UUIDtoHexString(GriefPreventionPlus.UUID1); // administrative
+								// claims
+							}
+						} else { // subclaims
+							nextParentId = migratedClaims.get(results.getLong(9));
+						}
+
+						if (nextParentId == null) {
+							GriefPreventionPlus.addLogEntry("Skipping orphan subclaim (parentid: " + results.getLong(9) + ").");
+							continue;
+						}
+
+						statement2.executeUpdate("INSERT INTO gpp_claims (owner, world, lesserX, lesserZ, greaterX, greaterZ, parentid) VALUES (" + playerId + ", " + UUIDtoHexString(world.getUID()) + ", " + lesser[1] + ", " + lesser[3] + ", " + greater[1] + ", " + greater[3] + ", " + nextParentId + ");");
+
+						i++;
+
+						// convert permissions for this claim
+						// builders
+						if (!results.getString(5).isEmpty()) {
+							for (final String s : results.getString(5).split(";")) {
+								if (s.startsWith("[")) {
+									statement2.executeUpdate("INSERT INTO gpp_permsbukkit VALUES(" + i + ", '" + s.substring(1, s.length() - 1) + "', 2) ON DUPLICATE KEY UPDATE perm = perm | 2;");
+								} else {
+									if ((s.length() == 36) && ((tString = s.replace("-", "")).length() == 32)) {
+										statement2.executeUpdate("INSERT INTO gpp_permsplayer VALUES(" + i + ", 0x" + tString + ", 2) ON DUPLICATE KEY UPDATE perm = perm | 2;");
+									} else if (s.equals("public")) {
+										statement2.executeUpdate("INSERT INTO gpp_permsplayer VALUES(" + i + ", " + UUIDtoHexString(GriefPreventionPlus.UUID0) + ", 2) ON DUPLICATE KEY UPDATE perm = perm | 2;");
+									}
+								}
+								j++;
+							}
+						}
+
+						// containers
+						if (!results.getString(6).isEmpty()) {
+							for (final String s : results.getString(6).split(";")) {
+								if (s.startsWith("[")) {
+									statement2.executeUpdate("INSERT INTO gpp_permsbukkit VALUES(" + i + ", '" + s.substring(1, s.length() - 1) + "', 4) ON DUPLICATE KEY UPDATE perm = perm | 4;");
+								} else {
+									if ((s.length() == 36) && ((tString = s.replace("-", "")).length() == 32)) {
+										statement2.executeUpdate("INSERT INTO gpp_permsplayer VALUES(" + i + ", 0x" + tString + ", 4) ON DUPLICATE KEY UPDATE perm = perm | 4;");
+									} else if (s.equals("public")) {
+										statement2.executeUpdate("INSERT INTO gpp_permsplayer VALUES(" + i + ", " + UUIDtoHexString(GriefPreventionPlus.UUID0) + ", 4) ON DUPLICATE KEY UPDATE perm = perm | 4;");
+									}
+								}
+								j++;
+							}
+						}
+
+						// accessors
+						if (!results.getString(7).isEmpty()) {
+							for (final String s : results.getString(7).split(";")) {
+								if (s.startsWith("[")) {
+									statement2.executeUpdate("INSERT INTO gpp_permsbukkit VALUES(" + i + ", '" + s.substring(1, s.length() - 1) + "', 8) ON DUPLICATE KEY UPDATE perm = perm | 8;");
+								} else {
+									if ((s.length() == 36) && ((tString = s.replace("-", "")).length() == 32)) {
+										statement2.executeUpdate("INSERT INTO gpp_permsplayer VALUES(" + i + ", 0x" + tString + ", 8) ON DUPLICATE KEY UPDATE perm = perm | 8;");
+									} else if (s.equals("public")) {
+										statement2.executeUpdate("INSERT INTO gpp_permsplayer VALUES(" + i + ", " + UUIDtoHexString(GriefPreventionPlus.UUID0) + ", 8) ON DUPLICATE KEY UPDATE perm = perm | 8;");
+									}
+								}
+								j++;
+							}
+						}
+
+						// managers
+						if (!results.getString(8).isEmpty()) {
+							for (final String s : results.getString(8).split(";")) {
+								if (s.startsWith("[")) {
+									statement2.executeUpdate("INSERT INTO gpp_permsbukkit VALUES(" + i + ", '" + s.substring(1, s.length() - 1) + "', 1) ON DUPLICATE KEY UPDATE perm = perm | 1;");
+								} else {
+									if ((s.length() == 36) && ((tString = s.replace("-", "")).length() == 32)) {
+										statement2.executeUpdate("INSERT INTO gpp_permsplayer VALUES(" + i + ", 0x" + tString + ", 1) ON DUPLICATE KEY UPDATE perm = perm | 1;");
+									} else if (s.equals("public")) {
+										statement2.executeUpdate("INSERT INTO gpp_permsplayer VALUES(" + i + ", " + UUIDtoHexString(GriefPreventionPlus.UUID0) + ", 1) ON DUPLICATE KEY UPDATE perm = perm | 1;");
+									}
+								}
+								j++;
+							}
+						}
+					}
+
+					results = statement.executeQuery("SELECT name, accruedblocks, bonusblocks FROM griefprevention_playerdata;");
+
+					final Map<String, Integer[]> claimBlocksMap = new HashMap<String, Integer[]>();
+					while (results.next()) {
+						final String ownerString = results.getString(1);
+
+						if ((ownerString.length() == 36) && ((tString = ownerString.replace("-", "")).length() == 32)) {
+							final Integer[] existingBlocks = claimBlocksMap.get(tString);
+							if (existingBlocks != null) {
+								GriefPreventionPlus.addLogEntry("WARNING: Found duplicated key for " + tString);
+
+								final int a = existingBlocks[0];
+								final int b = existingBlocks[1];
+
+								final Integer[] blocks = { (results.getInt(2) == a ? a : results.getInt(2) + a), (results.getInt(3) == b ? b : results.getInt(3) + b) };
+								claimBlocksMap.put(tString, blocks);
+							} else {
+								final Integer[] blocks = { results.getInt(2), results.getInt(3) };
+								claimBlocksMap.put(tString, blocks);
+							}
+
+							playerId = tString;
+						} else {
+							GriefPreventionPlus.addLogEntry("Skipping GriefPrevention data for user " + ownerString + ": no UUID.");
+							continue;
+						}
+					}
+
+					for (final Entry<String, Integer[]> gppbf : claimBlocksMap.entrySet()) {
+						statement2.executeUpdate("INSERT INTO gpp_playerdata VALUES (0x" + gppbf.getKey() + ", " + gppbf.getValue()[0] + ", " + gppbf.getValue()[1] + ");");
+						k++;
+					}
+
+					statement.close();
+					statement2.close();
+					GriefPreventionPlus.addLogEntry("Migration complete. Claims: " + i + " - Permissions: " + j + " - PlayerData: " + k);
+				}
+			}
+		} catch (final Exception e3) {
+			GriefPreventionPlus.addLogEntry("ERROR: Unable to create the necessary database table.  Details:");
+			GriefPreventionPlus.addLogEntry(e3.getMessage());
+			e3.printStackTrace();
+			throw e3;
+		}
+
+		// load group data into memory
+		final Statement statement = this.databaseConnection.createStatement();
+		ResultSet results = statement.executeQuery("SELECT gname, blocks FROM gpp_groupdata;");
+
+		while (results.next()) {
+			this.permissionToBonusBlocksMap.put(results.getString(1), results.getInt(2));
+		}
+
+		// load claims data into memory
+		results = statement.executeQuery("SELECT * FROM gpp_claims;");
+		final Statement statementPerms = this.databaseConnection.createStatement();
+		ResultSet resultsPerms;
+
+		while (results.next()) {
+			final int id = results.getInt(1);
+			final int parentid = results.getInt(8);
+			UUID owner = null;
+			final HashMap<UUID, Integer> permissionMapPlayers = new HashMap<UUID, Integer>();
+			final HashMap<String, Integer> permissionMapBukkit = new HashMap<String, Integer>();
+			final HashMap<String, Integer> permissionMapFakePlayer = new HashMap<String, Integer>();
+
+			final UUID world = toUUID(results.getBytes(3));
+
+			if (results.getBytes(2) != null) {
+				owner = toUUID(results.getBytes(2));
+			}
+
+			resultsPerms = statementPerms.executeQuery("SELECT player, perm FROM gpp_permsplayer WHERE claimid=" + id + ";");
+			while (resultsPerms.next()) {
+				permissionMapPlayers.put(toUUID(resultsPerms.getBytes(1)), resultsPerms.getInt(2));
+			}
+
+			resultsPerms = statementPerms.executeQuery("SELECT pname, perm FROM gpp_permsbukkit WHERE claimid=" + id + ";");
+			while (resultsPerms.next()) {
+				if (resultsPerms.getString(1).startsWith("#")) {
+					permissionMapFakePlayer.put(resultsPerms.getString(1).substring(1), resultsPerms.getInt(2));
+				} else {
+					permissionMapBukkit.put(resultsPerms.getString(1), resultsPerms.getInt(2));
+				}
+			}
+
+			final Claim claim = new Claim(world, results.getInt(4), results.getInt(5), results.getInt(6), results.getInt(7), owner, permissionMapPlayers, permissionMapBukkit, permissionMapFakePlayer, id);
+
+			if (parentid == -1) {
+				this.addClaim(claim, false);
+			} else {
+				final Claim topClaim = this.claims.get(parentid);
+				if (topClaim == null) {
+					// parent claim doesn't exist, skip this subclaim
+					GriefPreventionPlus.addLogEntry("Orphan subclaim: " + claim.locationToString());
+					continue;
+				}
+				claim.setParent(topClaim);
+				topClaim.getChildren().add(claim);
+			}
+		}
+
+		GriefPreventionPlus.addLogEntry(this.claims.size() + " total claims loaded.");
+
+		// load up all the messages from messages.yml
+		this.loadMessages();
+		GriefPreventionPlus.addLogEntry("Customizable messages loaded.");
+
+		// load list of soft mutes
+		this.loadSoftMutes();
+
+		// try to hook into world guard
+		try {
+			this.worldGuard = new WorldGuardWrapper();
+			GriefPreventionPlus.addLogEntry("Successfully hooked into WorldGuard.");
+		}
+		// if failed, world guard compat features will just be disabled.
+		catch (final ClassNotFoundException exception) {
+		} catch (final NoClassDefFoundError exception) {
+		}
+	}
+	
 	// grants a group (players with a specific permission) bonus claim blocks as
 	// long as they're still members of the group
 	synchronized public int adjustGroupBonusBlocks(String groupName, int amount) {
@@ -1107,294 +1394,7 @@ public class DataStore {
 
 		return null;
 	}
-
-	// initialization!
-	void initialize() throws Exception {
-		try {
-			// load the java driver for mySQL
-			Class.forName("com.mysql.jdbc.Driver");
-		} catch (final Exception e) {
-			GriefPreventionPlus.addLogEntry("ERROR: Unable to load Java's mySQL database driver.  Check to make sure you've installed it properly.");
-			throw e;
-		}
-
-		try {
-			this.refreshDataConnection();
-		} catch (final Exception e2) {
-			GriefPreventionPlus.addLogEntry("ERROR: Unable to connect to database.  Check your config file settings.");
-			throw e2;
-		}
-
-		try {
-			final Statement statement = this.databaseConnection.createStatement();
-
-			ResultSet results = statement.executeQuery("SHOW TABLES LIKE 'gpp_claims'");
-			if (!results.next()) {
-				statement.execute("CREATE TABLE IF NOT EXISTS gpp_claims (" + "id int(11) NOT NULL AUTO_INCREMENT," + "owner binary(16) NOT NULL COMMENT 'UUID'," + "world binary(16) NOT NULL COMMENT 'UUID'," + "lesserX mediumint(9) NOT NULL," + "lesserZ mediumint(9) NOT NULL," + "greaterX mediumint(9) NOT NULL," + "greaterZ mediumint(9) NOT NULL," + "parentid int(11) NOT NULL," + "PRIMARY KEY (id));");
-
-				statement.execute("CREATE TABLE IF NOT EXISTS gpp_groupdata (" + "gname varchar(100) NOT NULL," + "blocks int(11) NOT NULL," + "UNIQUE KEY gname (gname));");
-
-				statement.execute("CREATE TABLE IF NOT EXISTS gpp_permsbukkit (" + "claimid int(11) NOT NULL," + "pname varchar(80) NOT NULL," + "perm tinyint(4) NOT NULL," + "PRIMARY KEY (claimid,pname)," + "KEY claimid (claimid));");
-
-				statement.execute("CREATE TABLE IF NOT EXISTS gpp_permsplayer (" + "claimid int(11) NOT NULL," + "player binary(16) NOT NULL COMMENT 'UUID'," + "perm tinyint(4) NOT NULL," + "PRIMARY KEY (claimid,player)," + "KEY claimid (claimid));");
-
-				statement.execute("CREATE TABLE IF NOT EXISTS gpp_playerdata (" + "player binary(16) NOT NULL COMMENT 'UUID'," + "accruedblocks int(11) NOT NULL," + "bonusblocks int(11) NOT NULL," + "PRIMARY KEY (player));");
-
-				results = statement.executeQuery("SHOW TABLES LIKE 'griefprevention_claimdata';");
-				if (results.next()) {
-					// migration from griefprevention
-					GriefPreventionPlus.addLogEntry("Migrating data from Grief Prevention. It may take some time.");
-
-					// claims
-					results = statement.executeQuery("SELECT * FROM griefprevention_claimdata ORDER BY parentid ASC;");
-					final Statement statement2 = this.databaseConnection.createStatement();
-
-					String tString;
-					String playerId;
-					long i = 0;
-					long j = 0;
-					long k = 0;
-
-					long claimId = 1;
-					Long nextParentId;
-
-					final HashMap<Long, Long> migratedClaims = new HashMap<Long, Long>();
-					while (results.next()) {
-						final String ownerString = results.getString(2);
-						playerId = "0";
-
-						if ((ownerString.length() == 36) && ((tString = ownerString.replace("-", "")).length() == 32)) {
-							playerId = "0x" + tString;
-						}
-
-						final String[] lesser = results.getString(3).split(";");
-						final String[] greater = results.getString(4).split(";");
-						if ((lesser.length != 4) || (greater.length != 4)) { // wrong
-							// corners,
-							// skip
-							// this
-							// claim
-							GriefPreventionPlus.addLogEntry("Skipping claim " + results.getLong(1) + ": wrong corners");
-							continue;
-						}
-
-						final World world = GriefPreventionPlus.getInstance().getServer().getWorld(lesser[0]);
-						if (world == null) { // this world doesn't exist, skip
-							// this claim
-							GriefPreventionPlus.addLogEntry("Skipping claim " + results.getLong(1) + ": world " + lesser[0] + " doesn't exist");
-							continue;
-						}
-
-						// insert this claim in new claims table
-
-						if (results.getLong(9) == -1) { // claims
-							migratedClaims.put(results.getLong(1), claimId++);
-							nextParentId = (long) -1;
-							if (playerId.equals("0")) {
-								playerId = UUIDtoHexString(GriefPreventionPlus.UUID1); // administrative
-								// claims
-							}
-						} else { // subclaims
-							nextParentId = migratedClaims.get(results.getLong(9));
-						}
-
-						if (nextParentId == null) {
-							GriefPreventionPlus.addLogEntry("Skipping orphan subclaim (parentid: " + results.getLong(9) + ").");
-							continue;
-						}
-
-						statement2.executeUpdate("INSERT INTO gpp_claims (owner, world, lesserX, lesserZ, greaterX, greaterZ, parentid) VALUES (" + playerId + ", " + UUIDtoHexString(world.getUID()) + ", " + lesser[1] + ", " + lesser[3] + ", " + greater[1] + ", " + greater[3] + ", " + nextParentId + ");");
-
-						i++;
-
-						// convert permissions for this claim
-						// builders
-						if (!results.getString(5).isEmpty()) {
-							for (final String s : results.getString(5).split(";")) {
-								if (s.startsWith("[")) {
-									statement2.executeUpdate("INSERT INTO gpp_permsbukkit VALUES(" + i + ", '" + s.substring(1, s.length() - 1) + "', 2) ON DUPLICATE KEY UPDATE perm = perm | 2;");
-								} else {
-									if ((s.length() == 36) && ((tString = s.replace("-", "")).length() == 32)) {
-										statement2.executeUpdate("INSERT INTO gpp_permsplayer VALUES(" + i + ", 0x" + tString + ", 2) ON DUPLICATE KEY UPDATE perm = perm | 2;");
-									} else if (s.equals("public")) {
-										statement2.executeUpdate("INSERT INTO gpp_permsplayer VALUES(" + i + ", " + UUIDtoHexString(GriefPreventionPlus.UUID0) + ", 2) ON DUPLICATE KEY UPDATE perm = perm | 2;");
-									}
-								}
-								j++;
-							}
-						}
-
-						// containers
-						if (!results.getString(6).isEmpty()) {
-							for (final String s : results.getString(6).split(";")) {
-								if (s.startsWith("[")) {
-									statement2.executeUpdate("INSERT INTO gpp_permsbukkit VALUES(" + i + ", '" + s.substring(1, s.length() - 1) + "', 4) ON DUPLICATE KEY UPDATE perm = perm | 4;");
-								} else {
-									if ((s.length() == 36) && ((tString = s.replace("-", "")).length() == 32)) {
-										statement2.executeUpdate("INSERT INTO gpp_permsplayer VALUES(" + i + ", 0x" + tString + ", 4) ON DUPLICATE KEY UPDATE perm = perm | 4;");
-									} else if (s.equals("public")) {
-										statement2.executeUpdate("INSERT INTO gpp_permsplayer VALUES(" + i + ", " + UUIDtoHexString(GriefPreventionPlus.UUID0) + ", 4) ON DUPLICATE KEY UPDATE perm = perm | 4;");
-									}
-								}
-								j++;
-							}
-						}
-
-						// accessors
-						if (!results.getString(7).isEmpty()) {
-							for (final String s : results.getString(7).split(";")) {
-								if (s.startsWith("[")) {
-									statement2.executeUpdate("INSERT INTO gpp_permsbukkit VALUES(" + i + ", '" + s.substring(1, s.length() - 1) + "', 8) ON DUPLICATE KEY UPDATE perm = perm | 8;");
-								} else {
-									if ((s.length() == 36) && ((tString = s.replace("-", "")).length() == 32)) {
-										statement2.executeUpdate("INSERT INTO gpp_permsplayer VALUES(" + i + ", 0x" + tString + ", 8) ON DUPLICATE KEY UPDATE perm = perm | 8;");
-									} else if (s.equals("public")) {
-										statement2.executeUpdate("INSERT INTO gpp_permsplayer VALUES(" + i + ", " + UUIDtoHexString(GriefPreventionPlus.UUID0) + ", 8) ON DUPLICATE KEY UPDATE perm = perm | 8;");
-									}
-								}
-								j++;
-							}
-						}
-
-						// managers
-						if (!results.getString(8).isEmpty()) {
-							for (final String s : results.getString(8).split(";")) {
-								if (s.startsWith("[")) {
-									statement2.executeUpdate("INSERT INTO gpp_permsbukkit VALUES(" + i + ", '" + s.substring(1, s.length() - 1) + "', 1) ON DUPLICATE KEY UPDATE perm = perm | 1;");
-								} else {
-									if ((s.length() == 36) && ((tString = s.replace("-", "")).length() == 32)) {
-										statement2.executeUpdate("INSERT INTO gpp_permsplayer VALUES(" + i + ", 0x" + tString + ", 1) ON DUPLICATE KEY UPDATE perm = perm | 1;");
-									} else if (s.equals("public")) {
-										statement2.executeUpdate("INSERT INTO gpp_permsplayer VALUES(" + i + ", " + UUIDtoHexString(GriefPreventionPlus.UUID0) + ", 1) ON DUPLICATE KEY UPDATE perm = perm | 1;");
-									}
-								}
-								j++;
-							}
-						}
-					}
-
-					results = statement.executeQuery("SELECT name, accruedblocks, bonusblocks FROM griefprevention_playerdata;");
-
-					final Map<String, Integer[]> claimBlocksMap = new HashMap<String, Integer[]>();
-					while (results.next()) {
-						final String ownerString = results.getString(1);
-
-						if ((ownerString.length() == 36) && ((tString = ownerString.replace("-", "")).length() == 32)) {
-							final Integer[] existingBlocks = claimBlocksMap.get(tString);
-							if (existingBlocks != null) {
-								GriefPreventionPlus.addLogEntry("WARNING: Found duplicated key for " + tString);
-
-								final int a = existingBlocks[0];
-								final int b = existingBlocks[1];
-
-								final Integer[] blocks = { (results.getInt(2) == a ? a : results.getInt(2) + a), (results.getInt(3) == b ? b : results.getInt(3) + b) };
-								claimBlocksMap.put(tString, blocks);
-							} else {
-								final Integer[] blocks = { results.getInt(2), results.getInt(3) };
-								claimBlocksMap.put(tString, blocks);
-							}
-
-							playerId = tString;
-						} else {
-							GriefPreventionPlus.addLogEntry("Skipping GriefPrevention data for user " + ownerString + ": no UUID.");
-							continue;
-						}
-					}
-
-					for (final Entry<String, Integer[]> gppbf : claimBlocksMap.entrySet()) {
-						statement2.executeUpdate("INSERT INTO gpp_playerdata VALUES (0x" + gppbf.getKey() + ", " + gppbf.getValue()[0] + ", " + gppbf.getValue()[1] + ");");
-						k++;
-					}
-
-					statement.close();
-					statement2.close();
-					GriefPreventionPlus.addLogEntry("Migration complete. Claims: " + i + " - Permissions: " + j + " - PlayerData: " + k);
-				}
-			}
-		} catch (final Exception e3) {
-			GriefPreventionPlus.addLogEntry("ERROR: Unable to create the necessary database table.  Details:");
-			GriefPreventionPlus.addLogEntry(e3.getMessage());
-			e3.printStackTrace();
-			throw e3;
-		}
-
-		// load group data into memory
-		final Statement statement = this.databaseConnection.createStatement();
-		ResultSet results = statement.executeQuery("SELECT gname, blocks FROM gpp_groupdata;");
-
-		while (results.next()) {
-			this.permissionToBonusBlocksMap.put(results.getString(1), results.getInt(2));
-		}
-
-		// load claims data into memory
-		results = statement.executeQuery("SELECT * FROM gpp_claims;");
-		final Statement statementPerms = this.databaseConnection.createStatement();
-		ResultSet resultsPerms;
-
-		while (results.next()) {
-			final int id = results.getInt(1);
-			final int parentid = results.getInt(8);
-			UUID owner = null;
-			final HashMap<UUID, Integer> permissionMapPlayers = new HashMap<UUID, Integer>();
-			final HashMap<String, Integer> permissionMapBukkit = new HashMap<String, Integer>();
-			final HashMap<String, Integer> permissionMapFakePlayer = new HashMap<String, Integer>();
-
-			final UUID world = toUUID(results.getBytes(3));
-
-			if (results.getBytes(2) != null) {
-				owner = toUUID(results.getBytes(2));
-			}
-
-			resultsPerms = statementPerms.executeQuery("SELECT player, perm FROM gpp_permsplayer WHERE claimid=" + id + ";");
-			while (resultsPerms.next()) {
-				permissionMapPlayers.put(toUUID(resultsPerms.getBytes(1)), resultsPerms.getInt(2));
-			}
-
-			resultsPerms = statementPerms.executeQuery("SELECT pname, perm FROM gpp_permsbukkit WHERE claimid=" + id + ";");
-			while (resultsPerms.next()) {
-				if (resultsPerms.getString(1).startsWith("#")) {
-					permissionMapFakePlayer.put(resultsPerms.getString(1).substring(1), resultsPerms.getInt(2));
-				} else {
-					permissionMapBukkit.put(resultsPerms.getString(1), resultsPerms.getInt(2));
-				}
-			}
-
-			final Claim claim = new Claim(world, results.getInt(4), results.getInt(5), results.getInt(6), results.getInt(7), owner, permissionMapPlayers, permissionMapBukkit, permissionMapFakePlayer, id);
-
-			if (parentid == -1) {
-				this.addClaim(claim, false);
-			} else {
-				final Claim topClaim = this.claims.get(parentid);
-				if (topClaim == null) {
-					// parent claim doesn't exist, skip this subclaim
-					GriefPreventionPlus.addLogEntry("Orphan subclaim: " + claim.locationToString());
-					continue;
-				}
-				claim.setParent(topClaim);
-				topClaim.getChildren().add(claim);
-			}
-		}
-
-		GriefPreventionPlus.addLogEntry(this.claims.size() + " total claims loaded.");
-
-		// load up all the messages from messages.yml
-		this.loadMessages();
-		GriefPreventionPlus.addLogEntry("Customizable messages loaded.");
-
-		// load list of soft mutes
-		this.loadSoftMutes();
-
-		// try to hook into world guard
-		try {
-			this.worldGuard = new WorldGuardWrapper();
-			GriefPreventionPlus.addLogEntry("Successfully hooked into WorldGuard.");
-		}
-		// if failed, world guard compat features will just be disabled.
-		catch (final ClassNotFoundException exception) {
-		} catch (final NoClassDefFoundError exception) {
-		}
-	}
-
+	
 	boolean isSoftMuted(UUID playerID) {
 		final Boolean mapEntry = this.softMuteMap.get(playerID);
 		if ((mapEntry == null) || (mapEntry == Boolean.FALSE)) {

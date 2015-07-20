@@ -58,6 +58,197 @@ public class GriefPreventionPlus extends JavaPlugin {
 	// helper method to resolve a player by name
 	public HashMap<String, UUID> playerNameToIDMap = new HashMap<String, UUID>();
 
+	@Override
+	public void onLoad() {
+		// check if Grief Prevention is loaded
+		if (this.getServer().getPluginManager().getPlugin("GriefPrevention") != null) {
+			addLogEntry("-- WARNING  --");
+			addLogEntry("-- SHUTDOWN --");
+			addLogEntry("Remove GriefPrevention.jar (do not delete data folder)");
+			addLogEntry("--------------");
+			this.getServer().shutdown();
+			this.getServer().getPluginManager().clearPlugins();
+			return;
+		}
+	}
+	
+	// initializes well... everything
+	@Override
+	public void onEnable() {
+
+		addLogEntry("boot start.");
+		setInstance(this);
+
+		this.config = new Config();
+
+		addLogEntry("Finished loading configuration.");
+
+		// when datastore initializes, it loads player and claim data, and posts
+		// some stats to the log
+		if (this.config.databaseUrl.length() > 0) {
+			try {
+				final DataStore databaseStore = new DataStore(this.config.databaseUrl, this.config.databaseUserName, this.config.databasePassword);
+
+				this.setDataStore(databaseStore);
+			} catch (final Exception e) {
+				addLogEntry(e.getMessage());
+				e.printStackTrace();
+				addLogEntry("-- WARNING  --");
+				addLogEntry("-- SHUTDOWN --");
+				addLogEntry("I can't connect to the database! Update the database config settings to resolve the issue. The server will shutdown to avoid claim griefing.");
+				addLogEntry("--------------");
+				this.getServer().shutdown();
+				this.getServer().getPluginManager().clearPlugins();
+				return;
+			}
+		} else {
+			addLogEntry("-- WARNING  --");
+			addLogEntry("Database settings are required! Update the database config settings to resolve the issue. Grief Prevention Plus disabled.");
+			addLogEntry("--------------");
+			return;
+		}
+
+		addLogEntry("Finished loading data.");
+
+		// unless claim block accrual is disabled, start the recurring per 5
+		// minute event to give claim blocks to online players
+		// 20L ~ 1 second
+		if (this.config.claims_blocksAccruedPerHour > 0) {
+			final DeliverClaimBlocksTask task = new DeliverClaimBlocksTask(null);
+			this.getServer().getScheduler().scheduleSyncRepeatingTask(this, task, 20L * 60 * 5, 20L * 60 * 5);
+		}
+
+		// start the recurring cleanup event for entities in creative worlds
+		final EntityCleanupTask task = new EntityCleanupTask(0);
+		this.getServer().getScheduler().scheduleSyncDelayedTask(GriefPreventionPlus.getInstance(), task, 20L);
+
+		// register for events
+		final PluginManager pluginManager = this.getServer().getPluginManager();
+
+		// player events
+		final PlayerEventHandler playerEventHandler = new PlayerEventHandler(this.getDataStore());
+		pluginManager.registerEvents(playerEventHandler, this);
+
+		// player events for MC 1.8
+		try {
+			Class.forName("org.bukkit.event.player.PlayerInteractAtEntityEvent");
+			pluginManager.registerEvents(new EventHandler18(playerEventHandler), this);
+
+			isBukkit18 = true;
+			addLogEntry("Oh, you're running Bukkit 1.8+!");
+		} catch (final ClassNotFoundException e) {
+			addLogEntry("You're running Bukkit 1.7!");
+		}
+
+		// block events
+		pluginManager.registerEvents(new BlockEventHandler(this.getDataStore()), this);
+
+		// entity events
+		pluginManager.registerEvents(new EntityEventHandler(this.getDataStore()), this);
+
+		// if economy is enabled
+		if ((this.config.economy_claimBlocksPurchaseCost > 0) || (this.config.economy_claimBlocksSellValue > 0)) {
+			// try to load Vault
+			GriefPreventionPlus.addLogEntry("GriefPrevention requires Vault for economy integration.");
+			GriefPreventionPlus.addLogEntry("Attempting to load Vault...");
+			final RegisteredServiceProvider<Economy> economyProvider = this.getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
+			GriefPreventionPlus.addLogEntry("Vault loaded successfully!");
+
+			// ask Vault to hook into an economy plugin
+			GriefPreventionPlus.addLogEntry("Looking for a Vault-compatible economy plugin...");
+			if (economyProvider != null) {
+				GriefPreventionPlus.economy = economyProvider.getProvider();
+
+				// on success, display success message
+				if (GriefPreventionPlus.economy != null) {
+					GriefPreventionPlus.addLogEntry("Hooked into economy: " + GriefPreventionPlus.economy.getName() + ".");
+					GriefPreventionPlus.addLogEntry("Ready to buy/sell claim blocks!");
+				}
+
+				// otherwise error message
+				else {
+					GriefPreventionPlus.addLogEntry("ERROR: Vault was unable to find a supported economy plugin.  Either install a Vault-compatible economy plugin, or set both of the economy config variables to zero.");
+				}
+			}
+
+			// another error case
+			else {
+				GriefPreventionPlus.addLogEntry("ERROR: Vault was unable to find a supported economy plugin.  Either install a Vault-compatible economy plugin, or set both of the economy config variables to zero.");
+			}
+		}
+
+		int playersCached = 0;
+		final OfflinePlayer[] offlinePlayers = this.getServer().getOfflinePlayers();
+		final long now = System.currentTimeMillis();
+		final long millisecondsPerDay = 1000 * 60 * 60 * 24;
+		for (final OfflinePlayer player : offlinePlayers) {
+			// if the player has been seen in the last 30 days, cache his
+			// name/UUID pair
+			if (((player.getUniqueId() != null) && (player.getName() != null) && (((now - player.getLastPlayed()) / millisecondsPerDay) <= 30))) {
+				this.playerNameToIDMap.put(player.getName().toLowerCase(), player.getUniqueId());
+				playersCached++;
+			}
+		}
+
+		addLogEntry("Cached " + playersCached + " recent players.");
+		final CommandExec commandExec = new CommandExec();
+		this.getCommand("claim").setExecutor(commandExec);
+		this.getCommand("clearorphanclaims").setExecutor(commandExec);
+		this.getCommand("abandonclaim").setExecutor(commandExec);
+		this.getCommand("abandontoplevelclaim").setExecutor(commandExec);
+		this.getCommand("ignoreclaims").setExecutor(commandExec);
+		this.getCommand("abandonallclaims").setExecutor(commandExec);
+		this.getCommand("restorenature").setExecutor(commandExec);
+		this.getCommand("restorenatureaggressive").setExecutor(commandExec);
+		this.getCommand("restorenaturefill").setExecutor(commandExec);
+		this.getCommand("trust").setExecutor(commandExec);
+		this.getCommand("transferclaim").setExecutor(commandExec);
+		this.getCommand("trustlist").setExecutor(commandExec);
+		this.getCommand("untrust").setExecutor(commandExec);
+		this.getCommand("entrytrust").setExecutor(commandExec);
+		this.getCommand("accesstrust").setExecutor(commandExec);
+		this.getCommand("containertrust").setExecutor(commandExec);
+		this.getCommand("permissiontrust").setExecutor(commandExec);
+		this.getCommand("buyclaimblocks").setExecutor(commandExec);
+		this.getCommand("sellclaimblocks").setExecutor(commandExec);
+		this.getCommand("adminclaims").setExecutor(commandExec);
+		this.getCommand("basicclaims").setExecutor(commandExec);
+		this.getCommand("subdivideclaims").setExecutor(commandExec);
+		this.getCommand("deleteclaim").setExecutor(commandExec);
+		this.getCommand("claimexplosions").setExecutor(commandExec);
+		this.getCommand("deleteallclaims").setExecutor(commandExec);
+		this.getCommand("claimslist").setExecutor(commandExec);
+		this.getCommand("unlockdrops").setExecutor(commandExec);
+		this.getCommand("deletealladminclaims").setExecutor(commandExec);
+		this.getCommand("adjustbonusclaimblocks").setExecutor(commandExec);
+		this.getCommand("trapped").setExecutor(commandExec);
+		this.getCommand("softmute").setExecutor(commandExec);
+		this.getCommand("gpreload").setExecutor(commandExec);
+		this.getCommand("givepet").setExecutor(commandExec);
+		this.getCommand("gpblockinfo").setExecutor(commandExec);
+		this.getCommand("claimarea").setExecutor(commandExec);
+
+		// start recurring cleanup scan for unused claims belonging to inactive players
+		new CleanupUnusedClaimsTask(this).runTaskTimer(this, 200L, 4L);
+
+		addLogEntry("Boot finished.");
+	}
+
+	@Override
+	public void onDisable() {
+		if (this.getDataStore() != null) {
+			// save data for any online players
+			for (final Player player : this.getServer().getOnlinePlayers()) {
+				final UUID playerID = player.getUniqueId();
+				final PlayerData playerData = this.getDataStore().getPlayerData(playerID);
+				this.getDataStore().savePlayerDataSync(playerID, playerData);
+			}
+			this.getDataStore().close();
+		}
+
+		addLogEntry("GriefPreventionPlus disabled.");
+	}
+	
 	public String allowBreak(Player player, Block block, Location location) {
 		final PlayerData playerData = this.getDataStore().getPlayerData(player.getUniqueId());
 		final Claim claim = this.getDataStore().getClaimAt(location, false, playerData.lastClaim);
@@ -288,197 +479,6 @@ public class GriefPreventionPlus extends JavaPlugin {
 		}
 	}
 
-	@Override
-	public void onDisable() {
-		if (this.getDataStore() != null) {
-			// save data for any online players
-			for (final Player player : this.getServer().getOnlinePlayers()) {
-				final UUID playerID = player.getUniqueId();
-				final PlayerData playerData = this.getDataStore().getPlayerData(playerID);
-				this.getDataStore().savePlayerDataSync(playerID, playerData);
-			}
-			this.getDataStore().close();
-		}
-
-		addLogEntry("GriefPreventionPlus disabled.");
-	}
-
-	// initializes well... everything
-	@Override
-	public void onEnable() {
-
-		addLogEntry("boot start.");
-		setInstance(this);
-
-		this.config = new Config();
-
-		addLogEntry("Finished loading configuration.");
-
-		// when datastore initializes, it loads player and claim data, and posts
-		// some stats to the log
-		if (this.config.databaseUrl.length() > 0) {
-			try {
-				final DataStore databaseStore = new DataStore(this.config.databaseUrl, this.config.databaseUserName, this.config.databasePassword);
-
-				this.setDataStore(databaseStore);
-			} catch (final Exception e) {
-				addLogEntry(e.getMessage());
-				e.printStackTrace();
-				addLogEntry("-- WARNING  --");
-				addLogEntry("-- SHUTDOWN --");
-				addLogEntry("I can't connect to the database! Update the database config settings to resolve the issue. The server will shutdown to avoid claim griefing.");
-				addLogEntry("--------------");
-				this.getServer().shutdown();
-				this.getServer().getPluginManager().clearPlugins();
-				return;
-			}
-		} else {
-			addLogEntry("-- WARNING  --");
-			addLogEntry("Database settings are required! Update the database config settings to resolve the issue. Grief Prevention Plus disabled.");
-			addLogEntry("--------------");
-			return;
-		}
-
-		addLogEntry("Finished loading data.");
-
-		// unless claim block accrual is disabled, start the recurring per 5
-		// minute event to give claim blocks to online players
-		// 20L ~ 1 second
-		if (this.config.claims_blocksAccruedPerHour > 0) {
-			final DeliverClaimBlocksTask task = new DeliverClaimBlocksTask(null);
-			this.getServer().getScheduler().scheduleSyncRepeatingTask(this, task, 20L * 60 * 5, 20L * 60 * 5);
-		}
-
-		// start the recurring cleanup event for entities in creative worlds
-		final EntityCleanupTask task = new EntityCleanupTask(0);
-		this.getServer().getScheduler().scheduleSyncDelayedTask(GriefPreventionPlus.getInstance(), task, 20L);
-
-		// register for events
-		final PluginManager pluginManager = this.getServer().getPluginManager();
-
-		// player events
-		final PlayerEventHandler playerEventHandler = new PlayerEventHandler(this.getDataStore());
-		pluginManager.registerEvents(playerEventHandler, this);
-
-		// player events for MC 1.8
-		try {
-			Class.forName("org.bukkit.event.player.PlayerInteractAtEntityEvent");
-			pluginManager.registerEvents(new EventHandler18(playerEventHandler), this);
-
-			isBukkit18 = true;
-			addLogEntry("Oh, you're running Bukkit 1.8+!");
-		} catch (final ClassNotFoundException e) {
-			addLogEntry("You're running Bukkit 1.7!");
-		}
-
-		// block events
-		pluginManager.registerEvents(new BlockEventHandler(this.getDataStore()), this);
-
-		// entity events
-		pluginManager.registerEvents(new EntityEventHandler(this.getDataStore()), this);
-
-		// if economy is enabled
-		if ((this.config.economy_claimBlocksPurchaseCost > 0) || (this.config.economy_claimBlocksSellValue > 0)) {
-			// try to load Vault
-			GriefPreventionPlus.addLogEntry("GriefPrevention requires Vault for economy integration.");
-			GriefPreventionPlus.addLogEntry("Attempting to load Vault...");
-			final RegisteredServiceProvider<Economy> economyProvider = this.getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
-			GriefPreventionPlus.addLogEntry("Vault loaded successfully!");
-
-			// ask Vault to hook into an economy plugin
-			GriefPreventionPlus.addLogEntry("Looking for a Vault-compatible economy plugin...");
-			if (economyProvider != null) {
-				GriefPreventionPlus.economy = economyProvider.getProvider();
-
-				// on success, display success message
-				if (GriefPreventionPlus.economy != null) {
-					GriefPreventionPlus.addLogEntry("Hooked into economy: " + GriefPreventionPlus.economy.getName() + ".");
-					GriefPreventionPlus.addLogEntry("Ready to buy/sell claim blocks!");
-				}
-
-				// otherwise error message
-				else {
-					GriefPreventionPlus.addLogEntry("ERROR: Vault was unable to find a supported economy plugin.  Either install a Vault-compatible economy plugin, or set both of the economy config variables to zero.");
-				}
-			}
-
-			// another error case
-			else {
-				GriefPreventionPlus.addLogEntry("ERROR: Vault was unable to find a supported economy plugin.  Either install a Vault-compatible economy plugin, or set both of the economy config variables to zero.");
-			}
-		}
-
-		int playersCached = 0;
-		final OfflinePlayer[] offlinePlayers = this.getServer().getOfflinePlayers();
-		final long now = System.currentTimeMillis();
-		final long millisecondsPerDay = 1000 * 60 * 60 * 24;
-		for (final OfflinePlayer player : offlinePlayers) {
-			// if the player has been seen in the last 30 days, cache his
-			// name/UUID pair
-			if (((player.getUniqueId() != null) && (player.getName() != null) && (((now - player.getLastPlayed()) / millisecondsPerDay) <= 30))) {
-				this.playerNameToIDMap.put(player.getName().toLowerCase(), player.getUniqueId());
-				playersCached++;
-			}
-		}
-
-		addLogEntry("Cached " + playersCached + " recent players.");
-		final CommandExec commandExec = new CommandExec();
-		this.getCommand("claim").setExecutor(commandExec);
-		this.getCommand("clearorphanclaims").setExecutor(commandExec);
-		this.getCommand("abandonclaim").setExecutor(commandExec);
-		this.getCommand("abandontoplevelclaim").setExecutor(commandExec);
-		this.getCommand("ignoreclaims").setExecutor(commandExec);
-		this.getCommand("abandonallclaims").setExecutor(commandExec);
-		this.getCommand("restorenature").setExecutor(commandExec);
-		this.getCommand("restorenatureaggressive").setExecutor(commandExec);
-		this.getCommand("restorenaturefill").setExecutor(commandExec);
-		this.getCommand("trust").setExecutor(commandExec);
-		this.getCommand("transferclaim").setExecutor(commandExec);
-		this.getCommand("trustlist").setExecutor(commandExec);
-		this.getCommand("untrust").setExecutor(commandExec);
-		this.getCommand("entrytrust").setExecutor(commandExec);
-		this.getCommand("accesstrust").setExecutor(commandExec);
-		this.getCommand("containertrust").setExecutor(commandExec);
-		this.getCommand("permissiontrust").setExecutor(commandExec);
-		this.getCommand("buyclaimblocks").setExecutor(commandExec);
-		this.getCommand("sellclaimblocks").setExecutor(commandExec);
-		this.getCommand("adminclaims").setExecutor(commandExec);
-		this.getCommand("basicclaims").setExecutor(commandExec);
-		this.getCommand("subdivideclaims").setExecutor(commandExec);
-		this.getCommand("deleteclaim").setExecutor(commandExec);
-		this.getCommand("claimexplosions").setExecutor(commandExec);
-		this.getCommand("deleteallclaims").setExecutor(commandExec);
-		this.getCommand("claimslist").setExecutor(commandExec);
-		this.getCommand("unlockdrops").setExecutor(commandExec);
-		this.getCommand("deletealladminclaims").setExecutor(commandExec);
-		this.getCommand("adjustbonusclaimblocks").setExecutor(commandExec);
-		this.getCommand("trapped").setExecutor(commandExec);
-		this.getCommand("softmute").setExecutor(commandExec);
-		this.getCommand("gpreload").setExecutor(commandExec);
-		this.getCommand("givepet").setExecutor(commandExec);
-		this.getCommand("gpblockinfo").setExecutor(commandExec);
-		this.getCommand("claimarea").setExecutor(commandExec);
-
-		// start recurring cleanup scan for unused claims belonging to inactive
-		// players
-		new CleanupUnusedClaimsTask(this).runTaskTimer(this, 200L, 4L);
-
-		addLogEntry("Boot finished.");
-	}
-
-	@Override
-	public void onLoad() {
-		// check if Grief Prevention is loaded
-		if (this.getServer().getPluginManager().getPlugin("GriefPrevention") != null) {
-			addLogEntry("-- WARNING  --");
-			addLogEntry("-- SHUTDOWN --");
-			addLogEntry("Remove GriefPrevention.jar (do not delete data folder)");
-			addLogEntry("--------------");
-			this.getServer().shutdown();
-			this.getServer().getPluginManager().clearPlugins();
-			return;
-		}
-	}
 
 	public OfflinePlayer resolvePlayer(String name) {
 		// try online players first
