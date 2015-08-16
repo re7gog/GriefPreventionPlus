@@ -1079,7 +1079,7 @@ public class CommandExec implements CommandExecutor {
 					}
 				}
 				final int x1 = x - range, x2 = x + range, z1 = z - range, z2 = z + range;
-
+				
 				// try to create a new claim
 				final ClaimResult result = this.dataStore.createClaim(world.getUID(), x1, x2, z1, z2, (player!=null ? player.getUniqueId() : GriefPreventionPlus.UUID1), null, null, player);
 				

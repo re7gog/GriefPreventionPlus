@@ -371,8 +371,8 @@ public class DataStore {
 		}
 	}
 	
-	// grants a group (players with a specific permission) bonus claim blocks as
-	// long as they're still members of the group
+	/** grants a group (players with a specific permission) bonus claim blocks as
+	    long as they're still members of the group */
 	synchronized public int adjustGroupBonusBlocks(String groupName, int amount) {
 		Integer currentValue = this.permissionToBonusBlocksMap.get(groupName);
 		if (currentValue == null) {
@@ -388,8 +388,8 @@ public class DataStore {
 		return currentValue;
 	}
 
-	// saves changes to player data. MUST be called after you're done making
-	// changes, otherwise a reload will lose them
+	/** saves changes to player data. MUST be called after you're done making
+	    changes, otherwise a reload will lose them */
 	public void asyncSavePlayerData(UUID playerID, PlayerData playerData) {
 		// never save data for the "administrative" account. an empty string for
 		// player name indicates administrative account
@@ -407,7 +407,10 @@ public class DataStore {
 			GriefPreventionPlus.addLogEntry(e.getMessage());
 		}
 	}
-
+	
+	/** changes the claim owner
+	 *  @throws an exception if the claim is a subdivision
+	 * */
 	synchronized public void changeClaimOwner(Claim claim, UUID newOwnerID) throws Exception {
 		// if it's a subdivision, throw an exception
 		if (claim.getParent() != null) {
@@ -442,7 +445,11 @@ public class DataStore {
 			newOwnerData.getClaims().add(claim);
 		}
 	}
-
+	
+	
+	/**
+	 * Clears all permissions (/trust, etc..) on all claims owned by the specified player
+	 * */
 	public void clearPermissionsOnPlayerClaims(UUID ownerId) {
 		final PlayerData ownerData = this.getPlayerData(ownerId);
 		if (ownerData != null) {
@@ -453,22 +460,22 @@ public class DataStore {
 		}
 	}
 
-	// creates a claim.
-	// if the new claim would overlap an existing claim, returns a failure along
-	// with a reference to the existing claim
-	// if the new claim would overlap a WorldGuard region where the player
-	// doesn't have permission to build, returns a failure with NULL for claim
-	// otherwise, returns a success along with a reference to the new claim
-	// use ownerName == "" for administrative claims
-	// for top level claims, pass parent == NULL
-	// DOES adjust claim blocks available on success (players can go into
-	// negative quantity available)
-	// DOES check for world guard regions where the player doesn't have
-	// permission
-	// does NOT check a player has permission to create a claim, or enough claim
-	// blocks.
-	// does NOT check minimum claim size constraints
-	// does NOT visualize the new claim for any players
+	/** creates a claim.
+	if the new claim would overlap an existing claim, returns a failure along
+	with a reference to the existing claim
+	if the new claim would overlap a WorldGuard region where the player
+	doesn't have permission to build, returns a failure with NULL for claim
+	otherwise, returns a success along with a reference to the new claim
+	use ownerName == "" for administrative claims
+	for top level claims, pass parent == NULL
+	- DOES adjust claim blocks available on success (players can go into
+	negative quantity available)
+	- DOES check for world guard regions where the player doesn't have
+	permission
+	- does NOT check a player has permission to create a claim, or enough claim
+	blocks.
+	- does NOT check minimum claim size constraints
+	- does NOT visualize the new claim for any players */
 	synchronized public ClaimResult createClaim(UUID world, int x1, int x2, int z1, int z2, UUID ownerID, Claim parent, Integer id, Player creatingPlayer) {
 		final ClaimResult result = new ClaimResult();
 
@@ -535,7 +542,7 @@ public class DataStore {
 		return result;
 	}
 
-	// deletes a claim or subdivision
+	/** deletes a claim or subdivision */
 	synchronized public void deleteClaim(Claim claim) {
 		if (claim.getParent() != null) { // subdivision
 			final Claim parentClaim = claim.getParent();
@@ -565,7 +572,7 @@ public class DataStore {
 		}
 	}
 
-	// deletes all claims owned by a player
+	/** deletes all claims owned by a player */
 	synchronized public void deleteClaimsForPlayer(UUID playerID, boolean deleteCreativeClaims) {
 		List<Claim> claimsToRemove = new ArrayList<Claim>();
 		for (final Claim claim : this.claims.values()) {
@@ -589,7 +596,8 @@ public class DataStore {
 			}
 		}
 	}
-
+	
+	/** removes a permission node from all claims owned by the specified player */
 	public void dropPermissionOnPlayerClaims(UUID ownerId, String permBukkit) {
 		final PlayerData ownerData = this.getPlayerData(ownerId);
 		if (ownerData != null) {
@@ -599,7 +607,8 @@ public class DataStore {
 			}
 		}
 	}
-
+	
+	/** removes a player trust from all claims owned by the specified player */
 	public void dropPermissionOnPlayerClaims(UUID ownerId, UUID playerId) {
 		final PlayerData ownerData = this.getPlayerData(ownerId);
 		if (ownerData != null) {
@@ -614,15 +623,19 @@ public class DataStore {
 	public synchronized Claim getClaim(int id) {
 		return this.claims.get(id);
 	}
-
+	
+	/** get a claim at specified location, ignoring the height */
 	public Claim getClaimAt(Location location) {
 		return this.getClaimAt(location, true, null);
 	}
 
+	/** get a claim at specified location */
 	public Claim getClaimAt(Location location, boolean ignoreHeight) {
 		return this.getClaimAt(location, ignoreHeight, null);
 	}
 
+	/** get a claim at specified location
+	 *  specifying a cached claim will help performances */
 	public Claim getClaimAt(Location location, boolean ignoreHeight, Claim cachedClaim) {
 		final Claim claim = this.getClaimAt(location, cachedClaim);
 		if (ignoreHeight || ((claim != null) && claim.checkHeight(location))) {
@@ -632,9 +645,9 @@ public class DataStore {
 		return null;
 	}
 
-	// gets the claim at a specific location
-	// cachedClaim can be NULL, but will help performance if you have a
-	// reasonable guess about which claim the location is in
+	/** gets the claim at a specific location
+	  cachedClaim can be NULL, but will help performance if you have a
+	  reasonable guess about which claim the location is in */
 	public Claim getClaimAt(Location location, Claim cachedClaim) {
 		// check cachedClaim guess first. if it's in the datastore and the
 		// location is inside it, we're done
@@ -657,7 +670,10 @@ public class DataStore {
 
 		return claim;
 	}
-
+	
+	/** get the message string
+	 * @param messageID: a Messages enum value
+	 * @param args: preformat the message with the specified strings */
 	synchronized public String getMessage(Messages messageID, String... args) {
 		String message = this.messages[messageID.ordinal()];
 
@@ -669,14 +685,14 @@ public class DataStore {
 		return message;
 	}
 
-	// gets all the claims "near" a location
+	/** gets all the claims 128 blocks range from a location */
 	public Map<Integer, Claim> getNearbyClaims(Location location) {
 		return this.posClaimsGet(location, 128);
 	}
 
-	// retrieves player data from memory or secondary storage, as necessary
-	// if the player has never been on the server before, this will return a
-	// fresh player data with default values
+	/** retrieves player data from memory or secondary storage, as necessary
+	if the player has never been on the server before, this will return a
+	fresh player data with default values */
 	synchronized public PlayerData getPlayerData(UUID playerID) {
 		// first, look in memory
 		PlayerData playerData = this.playerNameToPlayerDataMap.get(playerID);
@@ -748,7 +764,7 @@ public class DataStore {
 		return null;
 	}
 
-	// This method will return a set with all claims on the specified range
+	/** This method will return a set with all claims on the specified range */
 	public Map<Integer, Claim> posClaimsGet(Location loc, int blocksRange) {
 		int lx = loc.getBlockX() - blocksRange;
 		int lz = loc.getBlockZ() - blocksRange;
@@ -816,14 +832,14 @@ public class DataStore {
 		}
 	}
 
-	// saves changes to player data to secondary storage. MUST be called after
-	// you're done making changes, otherwise a reload will lose them
+	/** saves changes to player data to secondary storage. MUST be called after
+	you're done making changes, otherwise a reload will lose them */
 	public void savePlayerData(UUID playerID, PlayerData playerData) {
 		new SavePlayerDataThread(playerID, playerData).start();
 	}
 
-	// saves changes to player data to secondary storage. MUST be called after
-	// you're done making changes, otherwise a reload will lose them
+	/** saves changes to player data to secondary storage. MUST be called after
+	you're done making changes, otherwise a reload will lose them */
 	public void savePlayerDataSync(UUID playerID, PlayerData playerData) {
 		// ensure player data is already read from file before trying to save
 		playerData.getAccruedClaimBlocks();
@@ -1506,7 +1522,8 @@ public class DataStore {
 	static final String CREATIVE_VIDEO_URL = "" + ChatColor.DARK_AQUA + ChatColor.UNDERLINE + "bit.ly/mcgpcrea";
 
 	static final String SUBDIVISION_VIDEO_URL = "" + ChatColor.DARK_AQUA + ChatColor.UNDERLINE + "bit.ly/mcgpsub";
-
+	
+	/** Converts an array of 16 bytes to an UUID */
 	public static UUID toUUID(byte[] bytes) {
 		if (bytes.length != 16) {
 			throw new IllegalArgumentException();
@@ -1523,6 +1540,7 @@ public class DataStore {
 		return new UUID(msl, lsl);
 	}
 
+	/** Converts an UUID to an hex number using the 0x format */
 	public static String UUIDtoHexString(UUID uuid) {
 		if (uuid == null) {
 			return "0";
@@ -1550,8 +1568,7 @@ public class DataStore {
 
 		@Override
 		public void run() {
-			// ensure player data is already read from file before trying to
-			// save
+			// ensure player data is already read from file before trying to save
 			this.playerData.getAccruedClaimBlocks();
 			this.playerData.getClaims();
 			DataStore.this.asyncSavePlayerData(this.playerID, this.playerData);
