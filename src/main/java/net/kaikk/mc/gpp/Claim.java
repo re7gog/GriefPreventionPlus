@@ -203,6 +203,11 @@ public class Claim {
 		if (player.getUniqueId().equals(this.getOwnerID()) || GriefPreventionPlus.getInstance().getDataStore().getPlayerData(player.getUniqueId()).ignoreClaims) {
 			return null;
 		}
+		
+		// if the entry trust mode is "allow by default", allow any player if there is no entry trust entry set
+		if (GriefPreventionPlus.getInstance().config.entryTrustAllowByDefault && this.permissionMapBukkit.isEmpty() && this.permissionMapFakePlayer.isEmpty() && this.permissionMapPlayers.isEmpty()) {
+			return null;
+		}
 
 		// look for explicit (or public) individual access, inventory, or build
 		// permission

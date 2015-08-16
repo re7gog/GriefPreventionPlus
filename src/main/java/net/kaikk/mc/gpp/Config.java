@@ -216,6 +216,9 @@ public class Config {
 	public boolean limitTreeGrowth; // whether trees should be prevented from
 	// growing into a claim from outside
 	public boolean pistonsInClaimsOnly; // whether pistons are limited to only
+	
+	// entrytrust default mode
+	public boolean entryTrustAllowByDefault;
 
 	// move blocks located within the
 	// piston's land claim
@@ -454,10 +457,14 @@ public class Config {
 		this.pvp_noCombatInAdminLandClaims = config.getBoolean("GriefPrevention.PvP.ProtectPlayersInLandClaims.AdministrativeClaims", true);
 		this.pvp_noCombatInAdminSubdivisions = config.getBoolean("GriefPrevention.PvP.ProtectPlayersInLandClaims.AdministrativeSubdivisions", true);
 
-		// optional database settings
+		// database settings
 		this.databaseUrl = config.getString("GriefPrevention.Database.URL", "");
 		this.databaseUserName = config.getString("GriefPrevention.Database.UserName", "");
 		this.databasePassword = config.getString("GriefPrevention.Database.Password", "");
+		
+		
+		// entry trust
+		this.entryTrustAllowByDefault = config.getBoolean("GriefPreventionPlus.EntryTrustAllowByDefault", true);
 
 		// claims mode by world
 		for (final UUID world : this.claims_worldModes.keySet()) {
@@ -549,6 +556,8 @@ public class Config {
 		outConfig.set("GriefPrevention.Mods.BlockIdsRequiringAccessTrust", accessTrustStrings);
 		outConfig.set("GriefPrevention.Mods.BlockIdsRequiringContainerTrust", containerTrustStrings);
 		outConfig.set("GriefPrevention.Mods.BlockIdsExplodable", explodableStrings);
+		
+		outConfig.set("GriefPreventionPlus.EntryTrustAllowByDefault", this.entryTrustAllowByDefault);
 
 		try {
 			outConfig.save(DataStore.configFilePath);
