@@ -848,11 +848,6 @@ public class Claim {
 			return true;
 		}
 
-		// check for public permission
-		if ((this.getPermission(GriefPreventionPlus.UUID0) & level.perm) != 0) {
-			return true;
-		}
-
 		// check if the player has the default permissionBukkit permission
 		switch (level) {
 		case ACCESS:
