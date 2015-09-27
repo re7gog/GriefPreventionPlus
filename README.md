@@ -1,18 +1,12 @@
 # GriefPreventionPlus
-I wanted to develop a GriefPrevention extension for cities (Towny-like), but the way GriefPrevention stores data limits extension possibilities.
+GriefPreventionPlus offers better performances, data integrity, extension capabilities, it currently supports MC1.7.10 and MC1.8.3.
 
-I changed the database structure and the way it stored data. GriefPreventionPlus offers better performances, data integrity, extension capabilities, it currently supports MC1.7.10 and MC1.8.3.
-
-There's a MC1.6.4 version too (thanks to @CappyT and @dedo1911) (UUIDProvider is required)
+There's a MC1.6.4 version too (thanks to @CappyT and @dedo1911)
 
 Feedback are needed! If you found an issue, please report it!
 Please use the "issues" page on Github!
 
-I suggest you to check my other plugins, like GriefPreventionPlus-Cities, that adds cities to your server! Check it at http://github.com/KaiKikuchi/GriefPreventionPlus-Cities
-If you're running a modded server, I suggest you to add ForgeRestrictor too!
-
-All DeVcoFTB's 1.7 modpacks run this plugin.
-Join us at http://www.devcoftb.com !
+DeVcoFTB's servers use this plugin. Check it at http://www.devcoftb.com
 
 ## Download
 All builds for my plugins can be found at this link: http://kaikk.net/mc/
@@ -40,6 +34,11 @@ If you're using GriefPrevention file based storage, read this: https://github.co
 - Entry permission (players can't enter claims without /entrytrust permission)
 - Javadoc for extension developers! (planned)
 
+###Extensions
+- GPPCities: be a mayor! make your city and invite your friends to your city! (https://github.com/KaiKikuchi/GriefPreventionPlus-Cities)
+- GPPRealEstate: Sell claims (https://github.com/KaiKikuchi/GPPRealEstate)
+- ForgeRestrictor: Enhanced protection for Cauldron servers (https://github.com/KaiKikuchi/ForgeRestrictor)
+- Dynmap-GPP: Add-on for Dynmap that shows claims (https://github.com/KaiKikuchi/Dynmap-GriefPreventionPlus)
 
 ####Notice
 - GriefPrevention's extensions don't work with GriefPreventionPlus without some little change on the code. If needed, I will fork most important GriefPrevention's extension to make it work with GriefPreventionPlus! You can ask for it!
