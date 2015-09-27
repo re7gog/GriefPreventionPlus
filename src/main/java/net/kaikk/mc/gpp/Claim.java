@@ -590,7 +590,7 @@ public class Claim {
 		GriefPreventionPlus.getInstance().getDataStore().dbUnsetPerm(this.id, permBukkit);
 	}
 
-	/** revokes a permission for a bukkit permission */
+	/** revokes a permission for a player */
 	public void dropPermission(UUID playerId) {
 		this.unsetPermission(playerId);
 		GriefPreventionPlus.getInstance().getDataStore().dbUnsetPerm(this.id, playerId);

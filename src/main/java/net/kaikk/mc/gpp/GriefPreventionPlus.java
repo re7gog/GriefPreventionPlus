@@ -57,7 +57,7 @@ public class GriefPreventionPlus extends JavaPlugin {
 
 	// helper method to resolve a player by name
 	public HashMap<String, UUID> playerNameToIDMap = new HashMap<String, UUID>();
-
+	
 	@Override
 	public void onLoad() {
 		// check if Grief Prevention is loaded
@@ -105,6 +105,7 @@ public class GriefPreventionPlus extends JavaPlugin {
 			addLogEntry("-- WARNING  --");
 			addLogEntry("Database settings are required! Update the database config settings to resolve the issue. Grief Prevention Plus disabled.");
 			addLogEntry("--------------");
+			this.getPluginLoader().disablePlugin(this);
 			return;
 		}
 
