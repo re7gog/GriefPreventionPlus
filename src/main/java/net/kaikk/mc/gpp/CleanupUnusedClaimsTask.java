@@ -19,86 +19,97 @@
 
 package net.kaikk.mc.gpp;
 
-import java.util.ConcurrentModificationException;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.bukkit.OfflinePlayer;
 import org.bukkit.scheduler.BukkitRunnable;
 
 class CleanupUnusedClaimsTask extends BukkitRunnable {
 	GriefPreventionPlus instance;
-	Iterator<Claim> iterator;
 	int areaOfDefaultClaim = 0;
-	int count = 0;
 
 	long claimsRemMillisecs = GriefPreventionPlus.getInstance().config.claims_expirationDays * 86400000L;
 	long chestMillisecs = GriefPreventionPlus.getInstance().config.claims_chestClaimExpirationDays * 86400000L;
+	
+	List<Claim> claimsToRemove;
+	
+	Iterator<Claim> iterator;
 
+	/** This constructor takes time to check claims to remove, then it'll remove claims
+	 *  when you run this task, one claim for each execution (use runTaskTimer!), until it removed all the claims.
+	 *  This is thread-unsafe, so don't use asynchronous calls.
+	 * */
 	CleanupUnusedClaimsTask(GriefPreventionPlus instance) {
 		if ((this.claimsRemMillisecs == 0) && (this.chestMillisecs == 0)) {
 			this.cancel();
 			return;
 		}
-		
 		this.instance = instance;
-		this.count = 0;
 		
 		if (this.instance.config.claims_automaticClaimsForNewPlayersRadius >= 0) { 
 			// determine area of the default chest claim
 			this.areaOfDefaultClaim = (int) Math.pow((this.instance.config.claims_automaticClaimsForNewPlayersRadius * 2) + 1, 2);
 		}
-	}
-
-	CleanupUnusedClaimsTask(GriefPreventionPlus instance, Iterator<Claim> iterator) {
-		this.instance = instance;
-		this.iterator = iterator;
+		
+		this.claimsToRemove = new LinkedList<Claim>();
+		
+		GriefPreventionPlus.addLogEntry("Unused claims task start! Calculating claims to remove...");
+		
+		long time = System.currentTimeMillis();
+		
+		for (Claim claim : this.instance.getDataStore().claims.values()) {
+			if (!claim.isAdminClaim()) {
+				final OfflinePlayer player = this.instance.getServer().getOfflinePlayer(claim.getOwnerID());
+				if (player.getLastPlayed() != 0) {
+					final PlayerData playerData = this.instance.getDataStore().getPlayerData(claim.getOwnerID());
+					if (player.getLastPlayed() != 0) {
+						final long timeElapsed = System.currentTimeMillis() - player.getLastPlayed();
+						if ((this.claimsRemMillisecs > 0 && timeElapsed > this.claimsRemMillisecs) || (this.chestMillisecs > 0 && timeElapsed > this.chestMillisecs && claim.getArea() <= this.areaOfDefaultClaim && (playerData == null || playerData.getClaims().size() == 1))) {
+							this.claimsToRemove.add(claim);
+						}
+					}
+				} else {
+					GriefPreventionPlus.addLogEntry(player.getName() + "'s LastPlayed is 0. Claim ID [" + claim.id + "] expiration skipped.");
+				}
+			}
+		}
+		
+		GriefPreventionPlus.addLogEntry("Found "+this.claimsToRemove.size()+" claims to be removed ("+(System.currentTimeMillis()-time)+" ms.)");
+		
+		this.iterator=this.claimsToRemove.iterator();
 	}
 
 	@Override
 	public void run() {
-		if (this.iterator == null) {
-			this.iterator = this.instance.getDataStore().claims.values().iterator();
-		}
-
 		try {
 			if (this.iterator.hasNext()) {
-				final Claim claim = this.iterator.next();
-				if (!claim.isAdminClaim()) {
-					final OfflinePlayer player = this.instance.getServer().getOfflinePlayer(claim.getOwnerID());
-					final PlayerData playerData = this.instance.getDataStore().getPlayerData(claim.getOwnerID());
-					if (player != null) {
-						if (player.getLastPlayed() != 0) {
-							final long timeElapsed = System.currentTimeMillis() - player.getLastPlayed();
-
-							if (((this.claimsRemMillisecs > 0) && (timeElapsed > this.claimsRemMillisecs)) || ((this.chestMillisecs > 0) && (timeElapsed > this.chestMillisecs) && (claim.getArea() <= this.areaOfDefaultClaim) && ((playerData == null) || (playerData.getClaims().size() == 1)))) {
-								claim.removeSurfaceFluids(null);
-								this.instance.getDataStore().deleteClaim(claim);
-								if (this.instance.creativeRulesApply(claim.getWorldUID()) || this.instance.config.claims_survivalAutoNatureRestoration) {
-									this.instance.restoreClaim(claim, 0);
-								}
-								this.count++;
-								GriefPreventionPlus.addLogEntry("Claim ID [" + claim.id + "] at " + claim.locationToString() + " owned by " + claim.getOwnerName() + " has expired.");
-							}
-						} else {
-							GriefPreventionPlus.addLogEntry(player.getName() + "'s LastPlayed is 0. Claim ID [" + claim.id + "] expiration skipped.");
-						}
-					}
+				Claim claim = this.iterator.next();
+				claim.removeSurfaceFluids(null);
+				this.instance.getDataStore().deleteClaim(claim);
+				if (this.instance.creativeRulesApply(claim.getWorldUID()) || this.instance.config.claims_survivalAutoNatureRestoration) {
+					this.instance.restoreClaim(claim, 0);
 				}
+				//this.count++;
+				GriefPreventionPlus.addLogEntry("Claim ID [" + claim.id + "] at " + claim.locationToString() + " owned by " + claim.getOwnerName() + " has expired.");
 			} else {
-				GriefPreventionPlus.addLogEntry("Claims cleanup task completed. Removed " + this.count + " claims.");
+				GriefPreventionPlus.addLogEntry("Claims cleanup task completed. Removed " + this.claimsToRemove.size() + " claims.");
 				this.reschedule();
 				return;
 			}
-		} catch (final ConcurrentModificationException e) {
-			new CleanupUnusedClaimsTask(this.instance).runTask(this.instance);
-			this.cancel();
-		} catch (final Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
 	void reschedule() {
-		new CleanupUnusedClaimsTask(this.instance).runTaskTimer(this.instance, 20L * 60 * 60 * 12, 4L);
 		this.cancel();
+		new BukkitRunnable() {
+			@Override
+			public void run() {
+				new CleanupUnusedClaimsTask(instance).runTaskTimer(instance, 4L, 4L);
+			}
+		}.runTaskLater(this.instance, 20L * 60 * 60 * 12);
 	}
 }
