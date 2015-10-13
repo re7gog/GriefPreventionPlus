@@ -22,8 +22,8 @@ package net.kaikk.mc.gpp;
 import java.util.UUID;
 
 import net.kaikk.mc.gpp.ClaimResult.Result;
-import net.kaikk.mc.gpp.events.ClaimDeletedEvent;
-import net.kaikk.mc.gpp.events.ClaimDeletedEvent.Reason;
+import net.kaikk.mc.gpp.events.ClaimDeleteEvent;
+import net.kaikk.mc.gpp.events.ClaimDeleteEvent.Reason;
 import net.kaikk.mc.gpp.visualization.Visualization;
 import net.kaikk.mc.gpp.visualization.VisualizationType;
 
@@ -670,7 +670,7 @@ public class CommandExec implements CommandExecutor {
 					playerData.warnedAboutMajorDeletion = true;
 				} else {
 					// fire event
-					final ClaimDeletedEvent event = new ClaimDeletedEvent(claim, Reason.DELETE);
+					final ClaimDeleteEvent event = new ClaimDeleteEvent(claim, Reason.DELETE);
 					GriefPreventionPlus.getInstance().getServer().getPluginManager().callEvent(event);
 					if (event.isCancelled()) {
 						return false;
@@ -1173,7 +1173,7 @@ public class CommandExec implements CommandExecutor {
 
 		else {
 			// fire event
-			final ClaimDeletedEvent event = new ClaimDeletedEvent(claim, Reason.ABANDON);
+			final ClaimDeleteEvent event = new ClaimDeleteEvent(claim, Reason.ABANDON);
 			GriefPreventionPlus.getInstance().getServer().getPluginManager().callEvent(event);
 			if (event.isCancelled()) {
 				return false;

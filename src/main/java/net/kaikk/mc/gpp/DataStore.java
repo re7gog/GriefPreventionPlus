@@ -40,9 +40,9 @@ import java.util.UUID;
 
 import net.kaikk.mc.gpp.ClaimResult.Result;
 import net.kaikk.mc.gpp.events.ClaimCreateEvent;
-import net.kaikk.mc.gpp.events.ClaimDeletedEvent;
-import net.kaikk.mc.gpp.events.ClaimDeletedEvent.Reason;
-import net.kaikk.mc.gpp.events.ClaimResizedEvent;
+import net.kaikk.mc.gpp.events.ClaimDeleteEvent;
+import net.kaikk.mc.gpp.events.ClaimDeleteEvent.Reason;
+import net.kaikk.mc.gpp.events.ClaimResizeEvent;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -588,7 +588,7 @@ public class DataStore {
 		for (final Claim claim : this.claims.values()) {
 			if (((playerID == claim.getOwnerID()) || ((playerID != null) && playerID.equals(claim.getOwnerID()))) && (deleteCreativeClaims || !GriefPreventionPlus.getInstance().creativeRulesApply(claim.getWorldUID()))) {
 				// fire event
-				final ClaimDeletedEvent event = new ClaimDeletedEvent(claim, Reason.DELETEALL);
+				final ClaimDeleteEvent event = new ClaimDeleteEvent(claim, Reason.DELETEALL);
 				GriefPreventionPlus.getInstance().getServer().getPluginManager().callEvent(event);
 				if (!event.isCancelled()) {
 					claimsToRemove.add(claim);
@@ -819,7 +819,7 @@ public class DataStore {
 
 		if (claimCheck == null) {
 			// fire event
-			final ClaimResizedEvent event = new ClaimResizedEvent(claim, newClaim);
+			final ClaimResizeEvent event = new ClaimResizeEvent(claim, newClaim);
 			GriefPreventionPlus.getInstance().getServer().getPluginManager().callEvent(event);
 			if (event.isCancelled()) {
 				return new ClaimResult(event.getReason());

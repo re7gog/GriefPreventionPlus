@@ -7,13 +7,13 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
 /** Called when a claim is resized */
-public class ClaimResizedEvent extends Event implements Cancellable {
+public class ClaimResizeEvent extends Event implements Cancellable {
 	private final Claim claim;
 	private final Claim newClaim;
 	private boolean isCancelled;
 	private String reason;
 
-	public ClaimResizedEvent(Claim claim, Claim newClaim) {
+	public ClaimResizeEvent(Claim claim, Claim newClaim) {
 		this.claim = claim;
 		this.newClaim = newClaim;
 	}
