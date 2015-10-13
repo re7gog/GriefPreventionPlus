@@ -134,7 +134,11 @@ public class CommandExec implements CommandExecutor {
 		// GP's commands
 		// abandonclaim
 		if (cmd.getName().equalsIgnoreCase("abandonclaim") && (player != null)) {
-			return this.abandonClaimHandler(player, false);
+			try {
+				return this.abandonClaimHandler(player, false, (args.length>0 ? Integer.valueOf(args[0]) : -1));
+			} catch (NumberFormatException e) {
+				return false;
+			}
 		}
 
 		// abandontoplevelclaim
@@ -1135,15 +1139,22 @@ public class CommandExec implements CommandExecutor {
 
 		return false;
 	}
-
+	
 	boolean abandonClaimHandler(Player player, boolean deleteTopLevelClaim) {
-		final PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
+		return abandonClaimHandler(player, deleteTopLevelClaim, -1);
+	}
 
+	boolean abandonClaimHandler(Player player, boolean deleteTopLevelClaim, int claimId) {
+		final PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
+		
 		// which claim is being abandoned?
-		final Claim claim = this.dataStore.getClaimAt(player.getLocation(), true /*
-																				 * ignore
-																				 * height
-																				 */);
+		final Claim claim;
+		if (claimId==-1) {
+			claim = this.dataStore.getClaimAt(player.getLocation(), true);
+		} else {
+			claim = this.dataStore.getClaim(claimId);
+		}
+		
 		if (claim == null) {
 			GriefPreventionPlus.sendMessage(player, TextMode.Instr, Messages.AbandonClaimMissing);
 		}
