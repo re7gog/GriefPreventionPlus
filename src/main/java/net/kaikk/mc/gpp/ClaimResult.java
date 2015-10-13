@@ -19,36 +19,57 @@
 package net.kaikk.mc.gpp;
 
 public class ClaimResult {
-	// whether or not the creation succeeded (it would fail if the new claim
-	// overlapped another existing claim)
-	private boolean succeeded;
+	// Success result
+	private Result result;
 
 	// when succeeded, this is a reference to the new claim
 	// when failed, this is a reference to the pre-existing, conflicting claim
 	private Claim claim;
+	
+	private String reason;
 
 	ClaimResult() {
-
+		result = Result.SUCCESS;
 	}
 
-	ClaimResult(boolean succeeded, Claim claim) {
-		this.setSucceeded(succeeded);
+	ClaimResult(Result result, Claim claim) {
+		this.setResult(result);
 		this.setClaim(claim);
+	}
+	
+	/** this will be set by an event that cancels the event */
+	ClaimResult(String reason) {
+		this.result=Result.EVENT;
+		this.reason=reason;
 	}
 
 	public Claim getClaim() {
 		return this.claim;
 	}
-
-	public boolean isSucceeded() {
-		return this.succeeded;
+	
+	public Result getResult() {
+		return result;
 	}
 
 	public void setClaim(Claim claim) {
 		this.claim = claim;
 	}
 
-	public void setSucceeded(boolean succeeded) {
-		this.succeeded = succeeded;
+	public void setResult(Result result) {
+		this.result = result;
+	}
+	
+	public enum Result {
+		SUCCESS, OVERLAP, WGREGION, EVENT;
+	}
+
+	/** the reason received by the event */
+	public String getReason() {
+		return reason;
+	}
+
+	/** set the reason that will be shown to the player */
+	public void setReason(String reason) {
+		this.reason = reason;
 	}
 }

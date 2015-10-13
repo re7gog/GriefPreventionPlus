@@ -21,6 +21,7 @@ package net.kaikk.mc.gpp;
 
 import java.util.UUID;
 
+import net.kaikk.mc.gpp.ClaimResult.Result;
 import net.kaikk.mc.gpp.events.ClaimDeletedEvent;
 import net.kaikk.mc.gpp.events.ClaimDeletedEvent.Reason;
 import net.kaikk.mc.gpp.visualization.Visualization;
@@ -79,32 +80,37 @@ public class CommandExec implements CommandExecutor {
 				// try to create a new claim
 				final ClaimResult result = this.dataStore.createClaim(player.getWorld().getUID(), x1, x2, z1, z2, player.getUniqueId(), null, null, player);
 
-				// if it didn't succeed, tell the player why
-				if (!result.isSucceeded()) {
-					if (result.getClaim() != null) {
+				switch(result.getResult()) {
+					case EVENT:{
+						// show the message set by the event
+						if (result.getReason()!=null) {
+							GriefPreventionPlus.sendMessage(player, TextMode.Err, result.getReason());
+						}
+						break;
+					}
+					case OVERLAP:{
 						GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.CreateClaimFailOverlapShort);
 
 						final Visualization visualization = Visualization.FromClaim(result.getClaim(), player.getLocation().getBlockY(), VisualizationType.ErrorClaim, player.getLocation());
 						Visualization.Apply(player, visualization);
-					} else {
-						GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.CreateClaimFailOverlapRegion);
+						break;
 					}
+					case SUCCESS:{
+						GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.CreateClaimSuccess);
+						final Visualization visualization = Visualization.FromClaim(result.getClaim(), player.getLocation().getBlockY(), VisualizationType.Claim, player.getLocation());
+						Visualization.Apply(player, visualization);
+						playerData.lastShovelLocation = null;
 
-					return true;
-				}
-
-				// otherwise, advise him on the /trust command and show him his
-				// new claim
-				else {
-					GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.CreateClaimSuccess);
-					final Visualization visualization = Visualization.FromClaim(result.getClaim(), player.getLocation().getBlockY(), VisualizationType.Claim, player.getLocation());
-					Visualization.Apply(player, visualization);
-					playerData.lastShovelLocation = null;
-
-					// if it's a big claim, tell the player about subdivisions
-					if (!player.hasPermission("griefprevention.adminclaims") && (result.getClaim().getArea() >= 1000)) {
-						GriefPreventionPlus.sendMessage(player, TextMode.Info, Messages.BecomeMayor, 200L);
-						GriefPreventionPlus.sendMessage(player, TextMode.Instr, Messages.SubdivisionVideo2, 201L, DataStore.SUBDIVISION_VIDEO_URL);
+						// if it's a big claim, tell the player about subdivisions
+						if (!player.hasPermission("griefprevention.adminclaims") && (result.getClaim().getArea() >= 1000)) {
+							GriefPreventionPlus.sendMessage(player, TextMode.Info, Messages.BecomeMayor, 200L);
+							GriefPreventionPlus.sendMessage(player, TextMode.Instr, Messages.SubdivisionVideo2, 201L, DataStore.SUBDIVISION_VIDEO_URL);
+						}
+						break;
+					}
+					case WGREGION:{
+						GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.CreateClaimFailOverlapRegion);
+						break;
 					}
 				}
 			} catch (final NumberFormatException e) {
@@ -1082,36 +1088,41 @@ public class CommandExec implements CommandExecutor {
 				
 				// try to create a new claim
 				final ClaimResult result = this.dataStore.createClaim(world.getUID(), x1, x2, z1, z2, (player!=null ? player.getUniqueId() : GriefPreventionPlus.UUID1), null, null, player);
-				
-				// if it didn't succeed, tell the player why
-				if (!result.isSucceeded()) {
-					if (player!=null) {
-						if (result.getClaim() != null) {
+				if (player==null && result.getResult()!=Result.SUCCESS) {
+					sender.sendMessage("Your selected area overlaps an existing claim.");
+				} else {
+					switch(result.getResult()) {
+						case EVENT:{
+							// show the message set by the event
+							if (result.getReason()!=null) {
+								GriefPreventionPlus.sendMessage(player, TextMode.Err, result.getReason());
+							}
+							break;
+						}
+						case OVERLAP:{
 							GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.CreateClaimFailOverlapShort);
-	
+							
 							final Visualization visualization = Visualization.FromClaim(result.getClaim(), player.getLocation().getBlockY(), VisualizationType.ErrorClaim, player.getLocation());
 							Visualization.Apply(player, visualization);
-						} else {
-							GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.CreateClaimFailOverlapRegion);
+							break;
 						}
-					} else {
-						sender.sendMessage("Your selected area overlaps an existing claim.");
-					}
-					return true;
-				}
-
-				// otherwise, advise him on the /trust command and show him his
-				// new claim
-				else {
-					GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.CreateClaimSuccess);
-					if (player!=null) {
-						final Visualization visualization = Visualization.FromClaim(result.getClaim(), player.getLocation().getBlockY(), VisualizationType.Claim, player.getLocation());
-						Visualization.Apply(player, visualization);
-	
-						// if it's a big claim, tell the player about subdivisions
-						if (!player.hasPermission("griefprevention.adminclaims") && (result.getClaim().getArea() >= 1000)) {
-							GriefPreventionPlus.sendMessage(player, TextMode.Info, Messages.BecomeMayor, 200L);
-							GriefPreventionPlus.sendMessage(player, TextMode.Instr, Messages.SubdivisionVideo2, 201L, DataStore.SUBDIVISION_VIDEO_URL);
+						case SUCCESS:{
+							GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.CreateClaimSuccess);
+							if (player!=null) {
+								final Visualization visualization = Visualization.FromClaim(result.getClaim(), player.getLocation().getBlockY(), VisualizationType.Claim, player.getLocation());
+								Visualization.Apply(player, visualization);
+			
+								// if it's a big claim, tell the player about subdivisions
+								if (!player.hasPermission("griefprevention.adminclaims") && (result.getClaim().getArea() >= 1000)) {
+									GriefPreventionPlus.sendMessage(player, TextMode.Info, Messages.BecomeMayor, 200L);
+									GriefPreventionPlus.sendMessage(player, TextMode.Instr, Messages.SubdivisionVideo2, 201L, DataStore.SUBDIVISION_VIDEO_URL);
+								}
+							}
+							break;
+						}
+						case WGREGION:{
+							GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.CreateClaimFailOverlapRegion);
+							break;
 						}
 					}
 				}

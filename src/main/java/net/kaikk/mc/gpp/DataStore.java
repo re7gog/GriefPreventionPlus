@@ -38,6 +38,8 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.UUID;
 
+import net.kaikk.mc.gpp.ClaimResult.Result;
+import net.kaikk.mc.gpp.events.ClaimCreateEvent;
 import net.kaikk.mc.gpp.events.ClaimDeletedEvent;
 import net.kaikk.mc.gpp.events.ClaimDeletedEvent.Reason;
 import net.kaikk.mc.gpp.events.ClaimResizedEvent;
@@ -517,7 +519,7 @@ public class DataStore {
 			// if we find an existing claim which will be overlapped
 			if (otherClaim.overlaps(newClaim)) {
 				// result = fail, return conflicting claim
-				result.setSucceeded(false);
+				result.setResult(Result.OVERLAP);
 				result.setClaim(otherClaim);
 				return result;
 			}
@@ -527,17 +529,25 @@ public class DataStore {
 		// worldguard regions
 		if (GriefPreventionPlus.getInstance().config.claims_respectWorldGuard && (this.worldGuard != null) && (creatingPlayer != null)) {
 			if (!this.worldGuard.canBuild(newClaim.getWorld(), newClaim.lesserX, newClaim.lesserZ, newClaim.greaterX, newClaim.greaterZ, creatingPlayer)) {
-				result.setSucceeded(false);
-				result.setClaim(null);
+				result.setResult(Result.WGREGION);
 				return result;
 			}
 		}
-
+		
+		// call the event
+		ClaimCreateEvent event = new ClaimCreateEvent(newClaim);
+		GriefPreventionPlus.getInstance().getServer().getPluginManager().callEvent(event);
+		if (event.isCancelled()) {
+			result.setResult(Result.EVENT);
+			result.setReason(event.getReason());
+			return result;
+		}
+		
 		// otherwise add this new claim to the data store to make it effective
 		this.addClaim(newClaim, true);
 
 		// then return success along with reference to new claim
-		result.setSucceeded(true);
+		result.setResult(Result.SUCCESS);
 		result.setClaim(newClaim);
 		return result;
 	}
@@ -812,7 +822,7 @@ public class DataStore {
 			final ClaimResizedEvent event = new ClaimResizedEvent(claim, newClaim);
 			GriefPreventionPlus.getInstance().getServer().getPluginManager().callEvent(event);
 			if (event.isCancelled()) {
-				return new ClaimResult(false, claimCheck);
+				return new ClaimResult(event.getReason());
 			}
 
 			// let's update this claim
@@ -826,9 +836,9 @@ public class DataStore {
 			this.posClaimsAdd(claim);
 
 			GriefPreventionPlus.addLogEntry(claim.getOwnerName() + " resized claim id " + claim.id + " from " + oldLoc + " to " + claim.locationToString());
-			return new ClaimResult(true, claim);
+			return new ClaimResult(Result.SUCCESS, claim);
 		} else {
-			return new ClaimResult(false, claimCheck);
+			return new ClaimResult(Result.OVERLAP, claimCheck);
 		}
 	}
 

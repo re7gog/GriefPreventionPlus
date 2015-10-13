@@ -71,7 +71,7 @@ class CleanupUnusedClaimsTask extends BukkitRunnable {
 						}
 					}
 				} else {
-					GriefPreventionPlus.addLogEntry(player.getName() + "'s LastPlayed is 0. Claim ID [" + claim.id + "] expiration skipped.");
+					GriefPreventionPlus.addLogEntry(""+(player.getName()!=null?player.getName():"(UUID:"+claim.getOwnerID()+")") + "'s player data is invalid. Claim ID [" + claim.id + "] expiration skipped.");
 				}
 			}
 		}

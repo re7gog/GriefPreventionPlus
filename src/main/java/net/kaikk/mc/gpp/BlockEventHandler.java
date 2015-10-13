@@ -22,6 +22,7 @@ package net.kaikk.mc.gpp;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.kaikk.mc.gpp.ClaimResult.Result;
 import net.kaikk.mc.gpp.visualization.Visualization;
 import net.kaikk.mc.gpp.visualization.VisualizationType;
 
@@ -458,7 +459,7 @@ class BlockEventHandler implements Listener {
 					// note that since the player had permission to place the
 					// chest, at the very least, the automatic claim will
 					// include the chest
-					while ((radius >= 0) && !this.dataStore.createClaim(block.getWorld().getUID(), block.getX() - radius, block.getX() + radius, block.getZ() - radius, block.getZ() + radius, player.getUniqueId(), null, null, player).isSucceeded()) {
+					while ((radius >= 0) && this.dataStore.createClaim(block.getWorld().getUID(), block.getX() - radius, block.getX() + radius, block.getZ() - radius, block.getZ() + radius, player.getUniqueId(), null, null, player).getResult()!=Result.SUCCESS) {
 						radius--;
 					}
 
