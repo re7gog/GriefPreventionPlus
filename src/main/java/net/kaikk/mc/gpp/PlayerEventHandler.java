@@ -124,27 +124,7 @@ class PlayerEventHandler implements Listener {
 	PlayerEventHandler(DataStore dataStore) {
 		this.dataStore = dataStore;
 	}
-	/* TODO 
-	@EventHandler(ignoreCancelled = false, priority = EventPriority.HIGH)
-	void onClaimEnter(ClaimEnterEvent event) {
-		final Player player = event.getPlayer();
-		final Claim toClaim = event.getClaim();
-		if (event.getClaim() != null) {
-			final PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
-			playerData.lastClaim = toClaim;
-			final String noEntryReason = toClaim.canEnter(player);
-			if (noEntryReason != null) {
-				GriefPreventionPlus.sendMessage(player, TextMode.Err, noEntryReason);
-				event.setCancelled(true);
-			}
-		}
-	}
-	
-	@EventHandler(ignoreCancelled = false, priority = EventPriority.HIGH)
-	void onClaimFromTo(ClaimFromToEvent event) {
-		
-	}
-*/
+
 	// when a player switches in-hand items
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	void onItemHeldChange(PlayerItemHeldEvent event) {
