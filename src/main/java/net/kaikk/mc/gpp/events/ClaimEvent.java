@@ -1,5 +1,6 @@
 package net.kaikk.mc.gpp.events;
 
+import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -11,13 +12,19 @@ public abstract class ClaimEvent extends Event implements Cancellable {
 	private final Claim claim;
 	private boolean isCancelled;
 	private String reason;
+	private Player player;
 
-	public ClaimEvent(Claim claim) {
+	public ClaimEvent(Claim claim, Player player) {
 		this.claim = claim;
+		this.player = player;
 	}
 
 	public Claim getClaim() {
 		return this.claim;
+	}
+	
+	public Player getPlayer() {
+		return player;
 	}
 	
 	public String getReason() {

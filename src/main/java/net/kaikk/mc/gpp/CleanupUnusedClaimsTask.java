@@ -23,8 +23,12 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.scheduler.BukkitRunnable;
+
+import net.kaikk.mc.gpp.events.ClaimDeleteEvent;
+import net.kaikk.mc.gpp.events.ClaimDeleteEvent.Reason;
 
 class CleanupUnusedClaimsTask extends BukkitRunnable {
 	GriefPreventionPlus instance;
@@ -86,6 +90,12 @@ class CleanupUnusedClaimsTask extends BukkitRunnable {
 		try {
 			if (this.iterator.hasNext()) {
 				Claim claim = this.iterator.next();
+				// call event
+				ClaimDeleteEvent event = new ClaimDeleteEvent(claim, null, Reason.EXPIRED);
+				Bukkit.getPluginManager().callEvent(event);
+				if (event.isCancelled()) {
+					return;
+				}
 				claim.removeSurfaceFluids(null);
 				this.instance.getDataStore().deleteClaim(claim);
 				if (this.instance.creativeRulesApply(claim.getWorldUID()) || this.instance.config.claims_survivalAutoNatureRestoration) {

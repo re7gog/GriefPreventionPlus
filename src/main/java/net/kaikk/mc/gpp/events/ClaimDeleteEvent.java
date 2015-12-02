@@ -1,13 +1,15 @@
 package net.kaikk.mc.gpp.events;
 
+import org.bukkit.entity.Player;
+
 import net.kaikk.mc.gpp.Claim;
 
 /** Called when a claim is deleted */
 public class ClaimDeleteEvent extends ClaimEvent {
 	private final Reason deleteReason;
 	
-	public ClaimDeleteEvent(Claim claim, Reason deleteReason) {
-		super(claim);
+	public ClaimDeleteEvent(Claim claim, Player player, Reason deleteReason) {
+		super(claim, player);
 		this.deleteReason = deleteReason;
 	}
 
@@ -16,6 +18,6 @@ public class ClaimDeleteEvent extends ClaimEvent {
 	}
 
 	public enum Reason {
-		ABANDON, DELETE, DELETEALL;
+		ABANDON, DELETE, DELETEALL, EXPIRED;
 	}
 }

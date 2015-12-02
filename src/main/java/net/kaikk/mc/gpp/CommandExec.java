@@ -21,12 +21,8 @@ package net.kaikk.mc.gpp;
 
 import java.util.UUID;
 
-import net.kaikk.mc.gpp.ClaimResult.Result;
-import net.kaikk.mc.gpp.events.ClaimDeleteEvent;
-import net.kaikk.mc.gpp.events.ClaimDeleteEvent.Reason;
-import net.kaikk.mc.gpp.visualization.Visualization;
-import net.kaikk.mc.gpp.visualization.VisualizationType;
-
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
@@ -37,6 +33,13 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+
+import net.kaikk.mc.gpp.ClaimResult.Result;
+import net.kaikk.mc.gpp.events.ClaimDeleteEvent;
+import net.kaikk.mc.gpp.events.ClaimDeleteEvent.Reason;
+import net.kaikk.mc.gpp.events.ClaimOwnerTransfer;
+import net.kaikk.mc.gpp.visualization.Visualization;
+import net.kaikk.mc.gpp.visualization.VisualizationType;
 
 @SuppressWarnings("deprecation")
 public class CommandExec implements CommandExecutor {
@@ -78,7 +81,7 @@ public class CommandExec implements CommandExecutor {
 				final int x = player.getLocation().getBlockX(), z = player.getLocation().getBlockZ(), x1 = x - range, x2 = x + range, z1 = z - range, z2 = z + range;
 
 				// try to create a new claim
-				final ClaimResult result = this.dataStore.createClaim(player.getWorld().getUID(), x1, x2, z1, z2, player.getUniqueId(), null, null, player);
+				final ClaimResult result = this.dataStore.createClaim(player.getWorld().getUID(), x1, z1, x2, z2, player.getUniqueId(), null, null, player);
 
 				switch(result.getResult()) {
 					case EVENT:{
@@ -129,6 +132,33 @@ public class CommandExec implements CommandExecutor {
 			}
 
 			return true;
+		}
+		
+		if (cmd.getName().equalsIgnoreCase("tpclaim")) {
+			if (player == null) {
+				GriefPreventionPlus.sendMessage(player, TextMode.Err, "Console can't run this command!");
+				return true;
+			}
+			
+			if (args.length!=1) {
+				return false;
+			}
+			
+			try {
+				Claim claim = GriefPreventionPlus.getInstance().getDataStore().getClaim(Integer.valueOf(args[0]));
+				if (claim==null) {
+					GriefPreventionPlus.sendMessage(player, TextMode.Err, "Claim not found");
+					return false;
+				}
+				
+				Location loc = claim.getLesserBoundaryCorner();
+				loc = loc.getWorld().getHighestBlockAt(loc).getLocation();
+				player.teleport(loc);
+				GriefPreventionPlus.sendMessage(player, TextMode.Info, "Teleported to claim ("+claim.getID()+") at "+"[" + loc.getWorld().getName() + ", " + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() + "]");
+			} catch (NumberFormatException e) {
+				GriefPreventionPlus.sendMessage(player, TextMode.Err, "Invalid id");
+				return false;
+			}
 		}
 
 		// GP's commands
@@ -184,7 +214,7 @@ public class CommandExec implements CommandExecutor {
 			}
 
 			// delete them
-			this.gpp.getDataStore().deleteClaimsForPlayer(player.getUniqueId(), false);
+			this.gpp.getDataStore().deleteClaimsForPlayer(player.getUniqueId(), player, false);
 
 			// inform the player
 			final int remainingBlocks = playerData.getRemainingClaimBlocks();
@@ -277,6 +307,13 @@ public class CommandExec implements CommandExecutor {
 				}
 				newOwnerID = targetPlayer.getUniqueId();
 				ownerName = targetPlayer.getName();
+			}
+			
+			// call event
+			ClaimOwnerTransfer event = new ClaimOwnerTransfer(claim, player, newOwnerID);
+			Bukkit.getPluginManager().callEvent(event);
+			if (event.isCancelled()) {
+				return true;
 			}
 
 			// change ownerhsip
@@ -670,7 +707,7 @@ public class CommandExec implements CommandExecutor {
 					playerData.warnedAboutMajorDeletion = true;
 				} else {
 					// fire event
-					final ClaimDeleteEvent event = new ClaimDeleteEvent(claim, Reason.DELETE);
+					final ClaimDeleteEvent event = new ClaimDeleteEvent(claim, player, Reason.DELETE);
 					GriefPreventionPlus.getInstance().getServer().getPluginManager().callEvent(event);
 					if (event.isCancelled()) {
 						return false;
@@ -744,7 +781,7 @@ public class CommandExec implements CommandExecutor {
 			}
 
 			// delete all that player's claims
-			this.gpp.getDataStore().deleteClaimsForPlayer(otherPlayer.getUniqueId(), true);
+			this.gpp.getDataStore().deleteClaimsForPlayer(otherPlayer.getUniqueId(), player, true);
 
 			GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.DeleteAllSuccess, otherPlayer.getName());
 			if (player != null) {
@@ -829,14 +866,7 @@ public class CommandExec implements CommandExecutor {
 			}
 
 			// delete all admin claims
-			this.gpp.getDataStore().deleteClaimsForPlayer(null, true); // null
-			// for
-			// owner
-			// id
-			// indicates
-			// an
-			// administrative
-			// claim
+			this.gpp.getDataStore().deleteClaimsForPlayer(null, player, true);
 
 			GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.AllAdminDeleted);
 			if (player != null) {
@@ -1091,7 +1121,7 @@ public class CommandExec implements CommandExecutor {
 				final int x1 = x - range, x2 = x + range, z1 = z - range, z2 = z + range;
 				
 				// try to create a new claim
-				final ClaimResult result = this.dataStore.createClaim(world.getUID(), x1, x2, z1, z2, (player!=null ? player.getUniqueId() : GriefPreventionPlus.UUID1), null, null, player);
+				final ClaimResult result = this.dataStore.createClaim(world.getUID(), x1, z1, x2, z2, (player!=null ? player.getUniqueId() : GriefPreventionPlus.UUID1), null, null, player);
 				if (player==null && result.getResult()!=Result.SUCCESS) {
 					sender.sendMessage("Your selected area overlaps an existing claim.");
 				} else {
@@ -1173,7 +1203,7 @@ public class CommandExec implements CommandExecutor {
 
 		else {
 			// fire event
-			final ClaimDeleteEvent event = new ClaimDeleteEvent(claim, Reason.ABANDON);
+			final ClaimDeleteEvent event = new ClaimDeleteEvent(claim, player, Reason.ABANDON);
 			GriefPreventionPlus.getInstance().getServer().getPluginManager().callEvent(event);
 			if (event.isCancelled()) {
 				return false;

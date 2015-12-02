@@ -193,41 +193,9 @@ public class GriefPreventionPlus extends JavaPlugin {
 
 		addLogEntry("Cached " + playersCached + " recent players.");
 		final CommandExec commandExec = new CommandExec();
-		this.getCommand("claim").setExecutor(commandExec);
-		this.getCommand("clearorphanclaims").setExecutor(commandExec);
-		this.getCommand("abandonclaim").setExecutor(commandExec);
-		this.getCommand("abandontoplevelclaim").setExecutor(commandExec);
-		this.getCommand("ignoreclaims").setExecutor(commandExec);
-		this.getCommand("abandonallclaims").setExecutor(commandExec);
-		this.getCommand("restorenature").setExecutor(commandExec);
-		this.getCommand("restorenatureaggressive").setExecutor(commandExec);
-		this.getCommand("restorenaturefill").setExecutor(commandExec);
-		this.getCommand("trust").setExecutor(commandExec);
-		this.getCommand("transferclaim").setExecutor(commandExec);
-		this.getCommand("trustlist").setExecutor(commandExec);
-		this.getCommand("untrust").setExecutor(commandExec);
-		this.getCommand("entrytrust").setExecutor(commandExec);
-		this.getCommand("accesstrust").setExecutor(commandExec);
-		this.getCommand("containertrust").setExecutor(commandExec);
-		this.getCommand("permissiontrust").setExecutor(commandExec);
-		this.getCommand("buyclaimblocks").setExecutor(commandExec);
-		this.getCommand("sellclaimblocks").setExecutor(commandExec);
-		this.getCommand("adminclaims").setExecutor(commandExec);
-		this.getCommand("basicclaims").setExecutor(commandExec);
-		this.getCommand("subdivideclaims").setExecutor(commandExec);
-		this.getCommand("deleteclaim").setExecutor(commandExec);
-		this.getCommand("claimexplosions").setExecutor(commandExec);
-		this.getCommand("deleteallclaims").setExecutor(commandExec);
-		this.getCommand("claimslist").setExecutor(commandExec);
-		this.getCommand("unlockdrops").setExecutor(commandExec);
-		this.getCommand("deletealladminclaims").setExecutor(commandExec);
-		this.getCommand("adjustbonusclaimblocks").setExecutor(commandExec);
-		this.getCommand("trapped").setExecutor(commandExec);
-		this.getCommand("softmute").setExecutor(commandExec);
-		this.getCommand("gpreload").setExecutor(commandExec);
-		this.getCommand("givepet").setExecutor(commandExec);
-		this.getCommand("gpblockinfo").setExecutor(commandExec);
-		this.getCommand("claimarea").setExecutor(commandExec);
+		for (String command : this.getDescription().getCommands().keySet()) {
+			this.getCommand(command).setExecutor(commandExec);
+		}
 
 		// start recurring cleanup scan for unused claims belonging to inactive players
 		new CleanupUnusedClaimsTask(this).runTaskTimer(this, 200L, 4L);

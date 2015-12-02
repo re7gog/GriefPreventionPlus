@@ -448,7 +448,7 @@ class BlockEventHandler implements Listener {
 			if (playerData.getClaims().size() == 0) {
 				// radius == 0 means protect ONLY the chest
 				if (GriefPreventionPlus.getInstance().config.claims_automaticClaimsForNewPlayersRadius == 0) {
-					this.dataStore.createClaim(block.getWorld().getUID(), block.getX(), block.getX(), block.getZ(), block.getZ(), player.getUniqueId(), null, null, player);
+					this.dataStore.createClaim(block.getWorld().getUID(), block.getX(), block.getZ(), block.getX(), block.getZ(), player.getUniqueId(), null, null, player);
 					GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.ChestClaimConfirmation);
 				}
 
@@ -459,7 +459,7 @@ class BlockEventHandler implements Listener {
 					// note that since the player had permission to place the
 					// chest, at the very least, the automatic claim will
 					// include the chest
-					while ((radius >= 0) && this.dataStore.createClaim(block.getWorld().getUID(), block.getX() - radius, block.getX() + radius, block.getZ() - radius, block.getZ() + radius, player.getUniqueId(), null, null, player).getResult()!=Result.SUCCESS) {
+					while ((radius >= 0) && this.dataStore.createClaim(block.getWorld().getUID(), block.getX() - radius, block.getZ() - radius, block.getX() + radius, block.getZ() + radius, player.getUniqueId(), null, null, player).getResult()!=Result.SUCCESS) {
 						radius--;
 					}
 

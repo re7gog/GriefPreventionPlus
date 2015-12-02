@@ -478,7 +478,7 @@ public class DataStore {
 	blocks.
 	- does NOT check minimum claim size constraints
 	- does NOT visualize the new claim for any players */
-	synchronized public ClaimResult createClaim(UUID world, int x1, int x2, int z1, int z2, UUID ownerID, Claim parent, Integer id, Player creatingPlayer) {
+	synchronized public ClaimResult createClaim(UUID world, int x1, int z1, int x2, int z2, UUID ownerID, Claim parent, Integer id, Player creatingPlayer) {
 		final ClaimResult result = new ClaimResult();
 
 		int smallx, bigx, smallz, bigz;
@@ -535,7 +535,7 @@ public class DataStore {
 		}
 		
 		// call the event
-		ClaimCreateEvent event = new ClaimCreateEvent(newClaim);
+		ClaimCreateEvent event = new ClaimCreateEvent(newClaim, creatingPlayer);
 		GriefPreventionPlus.getInstance().getServer().getPluginManager().callEvent(event);
 		if (event.isCancelled()) {
 			result.setResult(Result.EVENT);
@@ -583,12 +583,12 @@ public class DataStore {
 	}
 
 	/** deletes all claims owned by a player */
-	synchronized public void deleteClaimsForPlayer(UUID playerID, boolean deleteCreativeClaims) {
+	synchronized public void deleteClaimsForPlayer(UUID claimsOwner, Player sender, boolean deleteCreativeClaims) {
 		List<Claim> claimsToRemove = new ArrayList<Claim>();
 		for (final Claim claim : this.claims.values()) {
-			if (((playerID == claim.getOwnerID()) || ((playerID != null) && playerID.equals(claim.getOwnerID()))) && (deleteCreativeClaims || !GriefPreventionPlus.getInstance().creativeRulesApply(claim.getWorldUID()))) {
+			if (((claimsOwner == claim.getOwnerID()) || ((claimsOwner != null) && claimsOwner.equals(claim.getOwnerID()))) && (deleteCreativeClaims || !GriefPreventionPlus.getInstance().creativeRulesApply(claim.getWorldUID()))) {
 				// fire event
-				final ClaimDeleteEvent event = new ClaimDeleteEvent(claim, Reason.DELETEALL);
+				final ClaimDeleteEvent event = new ClaimDeleteEvent(claim, sender, Reason.DELETEALL);
 				GriefPreventionPlus.getInstance().getServer().getPluginManager().callEvent(event);
 				if (!event.isCancelled()) {
 					claimsToRemove.add(claim);
@@ -627,6 +627,10 @@ public class DataStore {
 				c.unsetPermission(playerId);
 			}
 		}
+	}
+	/** get claims map */
+	public Map<Integer, Claim> getClaims() {
+		return claims;
 	}
 
 	/** get a claim by ID */
@@ -819,7 +823,7 @@ public class DataStore {
 
 		if (claimCheck == null) {
 			// fire event
-			final ClaimResizeEvent event = new ClaimResizeEvent(claim, newClaim);
+			final ClaimResizeEvent event = new ClaimResizeEvent(claim, newClaim, resizingPlayer);
 			GriefPreventionPlus.getInstance().getServer().getPluginManager().callEvent(event);
 			if (event.isCancelled()) {
 				return new ClaimResult(event.getReason());

@@ -401,7 +401,7 @@ class PlayerEventHandler implements Listener {
 	// this event is fired when a player enters another claim/subdivision
 	@EventHandler(ignoreCancelled = false, priority = EventPriority.HIGH)
 	void onPlayerMove(PlayerMoveEvent event) {
-		if (!this.updateLastMovementClaim(event.getPlayer(), event.getTo())) {
+		if (!this.updateLastMovementClaim(event.getPlayer(), event.getFrom(), event.getTo())) {
 			final Location invertedLocation = this.invertedLocation(event.getFrom(), event.getTo());
 			final Claim claim = this.dataStore.getClaimAt(invertedLocation, false);
 			if (claim == null || claim.canAccess(event.getPlayer())==null) {
@@ -482,7 +482,7 @@ class PlayerEventHandler implements Listener {
 	// when a player teleports
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
 	void onPlayerTeleport(PlayerTeleportEvent event) {
-		event.setCancelled(!this.updateLastMovementClaim(event.getPlayer(), event.getTo()));
+		event.setCancelled(!this.updateLastMovementClaim(event.getPlayer(), event.getFrom(), event.getTo()));
 	}
 
 	// returns true if the message should be sent, false if it should be muted
@@ -812,11 +812,11 @@ class PlayerEventHandler implements Listener {
 		return false;
 	}
 
-	private boolean updateLastMovementClaim(Player player, Location location) {
+	private boolean updateLastMovementClaim(Player player,  Location from, Location to) {
 		final PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
 
-		if (playerData.lastX!=location.getBlockX() || playerData.lastZ!=location.getBlockZ() || !location.getWorld().getUID().equals(playerData.lastWorld)) {
-			final Claim claim = this.dataStore.getClaimAt(location, false);
+		if (playerData.lastX!=to.getBlockX() || playerData.lastZ!=to.getBlockZ() || !to.getWorld().getUID().equals(playerData.lastWorld)) {
+			final Claim claim = this.dataStore.getClaimAt(to, false);
 			if (claim != null) {
 				final String noEntryReason = claim.canEnter(player);
 				if (noEntryReason != null) {
@@ -829,20 +829,20 @@ class PlayerEventHandler implements Listener {
 				final PluginManager pm = GriefPreventionPlus.getInstance().getServer().getPluginManager();
 				if (playerData.lastClaim != null) {
 					if (claim != null) {
-						final ClaimFromToEvent event = new ClaimFromToEvent(player, playerData.lastClaim, claim);
+						final ClaimFromToEvent event = new ClaimFromToEvent(player, playerData.lastClaim, claim, from, to);
 						pm.callEvent(event);
 						if (event.isCancelled()) {
 							return false;
 						}
 					} else {
-						final ClaimExitEvent event = new ClaimExitEvent(player, playerData.lastClaim);
+						final ClaimExitEvent event = new ClaimExitEvent(playerData.lastClaim, player, from, to);
 						pm.callEvent(event);
 						if (event.isCancelled()) {
 							return false;
 						}
 					}
 				} else if (claim != null) {
-					final ClaimEnterEvent event = new ClaimEnterEvent(player, claim);
+					final ClaimEnterEvent event = new ClaimEnterEvent(claim, player, from, to);
 					pm.callEvent(event);
 					if (event.isCancelled()) {
 						return false;
@@ -850,9 +850,9 @@ class PlayerEventHandler implements Listener {
 				}
 
 				playerData.lastClaim = claim;
-				playerData.lastX = location.getBlockX();
-				playerData.lastZ = location.getBlockZ();
-				playerData.lastWorld = location.getWorld().getUID();
+				playerData.lastX = to.getBlockX();
+				playerData.lastZ = to.getBlockZ();
+				playerData.lastWorld = to.getWorld().getUID();
 			}
 		}
 
@@ -1733,8 +1733,8 @@ class PlayerEventHandler implements Listener {
 
 							// try to create a new claim (will return null if
 							// this subdivision overlaps another)
-							final ClaimResult result = this.dataStore.createClaim(player.getWorld().getUID(), playerData.lastShovelLocation.getBlockX(), clickedBlock.getX(), playerData.lastShovelLocation.getBlockZ(), clickedBlock.getZ(), null, playerData.claimSubdividing, null, player);
-
+							final ClaimResult result = this.dataStore.createClaim(player.getWorld().getUID(), playerData.lastShovelLocation.getBlockX(), playerData.lastShovelLocation.getBlockZ(), clickedBlock.getX(), clickedBlock.getZ(), null, playerData.claimSubdividing, null, player);
+							
 							switch(result.getResult()) {
 								case EVENT: {
 									// show the message set by the event
