@@ -1,8 +1,9 @@
-name: GriefPreventionPlus
-main: net.kaikk.mc.gpp.GriefPreventionPlus
+name: ${project.artifactId}
+main: ${package}.${project.artifactId}
+version: ${project.version}
+author: ${developer}
 softdepend: [Vault, Multiverse-Core, My Worlds, MystCraft, Transporter, TheUnderground, WorldGuard, WorldEdit]
 loadbefore: [TheUnderground, GriefPrevention]
-version: 12.8
 commands:
    claim:
       description: Claim with a specified range around your position.
@@ -166,6 +167,10 @@ commands:
       usage: /ClaimArea [worldname] [x] [z] [range]
       aliases: [carea]
       permission: griefprevention.claimarea
+   tpclaim:
+      description: Teleports to a claim corner
+      usage: /tpclaim [id]
+      permission: griefprevention.tpclaim
 permissions:
     griefprevention.createclaims:
         description: Grants permission to create claims.
@@ -192,6 +197,10 @@ permissions:
             griefprevention.clearorphanclaims: true
             griefprevention.claimarea: true
             griefprevention.bypassentryprotection: true
+            griefprevention.tpclaim: true
+    griefprevention.tpclaim:
+        description: Grants permission to use /tpclaim
+        default: op
     griefprevention.claimarea:
         description: Grants permission to use /ClaimArea
         default: op
