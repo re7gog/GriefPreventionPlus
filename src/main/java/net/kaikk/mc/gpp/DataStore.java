@@ -462,6 +462,11 @@ public class DataStore {
 		}
 	}
 
+	/** @deprecated Use {@link #newClaim(UUID,int,int,int,int,UUID,Claim,Integer,Player)} instead*/
+	synchronized public ClaimResult createClaim(UUID world, int x1, int x2, int z1, int z2, UUID ownerID, Claim parent, Integer id, Player creatingPlayer) {
+		return newClaim(world, x1, z1, x2, z2, ownerID, parent, id, creatingPlayer);
+	}
+
 	/** creates a claim.
 	if the new claim would overlap an existing claim, returns a failure along
 	with a reference to the existing claim
@@ -478,7 +483,7 @@ public class DataStore {
 	blocks.
 	- does NOT check minimum claim size constraints
 	- does NOT visualize the new claim for any players */
-	synchronized public ClaimResult createClaim(UUID world, int x1, int z1, int x2, int z2, UUID ownerID, Claim parent, Integer id, Player creatingPlayer) {
+	synchronized public ClaimResult newClaim(UUID world, int x1, int z1, int x2, int z2, UUID ownerID, Claim parent, Integer id, Player creatingPlayer) {
 		final ClaimResult result = new ClaimResult();
 
 		int smallx, bigx, smallz, bigz;

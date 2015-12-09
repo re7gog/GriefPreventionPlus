@@ -1731,9 +1731,8 @@ class PlayerEventHandler implements Listener {
 								return;
 							}
 
-							// try to create a new claim (will return null if
-							// this subdivision overlaps another)
-							final ClaimResult result = this.dataStore.createClaim(player.getWorld().getUID(), playerData.lastShovelLocation.getBlockX(), playerData.lastShovelLocation.getBlockZ(), clickedBlock.getX(), clickedBlock.getZ(), null, playerData.claimSubdividing, null, player);
+							// try to create a new claim
+							final ClaimResult result = this.dataStore.newClaim(player.getWorld().getUID(), playerData.lastShovelLocation.getBlockX(), playerData.lastShovelLocation.getBlockZ(), clickedBlock.getX(), clickedBlock.getZ(), null, playerData.claimSubdividing, null, player);
 							
 							switch(result.getResult()) {
 								case EVENT: {
@@ -1853,7 +1852,7 @@ class PlayerEventHandler implements Listener {
 				}
 
 				// try to create a new claim
-				final ClaimResult result = this.dataStore.createClaim(player.getWorld().getUID(), lastShovelLocation.getBlockX(), clickedBlock.getX(), lastShovelLocation.getBlockZ(), clickedBlock.getZ(), playerID, null, null, player);
+				final ClaimResult result = this.dataStore.newClaim(player.getWorld().getUID(), lastShovelLocation.getBlockX(), lastShovelLocation.getBlockZ(), clickedBlock.getX(), clickedBlock.getZ(), playerID, null, null, player);
 
 				switch(result.getResult()) {
 					case EVENT: {

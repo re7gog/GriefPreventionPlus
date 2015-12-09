@@ -81,7 +81,7 @@ public class CommandExec implements CommandExecutor {
 				final int x = player.getLocation().getBlockX(), z = player.getLocation().getBlockZ(), x1 = x - range, x2 = x + range, z1 = z - range, z2 = z + range;
 
 				// try to create a new claim
-				final ClaimResult result = this.dataStore.createClaim(player.getWorld().getUID(), x1, z1, x2, z2, player.getUniqueId(), null, null, player);
+				final ClaimResult result = this.dataStore.newClaim(player.getWorld().getUID(), x1, z1, x2, z2, player.getUniqueId(), null, null, player);
 
 				switch(result.getResult()) {
 					case EVENT:{
@@ -1121,7 +1121,7 @@ public class CommandExec implements CommandExecutor {
 				final int x1 = x - range, x2 = x + range, z1 = z - range, z2 = z + range;
 				
 				// try to create a new claim
-				final ClaimResult result = this.dataStore.createClaim(world.getUID(), x1, z1, x2, z2, (player!=null ? player.getUniqueId() : GriefPreventionPlus.UUID1), null, null, player);
+				final ClaimResult result = this.dataStore.newClaim(world.getUID(), x1, z1, x2, z2, (player!=null ? player.getUniqueId() : GriefPreventionPlus.UUID1), null, null, player);
 				if (player==null && result.getResult()!=Result.SUCCESS) {
 					sender.sendMessage("Your selected area overlaps an existing claim.");
 				} else {
