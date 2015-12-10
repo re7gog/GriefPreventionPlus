@@ -22,10 +22,6 @@ package net.kaikk.mc.gpp;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.kaikk.mc.gpp.ClaimResult.Result;
-import net.kaikk.mc.gpp.visualization.Visualization;
-import net.kaikk.mc.gpp.visualization.VisualizationType;
-
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -58,6 +54,10 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Dispenser;
 import org.bukkit.metadata.MetadataValue;
+
+import net.kaikk.mc.gpp.ClaimResult.Result;
+import net.kaikk.mc.gpp.visualization.Visualization;
+import net.kaikk.mc.gpp.visualization.VisualizationType;
 
 //event handlers related to blocks
 @SuppressWarnings("deprecation")
@@ -380,7 +380,7 @@ class BlockEventHandler implements Listener {
 	// when a player places a block...
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
 	public void onBlockPlace(BlockPlaceEvent placeEvent) {
-		final Player player = placeEvent.getPlayer();
+		final Player player = placeEvent.getPlayer();		
 		final Block block = placeEvent.getBlock();
 
 		// FEATURE: limit fire placement, to prevent PvP-by-fire
@@ -434,6 +434,11 @@ class BlockEventHandler implements Listener {
 		// otherwise if there's no claim, the player is placing a chest, and new
 		// player automatic claims are enabled
 		else if ((block.getType() == Material.CHEST) && (GriefPreventionPlus.getInstance().config.claims_automaticClaimsForNewPlayersRadius > -1) && GriefPreventionPlus.getInstance().claimsEnabledForWorld(block.getWorld())) {
+			// ignore fake players
+			if (Utils.isFakePlayer(player)) {
+				return;
+			}
+			
 			// if the chest is too deep underground, don't create the claim and
 			// explain why
 			if (GriefPreventionPlus.getInstance().config.claims_preventTheft && (block.getY() < GriefPreventionPlus.getInstance().config.claims_maxDepth)) {
