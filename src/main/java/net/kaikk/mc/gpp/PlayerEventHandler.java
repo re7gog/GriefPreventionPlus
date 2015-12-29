@@ -1065,11 +1065,11 @@ class PlayerEventHandler implements Listener {
 				}
 			}
 			// block destroying crops etc while untrusted players jumps on soil
-			else if(event.getAction()==Action.PHYSICAL && clickedBlockType==Material.SOIL) {
+			else if(clickedBlock != null && event.getAction()==Action.PHYSICAL && clickedBlockType==Material.SOIL) {
 				if (playerData == null) {
 					playerData = this.dataStore.getPlayerData(player.getUniqueId());
 				}
-				final Claim claim = this.dataStore.getClaimAt(clickedBlock.getLocation(), false, playerData.lastClaim);
+				final Claim claim = this.dataStore.getClaimAt(clickedBlock.getLocation(), false, (playerData==null ? null : playerData.lastClaim));
 				String reason=claim.canBreak(player, clickedBlockType);
 				if (reason!=null) {
 					player.sendMessage(reason);
