@@ -684,11 +684,6 @@ public class CommandExec implements CommandExecutor {
 			// determine which claim the player is standing in
 			if (args.length == 0) {
 				claim = this.gpp.getDataStore().getClaimAt(player.getLocation());
-
-				if (claim == null) {
-					GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.DeleteClaimMissing);
-					return false;
-				}
 			} else { // GPP's feature: delete a claim by ID
 				try {
 					claim = this.gpp.getDataStore().getClaim(Integer.valueOf(args[0]));
@@ -696,6 +691,11 @@ public class CommandExec implements CommandExecutor {
 					player.sendMessage("Invalid ID");
 					return false;
 				}
+			}
+			
+			if (claim == null) {
+				GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.DeleteClaimMissing);
+				return false;
 			}
 
 			// deleting an admin claim additionally requires the adminclaims
