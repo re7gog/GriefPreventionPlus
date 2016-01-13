@@ -270,3 +270,6 @@ permissions:
     griefprevention.overrideclaimcountlimit:
         description: Allows players to create more claims than the limit specified by the config.
         default: op
+    griefprevention.claiminfo:
+        description: Allows players to check claims size and last seen of the claim owner.
+        default: false

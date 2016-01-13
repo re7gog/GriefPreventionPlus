@@ -1286,14 +1286,14 @@ class PlayerEventHandler implements Listener {
 				final Visualization visualization = Visualization.FromClaim(claim, player.getEyeLocation().getBlockY(), VisualizationType.Claim, player.getLocation());
 				Visualization.Apply(player, visualization);
 
-				// if can resize this claim, tell about the boundaries
-				if (claim.canEdit(player) == null) {
+				// if can resize this claim or claiminfo permission, tell about the boundaries
+				if (claim.canEdit(player) == null || player.hasPermission("griefprevention.claiminfo")) {
 					GriefPreventionPlus.sendMessage(player, TextMode.Info, "ID: " + claim.id + " Area: " + claim.getWidth() + "x" + claim.getHeight() + "=" + claim.getArea());
 				}
 
-				// if deleteclaims permission, tell about the player's offline
+				// if deleteclaims permission or can see claim info permission, tell about the player's offline
 				// time
-				if (!claim.isAdminClaim() && player.hasPermission("griefprevention.deleteclaims")) {
+				if (!claim.isAdminClaim() && (player.hasPermission("griefprevention.deleteclaims") || player.hasPermission("griefprevention.claiminfo"))) {
 					if (claim.getParent() != null) {
 						claim = claim.getParent();
 					}
