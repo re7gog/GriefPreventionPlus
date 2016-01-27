@@ -54,14 +54,14 @@ import org.bukkit.entity.Player;
 //singleton class which manages all GriefPrevention data (except for config options)
 public class DataStore {
 	// in-memory cache for player data
-	protected HashMap<UUID, PlayerData> playerNameToPlayerDataMap = new HashMap<UUID, PlayerData>();
+	protected Map<UUID, PlayerData> playerNameToPlayerDataMap = new HashMap<UUID, PlayerData>();
 
 	// in-memory cache for group (permission-based) data
-	protected HashMap<String, Integer> permissionToBonusBlocksMap = new HashMap<String, Integer>();
+	protected Map<String, Integer> permissionToBonusBlocksMap = new HashMap<String, Integer>();
 
 	// in-memory cache for claim data
-	HashMap<Integer, Claim> claims = new HashMap<Integer, Claim>();
-	HashMap<Long, Map<Integer, Claim>> posClaims = new HashMap<Long, Map<Integer, Claim>>();
+	Map<Integer, Claim> claims = new HashMap<Integer, Claim>();
+	Map<Integer, Map<Integer, Claim>> posClaims = new HashMap<Integer, Map<Integer, Claim>>();
 
 	// in-memory cache for messages
 	private String[] messages;
@@ -802,7 +802,7 @@ public class DataStore {
 
 		for (int i = lx; i <= gx; i++) {
 			for (int j = lz; j <= gz; j++) {
-				final Map<Integer, Claim> claimMap = this.posClaims.get(from2int(i, j));
+				final Map<Integer, Claim> claimMap = this.posClaims.get(coordsHashCode(i, j));
 				if (claimMap != null) {
 					for (final Claim claim : claimMap.values()) {
 						if (claim.overlaps(validArea)) {
@@ -1448,10 +1448,10 @@ public class DataStore {
 
 		for (int i = lx; i <= gx; i++) {
 			for (int j = lz; j <= gz; j++) {
-				Map<Integer, Claim> claimMap = this.posClaims.get(from2int(i, j));
+				Map<Integer, Claim> claimMap = this.posClaims.get(coordsHashCode(i, j));
 				if (claimMap == null) {
 					claimMap = new HashMap<Integer, Claim>();
-					this.posClaims.put(from2int(i, j), claimMap);
+					this.posClaims.put(coordsHashCode(i, j), claimMap);
 				}
 				claimMap.put(claim.getID(), claim);
 			}
@@ -1459,7 +1459,7 @@ public class DataStore {
 	}
 
 	Claim posClaimsGet(Location loc) {
-		final Map<Integer, Claim> claimMap = this.posClaims.get(from2int(loc.getBlockX() >> 8, loc.getBlockZ() >> 8));
+		final Map<Integer, Claim> claimMap = this.posClaims.get(coordsHashCode(loc.getBlockX() >> 8, loc.getBlockZ() >> 8));
 		if (claimMap != null) {
 			for (final Claim claim : claimMap.values()) {
 				if (claim.contains(loc, true, false)) {
@@ -1479,7 +1479,7 @@ public class DataStore {
 
 		for (int i = lx; i <= gx; i++) {
 			for (int j = lz; j <= gz; j++) {
-				final Map<Integer, Claim> claimMap = this.posClaims.get(from2int(i, j));
+				final Map<Integer, Claim> claimMap = this.posClaims.get(coordsHashCode(i, j));
 				if (claimMap != null) {
 					claimMap.remove(claim.getID());
 				}
@@ -1567,13 +1567,8 @@ public class DataStore {
 		return "0x" + org.apache.commons.lang.StringUtils.leftPad(Long.toHexString(uuid.getMostSignificantBits()), 16, "0") + org.apache.commons.lang.StringUtils.leftPad(Long.toHexString(uuid.getLeastSignificantBits()), 16, "0");
 	}
 
-	static long from2int(int x, int z) {
-		return ((long) x << 32) | (z & 0xFFFFFFFFL);
-	}
-
-	static int[] fromLongTo2int(long l) {
-		final int[] r = { (int) (l >> 32), (int) l };
-		return r;
+	public static int coordsHashCode(int x, int z) {
+		return (z ^ (x << 16));
 	}
 
 	private class SavePlayerDataThread extends Thread {
