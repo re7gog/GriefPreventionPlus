@@ -205,7 +205,7 @@ public class Claim {
 		}
 		
 		// if the entry trust mode is "allow by default", allow any player if there is no entry trust entry set
-		if (GriefPreventionPlus.getInstance().config.entryTrustAllowByDefault && this.permissionMapBukkit.isEmpty() && this.permissionMapFakePlayer.isEmpty() && this.permissionMapPlayers.isEmpty()) {
+		if (GriefPreventionPlus.getInstance().config.entryTrustAllowByDefault && !this.hasExplicitEntryTrustEntry()) {
 			return null;
 		}
 
@@ -773,6 +773,27 @@ public class Claim {
 				enters.add("#" + entry.getKey());
 			}
 		}
+	}
+	
+	public boolean hasExplicitEntryTrustEntry() {
+		for (final Integer value : this.permissionMapPlayers.values()) {
+			if ((value & ClaimPermission.ENTRY.perm) != 0) {
+				return true;
+			}
+		}
+
+		for (final Integer value : this.permissionMapBukkit.values()) {
+			if ((value & ClaimPermission.ENTRY.perm) != 0) {
+				return true;
+			}
+		}
+
+		for (final Integer value : this.permissionMapFakePlayer.values()) {
+			if ((value & ClaimPermission.ENTRY.perm) != 0) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	public String getTrustList() {
