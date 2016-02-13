@@ -1070,10 +1070,12 @@ class PlayerEventHandler implements Listener {
 					playerData = this.dataStore.getPlayerData(player.getUniqueId());
 				}
 				final Claim claim = this.dataStore.getClaimAt(clickedBlock.getLocation(), false, (playerData==null ? null : playerData.lastClaim));
-				String reason=claim.canBreak(player, clickedBlockType);
-				if (reason!=null) {
-					player.sendMessage(reason);
-					event.setCancelled(true);
+				if (claim!=null) {
+					String reason=claim.canBreak(player, clickedBlockType);
+					if (reason!=null) {
+						player.sendMessage(reason);
+						event.setCancelled(true);
+					}
 				}
 				return;
 			}
