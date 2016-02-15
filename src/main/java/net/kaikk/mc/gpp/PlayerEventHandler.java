@@ -1669,7 +1669,7 @@ class PlayerEventHandler implements Listener {
 	
 						// if in a creative mode world and shrinking an existing
 						// claim, restore any unclaimed area
-						if (smaller && GriefPreventionPlus.getInstance().creativeRulesApply(oldClaim.getWorldUID())) {
+						if (smaller && GriefPreventionPlus.getInstance().creativeRulesApply(oldClaim.getWorld())) {
 							GriefPreventionPlus.sendMessage(player, TextMode.Warn, Messages.UnclaimCleanupWarning);
 							GriefPreventionPlus.getInstance().restoreClaim(oldClaim, 20L * 60 * 2); // 2
 																									// minutes
@@ -1922,7 +1922,7 @@ class PlayerEventHandler implements Listener {
 
 			// if in survival claims mode, send a message about the claim basics
 			// video (except for admins - assumed experts)
-			if ((GriefPreventionPlus.getInstance().config.claims_worldModes.get(player.getWorld().getUID()) == ClaimsMode.Survival) && !player.hasPermission("griefprevention.adminclaims") && (this.dataStore.claims.size() > 10)) {
+			if (GriefPreventionPlus.getInstance().claimsEnabledForWorld(player.getWorld()) && !GriefPreventionPlus.getInstance().config.creativeWorlds.contains(player.getWorld().getName()) && !player.hasPermission("griefprevention.adminclaims") && (this.dataStore.claims.size() > 10)) {
 				GriefPreventionPlus.sendMessage(player, TextMode.Instr, Messages.AvoidGriefClaimLand, 600L);
 				GriefPreventionPlus.sendMessage(player, TextMode.Instr, Messages.SurvivalBasicsVideo2, 601L, DataStore.SURVIVAL_VIDEO_URL);
 			}

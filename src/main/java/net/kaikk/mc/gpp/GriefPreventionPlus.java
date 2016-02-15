@@ -227,7 +227,7 @@ public class GriefPreventionPlus extends JavaPlugin {
 		// wilderness rules
 		if (claim == null) {
 			// no building in the wilderness in creative mode
-			if (this.creativeRulesApply(location.getWorld()) || (this.config.claims_worldModes.get(location.getWorld().getUID()) == ClaimsMode.SurvivalRequiringClaims)) {
+			if (this.creativeRulesApply(location.getWorld()) || (this.config.claimRequiredWorlds.contains(location.getWorld().getName()))) {
 				String reason = this.getDataStore().getMessage(Messages.NoBuildOutsideClaims);
 				if (player.hasPermission("griefprevention.ignoreclaims")) {
 					reason += "  " + this.getDataStore().getMessage(Messages.IgnoreClaimsAdvertisement);
@@ -263,7 +263,7 @@ public class GriefPreventionPlus extends JavaPlugin {
 		// wilderness rules
 		if (claim == null) {
 			// no building in the wilderness in creative mode
-			if (this.creativeRulesApply(location.getWorld()) || (this.config.claims_worldModes.get(location.getWorld().getUID()) == ClaimsMode.SurvivalRequiringClaims)) {
+			if (this.creativeRulesApply(location.getWorld()) || (this.config.claimRequiredWorlds.contains(location.getWorld().getName()))) {
 				String reason = this.getDataStore().getMessage(Messages.NoBuildOutsideClaims);
 				if (player.hasPermission("griefprevention.ignoreclaims")) {
 					reason += "  " + this.getDataStore().getMessage(Messages.IgnoreClaimsAdvertisement);
@@ -322,13 +322,13 @@ public class GriefPreventionPlus extends JavaPlugin {
 		}
 	}
 
-	public boolean claimsEnabledForWorld(UUID world) {
-		return this.config.claims_worldModes.get(world) != ClaimsMode.Disabled;
-	}
-
 	// checks whether players can create claims in a world
 	public boolean claimsEnabledForWorld(World world) {
-		return this.claimsEnabledForWorld(world.getUID());
+		return this.claimsEnabledForWorld(world.getName());
+	}
+	
+	public boolean claimsEnabledForWorld(String world) {
+		return !this.config.disabledWorlds.contains(world);
 	}
 
 	public boolean containsBlockedIP(String message) {
@@ -519,16 +519,15 @@ public class GriefPreventionPlus extends JavaPlugin {
 	public void setDataStore(DataStore dataStore) {
 		this.dataStore = dataStore;
 	}
-
-	boolean creativeRulesApply(UUID world) {
-		return this.config.claims_worldModes.get(world) == ClaimsMode.Creative;
-	}
-
 	// determines whether creative anti-grief rules apply at a location
 	boolean creativeRulesApply(World world) {
-		return this.creativeRulesApply(world.getUID());
-	}
+		return this.creativeRulesApply(world.getName());
+	}	
 
+	public boolean creativeRulesApply(String world) {
+		return this.config.creativeWorlds.contains(world);
+	}
+	
 	// for convenience, a reference to the instance of this plugin
 	private static GriefPreventionPlus instance;
 

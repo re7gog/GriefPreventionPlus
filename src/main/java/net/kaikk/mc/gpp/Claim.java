@@ -138,7 +138,7 @@ public class Claim {
 		}
 
 		// this rule only applies to creative mode worlds
-		if (!GriefPreventionPlus.getInstance().creativeRulesApply(this.getWorldUID())) {
+		if (!GriefPreventionPlus.getInstance().creativeRulesApply(this.getWorld())) {
 			return null;
 		}
 
@@ -975,7 +975,7 @@ public class Claim {
 		}
 
 		// only in creative mode worlds
-		if (!GriefPreventionPlus.getInstance().creativeRulesApply(this.getWorldUID())) {
+		if (!GriefPreventionPlus.getInstance().creativeRulesApply(this.getWorld())) {
 			return;
 		}
 
@@ -1064,7 +1064,7 @@ public class Claim {
 		// scan the claim for player placed blocks
 		double score = 0;
 
-		final boolean creativeMode = GriefPreventionPlus.getInstance().creativeRulesApply(this.getWorldUID());
+		final boolean creativeMode = GriefPreventionPlus.getInstance().creativeRulesApply(this.getWorld());
 
 		for (int x = this.lesserX; x <= this.greaterX; x++) {
 			for (int z = this.lesserZ; z <= this.greaterZ; z++) {

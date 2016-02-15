@@ -717,7 +717,7 @@ public class CommandExec implements CommandExecutor {
 					this.gpp.getDataStore().deleteClaim(claim);
 
 					// if in a creative mode world, /restorenature the claim
-					if (GriefPreventionPlus.getInstance().creativeRulesApply(claim.getWorldUID())) {
+					if (GriefPreventionPlus.getInstance().creativeRulesApply(claim.getWorld())) {
 						GriefPreventionPlus.getInstance().restoreClaim(claim, 0);
 					}
 
@@ -1215,7 +1215,7 @@ public class CommandExec implements CommandExecutor {
 			this.dataStore.deleteClaim(claim);
 
 			// if in a creative mode world, restore the claim area
-			if (GriefPreventionPlus.getInstance().creativeRulesApply(claim.getWorldUID())) {
+			if (GriefPreventionPlus.getInstance().creativeRulesApply(claim.getWorld())) {
 				// GriefPreventionPlus.AddLogEntry(player.getName() +
 				// " abandoned a claim @ " +
 				// GriefPreventionPlus.getfriendlyLocationString(claim.getLesserBoundaryCorner()));

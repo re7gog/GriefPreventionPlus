@@ -7,18 +7,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
-import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.World.Environment;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 public class Config {
 	// configuration variables, loaded/saved from a config.yml
-
-	// claim mode for each world
-	public HashMap<UUID, ClaimsMode> claims_worldModes;
 
 	public boolean claims_preventTheft; // whether containers and crafting
 	// blocks are protectable
@@ -226,6 +221,10 @@ public class Config {
 	String databaseUserName;
 	String databasePassword;
 
+	public List<String> disabledWorlds;
+	public List<String> claimRequiredWorlds;
+	public List<String> creativeWorlds;
+	
 	Config() {
 		// load the config if it exists
 		final FileConfiguration config = YamlConfiguration.loadConfiguration(new File(DataStore.configFilePath));
@@ -233,45 +232,29 @@ public class Config {
 
 		// read configuration settings (note defaults)
 
-		// get (deprecated node) claims world names from the config file
 		final List<World> worlds = GriefPreventionPlus.getInstance().getServer().getWorlds();
-		
-		// decide claim mode for each world
-		this.claims_worldModes = new HashMap<UUID, ClaimsMode>();
-		for (final World worldObj : worlds) {
-			final UUID world = worldObj.getUID();
-			// is it specified in the config file?
-			final String configSetting = config.getString("GriefPrevention.Claims.Mode." + worldObj.getName());
-			if (configSetting != null) {
-				final ClaimsMode claimsMode = configStringToClaimsMode(configSetting);
-				if (claimsMode != null) {
-					this.claims_worldModes.put(world, claimsMode);
-					continue;
-				} else {
-					GriefPreventionPlus.addLogEntry("Error: Invalid claim mode \"" + configSetting + "\".  Options are Survival, Creative, and Disabled.");
-					this.claims_worldModes.put(world, ClaimsMode.Creative);
-				}
-			}
 
-			// does the world's name indicate its purpose?
-			else if (worldObj.getName().toLowerCase().contains("survival")) {
-				this.claims_worldModes.put(world, ClaimsMode.Survival);
-			}
-
-			else if (worldObj.getName().toLowerCase().contains("creative")) {
-				this.claims_worldModes.put(world, ClaimsMode.Creative);
-			}
-
-			// decide a default based on server type and world type
-			else if (GriefPreventionPlus.getInstance().getServer().getDefaultGameMode() == GameMode.CREATIVE) {
-				this.claims_worldModes.put(world, ClaimsMode.Creative);
-			}
-
-			else {
-				this.claims_worldModes.put(world, ClaimsMode.Survival);
-			}
+		this.disabledWorlds = config.getStringList("GriefPrevention.Claims.DisabledWorlds");
+		if (this.disabledWorlds.isEmpty()) {
+			this.disabledWorlds.add("DummyDisabledWorld");
+			outConfig.set("GriefPrevention.Claims.DisabledWorlds", this.disabledWorlds);
 		}
-
+		this.disabledWorlds.remove("DummyDisabledWorld");
+		
+		this.creativeWorlds = config.getStringList("GriefPrevention.Claims.CreativeWorlds");
+		if (this.creativeWorlds.isEmpty()) {
+			this.creativeWorlds.add("DummyCreativeWorld");
+			outConfig.set("GriefPrevention.Claims.CreativeWorlds", this.creativeWorlds);
+		}
+		this.creativeWorlds.remove("DummyCreativeWorld");
+		
+		this.claimRequiredWorlds = config.getStringList("GriefPrevention.Claims.ClaimRequiredWorlds");
+		if (this.claimRequiredWorlds.isEmpty()) {
+			this.claimRequiredWorlds.add("DummyClaimRequiredWorld");
+			outConfig.set("GriefPrevention.Claims.ClaimRequiredWorlds", this.claimRequiredWorlds);
+		}
+		this.claimRequiredWorlds.remove("DummyClaimRequiredWorld");
+		
 		// pvp worlds list
 		this.pvp_enabledWorlds = new ArrayList<UUID>();
 		for (final World world : worlds) {
@@ -421,11 +404,6 @@ public class Config {
 		
 		// entry trust
 		this.entryTrustAllowByDefault = config.getBoolean("GriefPreventionPlus.EntryTrustAllowByDefault", true);
-
-		// claims mode by world
-		for (final UUID world : this.claims_worldModes.keySet()) {
-			outConfig.set("GriefPrevention.Claims.Mode." + GriefPreventionPlus.getInstance().getServer().getWorld(world).getName(), this.claims_worldModes.get(world).name());
-		}
 
 		outConfig.set("GriefPrevention.Claims.PreventTheft", this.claims_preventTheft);
 		outConfig.set("GriefPrevention.Claims.ProtectCreatures", this.claims_protectCreatures);
@@ -580,19 +558,4 @@ public class Config {
 			}
 		}
 	}
-
-	private static ClaimsMode configStringToClaimsMode(String configSetting) {
-		if (configSetting.equalsIgnoreCase("Survival")) {
-			return ClaimsMode.Survival;
-		} else if (configSetting.equalsIgnoreCase("Creative")) {
-			return ClaimsMode.Creative;
-		} else if (configSetting.equalsIgnoreCase("Disabled")) {
-			return ClaimsMode.Disabled;
-		} else if (configSetting.equalsIgnoreCase("SurvivalRequiringClaims")) {
-			return ClaimsMode.SurvivalRequiringClaims;
-		} else {
-			return null;
-		}
-	}
-
 }

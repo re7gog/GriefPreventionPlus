@@ -101,7 +101,7 @@ class EntityEventHandler implements Listener {
 
 		// don't allow the wither to break blocks, when the wither is
 		// determined, too expensive to constantly check for claimed blocks
-		else if ((event.getEntityType() == EntityType.WITHER) && (GriefPreventionPlus.getInstance().config.claims_worldModes.get(event.getBlock().getWorld().getUID()) != ClaimsMode.Disabled)) {
+		else if ((event.getEntityType() == EntityType.WITHER) && !GriefPreventionPlus.getInstance().config.disabledWorlds.contains(event.getBlock().getWorld().getName())) {
 			event.setCancelled(true);
 		}
 
@@ -138,7 +138,7 @@ class EntityEventHandler implements Listener {
 				// if did not fall straight down
 				if ((originalLocation.getBlockX() != newLocation.getBlockX()) || (originalLocation.getBlockZ() != newLocation.getBlockZ())) {
 					// in creative mode worlds, never form the block
-					if (GriefPreventionPlus.getInstance().config.claims_worldModes.get(newLocation.getWorld().getUID()) == ClaimsMode.Creative) {
+					if (GriefPreventionPlus.getInstance().config.creativeWorlds.contains(newLocation.getWorld().getName())) {
 						event.setCancelled(true);
 						return;
 					}
