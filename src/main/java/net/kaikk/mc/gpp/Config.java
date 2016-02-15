@@ -267,12 +267,8 @@ public class Config {
 				this.claims_worldModes.put(world, ClaimsMode.Creative);
 			}
 
-			else if (worldObj.getEnvironment() == Environment.NORMAL) {
-				this.claims_worldModes.put(world, ClaimsMode.Survival);
-			}
-
 			else {
-				this.claims_worldModes.put(world, ClaimsMode.Disabled);
+				this.claims_worldModes.put(world, ClaimsMode.Survival);
 			}
 		}
 
