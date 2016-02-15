@@ -235,29 +235,7 @@ public class Config {
 
 		// get (deprecated node) claims world names from the config file
 		final List<World> worlds = GriefPreventionPlus.getInstance().getServer().getWorlds();
-		final List<String> deprecated_claimsEnabledWorldNames = config.getStringList("GriefPrevention.Claims.Worlds");
-
-		// validate that list
-		for (int i = 0; i < deprecated_claimsEnabledWorldNames.size(); i++) {
-			final String worldName = deprecated_claimsEnabledWorldNames.get(i);
-			final World world = GriefPreventionPlus.getInstance().getServer().getWorld(worldName);
-			if (world == null) {
-				deprecated_claimsEnabledWorldNames.remove(i--);
-			}
-		}
-
-		// get (deprecated node) creative world names from the config file
-		final List<String> deprecated_creativeClaimsEnabledWorldNames = config.getStringList("GriefPrevention.Claims.CreativeRulesWorlds");
-
-		// validate that list
-		for (int i = 0; i < deprecated_creativeClaimsEnabledWorldNames.size(); i++) {
-			final String worldName = deprecated_creativeClaimsEnabledWorldNames.get(i);
-			final World world = GriefPreventionPlus.getInstance().getServer().getWorld(worldName);
-			if (world == null) {
-				deprecated_claimsEnabledWorldNames.remove(i--);
-			}
-		}
-
+		
 		// decide claim mode for each world
 		this.claims_worldModes = new HashMap<UUID, ClaimsMode>();
 		for (final World worldObj : worlds) {
@@ -273,15 +251,6 @@ public class Config {
 					GriefPreventionPlus.addLogEntry("Error: Invalid claim mode \"" + configSetting + "\".  Options are Survival, Creative, and Disabled.");
 					this.claims_worldModes.put(world, ClaimsMode.Creative);
 				}
-			}
-
-			// was it specified in a deprecated config node?
-			if (deprecated_creativeClaimsEnabledWorldNames.contains(worldObj.getName())) {
-				this.claims_worldModes.put(world, ClaimsMode.Creative);
-			}
-
-			else if (deprecated_claimsEnabledWorldNames.contains(worldObj.getName())) {
-				this.claims_worldModes.put(world, ClaimsMode.Survival);
 			}
 
 			// does the world's name indicate its purpose?
@@ -304,15 +273,6 @@ public class Config {
 
 			else {
 				this.claims_worldModes.put(world, ClaimsMode.Disabled);
-			}
-
-			// if the setting WOULD be disabled but this is a server upgrading
-			// from the old config format,
-			// then default to survival mode for safety's sake (to protect any
-			// admin claims which may
-			// have been created there)
-			if ((this.claims_worldModes.get(world) == ClaimsMode.Disabled) && (deprecated_claimsEnabledWorldNames.size() > 0)) {
-				this.claims_worldModes.put(world, ClaimsMode.Survival);
 			}
 		}
 
