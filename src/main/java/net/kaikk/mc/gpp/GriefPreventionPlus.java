@@ -119,10 +119,6 @@ public class GriefPreventionPlus extends JavaPlugin {
 			this.getServer().getScheduler().scheduleSyncRepeatingTask(this, task, 20L * 60 * 5, 20L * 60 * 5);
 		}
 
-		// start the recurring cleanup event for entities in creative worlds
-		final EntityCleanupTask task = new EntityCleanupTask(0);
-		this.getServer().getScheduler().scheduleSyncDelayedTask(GriefPreventionPlus.getInstance(), task, 20L);
-
 		// register for events
 		final PluginManager pluginManager = this.getServer().getPluginManager();
 
