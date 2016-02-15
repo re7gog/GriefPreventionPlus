@@ -138,7 +138,7 @@ class EntityEventHandler implements Listener {
 				// if did not fall straight down
 				if ((originalLocation.getBlockX() != newLocation.getBlockX()) || (originalLocation.getBlockZ() != newLocation.getBlockZ())) {
 					// in creative mode worlds, never form the block
-					if (GriefPreventionPlus.getInstance().config.creativeWorlds.contains(newLocation.getWorld().getName())) {
+					if (GriefPreventionPlus.getInstance().config.creativeRulesWorlds.contains(newLocation.getWorld().getName())) {
 						event.setCancelled(true);
 						return;
 					}

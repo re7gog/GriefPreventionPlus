@@ -1922,7 +1922,7 @@ class PlayerEventHandler implements Listener {
 
 			// if in survival claims mode, send a message about the claim basics
 			// video (except for admins - assumed experts)
-			if (GriefPreventionPlus.getInstance().claimsEnabledForWorld(player.getWorld()) && !GriefPreventionPlus.getInstance().config.creativeWorlds.contains(player.getWorld().getName()) && !player.hasPermission("griefprevention.adminclaims") && (this.dataStore.claims.size() > 10)) {
+			if (GriefPreventionPlus.getInstance().claimsEnabledForWorld(player.getWorld()) && !GriefPreventionPlus.getInstance().config.creativeRulesWorlds.contains(player.getWorld().getName()) && !player.hasPermission("griefprevention.adminclaims") && (this.dataStore.claims.size() > 10)) {
 				GriefPreventionPlus.sendMessage(player, TextMode.Instr, Messages.AvoidGriefClaimLand, 600L);
 				GriefPreventionPlus.sendMessage(player, TextMode.Instr, Messages.SurvivalBasicsVideo2, 601L, DataStore.SURVIVAL_VIDEO_URL);
 			}

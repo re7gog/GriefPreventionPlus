@@ -525,7 +525,7 @@ public class GriefPreventionPlus extends JavaPlugin {
 	}	
 
 	public boolean creativeRulesApply(String world) {
-		return this.config.creativeWorlds.contains(world);
+		return this.config.creativeRulesWorlds.contains(world);
 	}
 	
 	// for convenience, a reference to the instance of this plugin

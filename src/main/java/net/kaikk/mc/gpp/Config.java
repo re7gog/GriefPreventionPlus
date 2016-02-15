@@ -223,7 +223,7 @@ public class Config {
 
 	public List<String> disabledWorlds;
 	public List<String> claimRequiredWorlds;
-	public List<String> creativeWorlds;
+	public List<String> creativeRulesWorlds;
 	
 	Config() {
 		// load the config if it exists
@@ -241,12 +241,12 @@ public class Config {
 		}
 		this.disabledWorlds.remove("DummyDisabledWorld");
 		
-		this.creativeWorlds = config.getStringList("GriefPrevention.Claims.CreativeWorlds");
-		if (this.creativeWorlds.isEmpty()) {
-			this.creativeWorlds.add("DummyCreativeWorld");
-			outConfig.set("GriefPrevention.Claims.CreativeWorlds", this.creativeWorlds);
+		this.creativeRulesWorlds = config.getStringList("GriefPrevention.Claims.CreativeRulesWorlds");
+		if (this.creativeRulesWorlds.isEmpty()) {
+			this.creativeRulesWorlds.add("DummyCreativeRulesWorld");
+			outConfig.set("GriefPrevention.Claims.CreativeRulesWorlds", this.creativeRulesWorlds);
 		}
-		this.creativeWorlds.remove("DummyCreativeWorld");
+		this.creativeRulesWorlds.remove("DummyCreativeRulesWorld");
 		
 		this.claimRequiredWorlds = config.getStringList("GriefPrevention.Claims.ClaimRequiredWorlds");
 		if (this.claimRequiredWorlds.isEmpty()) {
