@@ -46,10 +46,6 @@ class CleanupUnusedClaimsTask extends BukkitRunnable {
 	 *  This is thread-unsafe, so don't use asynchronous calls.
 	 * */
 	CleanupUnusedClaimsTask(GriefPreventionPlus instance) {
-		if ((this.claimsRemMillisecs == 0) && (this.chestMillisecs == 0)) {
-			this.cancel();
-			return;
-		}
 		this.instance = instance;
 		
 		if (this.instance.config.claims_automaticClaimsForNewPlayersRadius >= 0) { 

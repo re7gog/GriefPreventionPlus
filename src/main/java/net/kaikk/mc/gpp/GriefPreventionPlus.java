@@ -194,8 +194,10 @@ public class GriefPreventionPlus extends JavaPlugin {
 		}
 
 		// start recurring cleanup scan for unused claims belonging to inactive players
-		new CleanupUnusedClaimsTask(this).runTaskTimer(this, 200L, 4L);
-
+		if (GriefPreventionPlus.getInstance().config.claims_expirationDays != 0 ||  GriefPreventionPlus.getInstance().config.claims_chestClaimExpirationDays != 0) {
+			new CleanupUnusedClaimsTask(this).runTaskTimer(this, 200L, 4L);
+		}
+		
 		addLogEntry("Boot finished.");
 	}
 
