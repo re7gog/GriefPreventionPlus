@@ -68,9 +68,15 @@ public class CommandExec implements CommandExecutor {
 					GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.NewClaimTooSmall, String.valueOf(GriefPreventionPlus.getInstance().config.claims_minSize));
 					return true;
 				}
-
+				
 				final int newClaimArea = side * side;
 				final PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
+				if ((GriefPreventionPlus.getInstance().config.claims_maxClaimsPerPlayer > 0) && !player.hasPermission("griefprevention.overrideclaimcountlimit") && (playerData.getClaims().size() >= GriefPreventionPlus.getInstance().config.claims_maxClaimsPerPlayer)) {
+					GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.ClaimCreationFailedOverClaimCountLimit);
+					return true;
+				}
+				
+				
 				final int remainingBlocks = playerData.getRemainingClaimBlocks();
 				if (newClaimArea > remainingBlocks) {
 					GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.CreateClaimInsufficientBlocks, String.valueOf(newClaimArea - remainingBlocks));
