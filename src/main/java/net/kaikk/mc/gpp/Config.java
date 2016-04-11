@@ -235,25 +235,13 @@ public class Config {
 		final List<World> worlds = GriefPreventionPlus.getInstance().getServer().getWorlds();
 
 		this.disabledWorlds = config.getStringList("GriefPrevention.Claims.DisabledWorlds");
-		if (this.disabledWorlds.isEmpty()) {
-			this.disabledWorlds.add("DummyDisabledWorld");
-			outConfig.set("GriefPrevention.Claims.DisabledWorlds", this.disabledWorlds);
-		}
-		this.disabledWorlds.remove("DummyDisabledWorld");
+		outConfig.set("GriefPrevention.Claims.DisabledWorlds", this.disabledWorlds);
 		
 		this.creativeRulesWorlds = config.getStringList("GriefPrevention.Claims.CreativeRulesWorlds");
-		if (this.creativeRulesWorlds.isEmpty()) {
-			this.creativeRulesWorlds.add("DummyCreativeRulesWorld");
-			outConfig.set("GriefPrevention.Claims.CreativeRulesWorlds", this.creativeRulesWorlds);
-		}
-		this.creativeRulesWorlds.remove("DummyCreativeRulesWorld");
+		outConfig.set("GriefPrevention.Claims.CreativeRulesWorlds", this.creativeRulesWorlds);
 		
 		this.claimRequiredWorlds = config.getStringList("GriefPrevention.Claims.ClaimRequiredWorlds");
-		if (this.claimRequiredWorlds.isEmpty()) {
-			this.claimRequiredWorlds.add("DummyClaimRequiredWorld");
-			outConfig.set("GriefPrevention.Claims.ClaimRequiredWorlds", this.claimRequiredWorlds);
-		}
-		this.claimRequiredWorlds.remove("DummyClaimRequiredWorld");
+		outConfig.set("GriefPrevention.Claims.ClaimRequiredWorlds", this.claimRequiredWorlds);
 		
 		// pvp worlds list
 		this.pvp_enabledWorlds = new ArrayList<UUID>();

@@ -62,6 +62,11 @@ public class CommandExec implements CommandExecutor {
 				return false;
 			}
 			try {
+				if (!GriefPreventionPlus.getInstance().claimsEnabledForWorld(player.getWorld())) {
+					GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.ClaimsDisabledWorld);
+					return true;
+				}
+				
 				final int range = Integer.valueOf(args[0]);
 				final int side = (range * 2) + 1;
 				if (side < GriefPreventionPlus.getInstance().config.claims_minSize) {
