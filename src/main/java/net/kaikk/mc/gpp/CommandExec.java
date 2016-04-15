@@ -616,7 +616,14 @@ public class CommandExec implements CommandExecutor {
 
 			// load player data
 			final PlayerData playerData = this.gpp.getDataStore().getPlayerData(player.getUniqueId());
-			final int availableBlocks = playerData.getBonusClaimBlocks();
+			int availableBlocks = playerData.getBonusClaimBlocks();
+			for (Claim claim : playerData.getClaims()) {
+				availableBlocks-=claim.getArea();
+			}
+			
+			if (availableBlocks<0) {
+				availableBlocks+=playerData.getAccruedClaimBlocks();
+			}
 
 			// if no amount provided, just tell player value per block sold, and
 			// how many he can sell
