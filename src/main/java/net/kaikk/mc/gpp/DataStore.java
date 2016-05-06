@@ -1200,7 +1200,7 @@ public class DataStore {
 
 			while (results.next()) {
 				final World world = GriefPreventionPlus.getInstance().getServer().getWorld(toUUID(results.getBytes(3)));
-				if ((world == null) || !GriefPreventionPlus.getInstance().getServer().getOfflinePlayer(toUUID(results.getBytes(2))).hasPlayedBefore() || ((results.getInt(8) != -1) && (this.getClaim(results.getInt(8)) == null))) {
+				if ((world == null) || ((results.getInt(8) != -1) && (this.getClaim(results.getInt(8)) == null))) {
 					statement2.executeUpdate("DELETE FROM gpp_claims WHERE id=" + results.getInt(1));
 					count++;
 				}

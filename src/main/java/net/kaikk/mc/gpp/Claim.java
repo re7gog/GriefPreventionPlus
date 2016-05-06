@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.UUID;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -74,6 +75,8 @@ public class Claim {
 	private ArrayList<Claim> children = new ArrayList<Claim>();
 
 	private final List<Material> placeableFarmingBlocksList = Arrays.asList(Material.PUMPKIN_STEM, Material.CROPS, Material.MELON_STEM, Material.CARROT, Material.POTATO, Material.NETHER_WARTS);
+	
+	long autoTrust;
 
 	/**
 	 * use this constructor if you stored Location, otherwise use the other
@@ -353,6 +356,24 @@ public class Claim {
 		// subdivision permission inheritance
 		if (this.getParent() != null) {
 			return this.getParent().canBuild(player, material);
+		}
+		
+		// autotrust
+		if (System.currentTimeMillis()<this.autoTrust) {
+			String trustMessage;
+			if (Utils.isFakePlayer(player)) {
+				this.setPermission("#"+player.getName(), ClaimPermission.BUILD);
+				trustMessage = ChatColor.GREEN+"Fake player #"+player.getName()+" has been automatically trusted in your claim id "+this.getID();
+			} else {
+				this.setPermission(player.getUniqueId(), ClaimPermission.BUILD);
+				trustMessage = ChatColor.GREEN+"Player "+ChatColor.RED+player.getName()+ChatColor.GREEN+" has been automatically trusted in your claim id "+this.getID();
+			}
+			
+			Player owner = Bukkit.getPlayer(this.getOwnerID());
+			if (owner!=null) {
+				owner.sendMessage(trustMessage);
+			}
+			return null;
 		}
 
 		// failure message for all other cases

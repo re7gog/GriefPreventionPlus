@@ -22,6 +22,7 @@ package net.kaikk.mc.gpp;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -170,6 +171,22 @@ public class CommandExec implements CommandExecutor {
 				GriefPreventionPlus.sendMessage(player, TextMode.Err, "Invalid id");
 				return false;
 			}
+		}
+		
+		if (cmd.getName().equalsIgnoreCase("autotrust") && (player != null)) {
+			final Claim claim = this.dataStore.getClaimAt(player.getLocation(), true);
+			if (claim==null) {
+				return false;
+			}
+			
+			if (claim.canGrantPermission(player) != null) {
+				GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.NoPermissionTrust, claim.getOwnerName());
+				return true;
+			}
+			
+			claim.autoTrust = System.currentTimeMillis()+10000;
+			player.sendMessage(ChatColor.GREEN+"All players that breaks or places a block in the next 10 seconds on this claim will get automatically trusted."); // TODO move to messages
+			return true;
 		}
 
 		// GP's commands

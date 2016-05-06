@@ -171,6 +171,10 @@ commands:
       description: Teleports to a claim corner
       usage: /tpclaim [id]
       permission: griefprevention.tpclaim
+   autotrust:
+      description: Auto trusts all players and fake players that places or breaks a block in 10 seconds in the claim you are standing on
+      usage: /autotrust (while standing in your claim)
+      permission: griefprevention.claims
 permissions:
     griefprevention.createclaims:
         description: Grants permission to create claims.
