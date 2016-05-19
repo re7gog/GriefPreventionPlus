@@ -934,7 +934,7 @@ public class DataStore {
 		this.addDefault(defaults, Messages.CollectivePublic, "the public", "as in 'granted the public permission to...'");
 		this.addDefault(defaults, Messages.BuildPermission, "build", null);
 		this.addDefault(defaults, Messages.ContainersPermission, "access containers and animals", null);
-		this.addDefault(defaults, Messages.EntryPermission, "enter the claim", null);
+		this.addDefault(defaults, Messages.EntryPermission, "enter", null);
 		this.addDefault(defaults, Messages.AccessPermission, "use buttons and levers", null);
 		this.addDefault(defaults, Messages.PermissionsPermission, "manage permissions", null);
 		this.addDefault(defaults, Messages.LocationCurrentClaim, "in this claim", null);
