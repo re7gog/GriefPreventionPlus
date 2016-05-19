@@ -9,6 +9,10 @@ commands:
       description: Claim with a specified range around your position.
       usage: /Claim [range]
       permission: griefprevention.claims
+   adminclaim:
+      description: Claim with a specified range around your position.
+      usage: /AdminClaim [range]
+      permission: griefprevention.adminclaims
    abandonclaim:
       description: Deletes a claim.
       usage: /AbandonClaim
