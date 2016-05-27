@@ -19,6 +19,8 @@
 
 package net.kaikk.mc.gpp;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -158,6 +160,51 @@ public class CommandExec implements CommandExecutor {
 				GriefPreventionPlus.sendMessage(player, TextMode.Err, "Invalid id");
 				return false;
 			}
+		}
+		
+		if (cmd.getName().equalsIgnoreCase("deleteplayerclaims")) {
+			if (args.length==0) {
+				return false;
+			}
+			OfflinePlayer oPlayer = Bukkit.getOfflinePlayer(args[0]);
+			if (oPlayer.getLastPlayed()==0) {
+				GriefPreventionPlus.sendMessage(player, TextMode.Err, "The player has never played on this server.");
+				return true;
+			}
+			this.gpp.getDataStore().deleteClaimsForPlayer(oPlayer.getUniqueId(), player, true);
+			GriefPreventionPlus.sendMessage(player, TextMode.Info, "Deleted "+oPlayer.getName()+" claims.");
+			return true;
+		}
+		
+		if (cmd.getName().equalsIgnoreCase("deleteclaimsinworld")) {
+			if (args.length==0) {
+				return false;
+			}
+			
+			World world = Bukkit.getWorld(args[0]);
+			if (world==null) {
+				GriefPreventionPlus.sendMessage(player, TextMode.Err, "The specified world doesn't exist.");
+				return true;
+			}
+			
+			List<Claim> claimsToDelete = new ArrayList<Claim>();
+			for (Claim claim : this.gpp.getDataStore().claims.values()) {
+				if (world.getUID().equals(claim.getWorldUID())) {
+					claimsToDelete.add(claim);
+				}
+			}
+			
+			for (final Claim claim : claimsToDelete) {
+				claim.removeSurfaceFluids(null);
+				this.gpp.getDataStore().deleteClaim(claim);
+
+				// if in a creative mode world, delete the claim content
+				if (GriefPreventionPlus.getInstance().creativeRulesApply(claim.getWorld())) {
+					GriefPreventionPlus.getInstance().restoreClaim(claim, 0);
+				}
+			}
+			GriefPreventionPlus.sendMessage(player, TextMode.Info, "Deleted "+claimsToDelete.size()+" claims in world \""+world.getName()+"\".");
+			return true;
 		}
 		
 		if (cmd.getName().equalsIgnoreCase("autotrust") && (player != null)) {

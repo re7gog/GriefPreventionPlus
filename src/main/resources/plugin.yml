@@ -179,6 +179,14 @@ commands:
       description: Auto trusts all players and fake players that places or breaks a block in 10 seconds in the claim you are standing on
       usage: /autotrust (while standing in your claim)
       permission: griefprevention.claims
+   deleteplayerclaims:
+      description: Delete all claims owned by the specified player
+      usage: /deleteplayerclaims [PlayerName]
+      permission: griefprevention.deleteclaims
+   deleteclaimsinworld:
+      description: Delete all claims on the specified world
+      usage: /deleteclaimsinworld [WorldName]
+      permission: griefprevention.deleteclaims
 permissions:
     griefprevention.createclaims:
         description: Grants permission to create claims.
