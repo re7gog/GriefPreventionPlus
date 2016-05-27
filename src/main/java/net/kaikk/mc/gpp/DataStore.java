@@ -591,7 +591,7 @@ public class DataStore {
 	synchronized public void deleteClaimsForPlayer(UUID claimsOwner, Player sender, boolean deleteCreativeClaims) {
 		List<Claim> claimsToRemove = new ArrayList<Claim>();
 		for (final Claim claim : this.claims.values()) {
-			if (((claimsOwner == claim.getOwnerID()) || ((claimsOwner != null) && claimsOwner.equals(claim.getOwnerID()))) && (deleteCreativeClaims || !GriefPreventionPlus.getInstance().creativeRulesApply(claim.getWorld()))) {
+			if (claimsOwner.equals(claim.getOwnerID()) && (deleteCreativeClaims || !GriefPreventionPlus.getInstance().creativeRulesApply(claim.getWorld()))) {
 				// fire event
 				final ClaimDeleteEvent event = new ClaimDeleteEvent(claim, sender, Reason.DELETEALL);
 				GriefPreventionPlus.getInstance().getServer().getPluginManager().callEvent(event);
