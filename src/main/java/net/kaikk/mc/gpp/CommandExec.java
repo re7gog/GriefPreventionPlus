@@ -439,7 +439,7 @@ public class CommandExec implements CommandExecutor {
 																							 */);
 
 			if (claim == null) { // all player's claims
-				if (this.gpp.getDataStore().getPlayerData(player.getUniqueId()).getClaims().size() > 0) {
+				if (this.gpp.getDataStore().getPlayerData(player.getUniqueId()).getClaims().size() == 0) {
 					GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.YouHaveNoClaims);
 					return false;
 				}
