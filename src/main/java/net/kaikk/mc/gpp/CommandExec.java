@@ -396,14 +396,30 @@ public class CommandExec implements CommandExecutor {
 
 		// trustlist
 		else if (cmd.getName().equalsIgnoreCase("trustlist") && (player != null)) {
-			final Claim claim = this.gpp.getDataStore().getClaimAt(player.getLocation(), true);
+			final Claim claim;
+			if (args.length==0) {
+				claim = this.gpp.getDataStore().getClaimAt(player.getLocation(), true);
+				
+				// if no claim here, error message
+				if (claim == null) {
+					GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.TrustListNoClaim);
+					return true;
+				}
 
-			// if no claim here, error message
-			if (claim == null) {
-				GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.TrustListNoClaim);
-				return true;
+			} else {
+				try {
+					int claimId = Integer.valueOf(args[0]);
+					claim = this.gpp.getDataStore().getClaim(claimId);
+					
+					if (claim==null) {
+						GriefPreventionPlus.sendMessage(player, TextMode.Err, "No claim found with the specified ID."); // move to messages
+						return true;
+					}
+				} catch (NumberFormatException e) {
+					return false;
+				}
 			}
-
+			
 			// if no permission to manage permissions, error message
 			final String errorMessage = claim.canGrantPermission(player);
 			if (errorMessage != null) {

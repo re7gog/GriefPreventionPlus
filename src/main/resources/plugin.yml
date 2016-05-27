@@ -119,8 +119,8 @@ commands:
       description: Ejects you to nearby unclaimed land.  Has a substantial cooldown period.
       usage: /Trapped
    trustlist:
-      description: Lists permissions for the claim you're standing in.
-      usage: /TrustList
+      description: Lists permissions for the claim you're standing in or the specified claim ID.
+      usage: /TrustList <ClaimID>
       permission: griefprevention.claims
    ignoreclaims:
       description: Toggles ignore claims mode.
