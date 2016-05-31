@@ -75,7 +75,7 @@ public class Claim {
 	private ArrayList<Claim> children = new ArrayList<Claim>();
 
 	private final List<Material> placeableFarmingBlocksList = Arrays.asList(Material.PUMPKIN_STEM, Material.CROPS, Material.MELON_STEM, Material.CARROT, Material.POTATO, Material.NETHER_WARTS);
-	
+
 	long autoTrust;
 
 	/**
@@ -196,7 +196,7 @@ public class Claim {
 				return null;
 			}
 		}
-		
+
 		// players with this permission node can always enter the claim
 		if (player.hasPermission("griefprevention.bypassentryprotection")) {
 			return null;
@@ -206,7 +206,7 @@ public class Claim {
 		if (player.getUniqueId().equals(this.getOwnerID()) || GriefPreventionPlus.getInstance().getDataStore().getPlayerData(player.getUniqueId()).ignoreClaims) {
 			return null;
 		}
-		
+
 		// if the entry trust mode is "allow by default", allow any player if there is no entry trust entry set
 		if (GriefPreventionPlus.getInstance().config.entryTrustAllowByDefault && !this.hasExplicitEntryTrustEntry()) {
 			return null;
@@ -255,8 +255,8 @@ public class Claim {
 		}
 		return reason;
 	}
-	
-	
+
+
 	// access permission check
 	public String canAccess(Player player) {
 		// admin claims need adminclaims permission only.
@@ -357,7 +357,7 @@ public class Claim {
 		if (this.getParent() != null) {
 			return this.getParent().canBuild(player, material);
 		}
-		
+
 		// autotrust
 		if (System.currentTimeMillis()<this.autoTrust) {
 			String trustMessage;
@@ -368,7 +368,7 @@ public class Claim {
 				this.setPermission(player.getUniqueId(), ClaimPermission.BUILD);
 				trustMessage = ChatColor.GREEN+"Player "+ChatColor.RED+player.getName()+ChatColor.GREEN+" has been automatically trusted in your claim id "+this.getID();
 			}
-			
+
 			Player owner = Bukkit.getPlayer(this.getOwnerID());
 			if (owner!=null) {
 				owner.sendMessage(trustMessage);
@@ -419,7 +419,7 @@ public class Claim {
 			if (player.getUniqueId().equals(this.ownerID)) {
 				return null;
 			}
-			
+
 			// anyone with deleteclaims permission can modify non-admin claims at
 			// any time
 			if (player.hasPermission("griefprevention.deleteclaims")) {
@@ -453,12 +453,11 @@ public class Claim {
 		if (this.hasExplicitPermission(player, ClaimPermission.MANAGE)) {
 			return null;
 		}
-		
-	      // players ignoring claims can do this
-        if (GriefPreventionPlus.getInstance().getDataStore().getPlayerData(player.getUniqueId()).ignoreClaims) {
-            return null;
-        }
 
+		// players ignoring claims can do this
+		if (GriefPreventionPlus.getInstance().getDataStore().getPlayerData(player.getUniqueId()).ignoreClaims) {
+			return null;
+		}
 
 		// permission inheritance for subdivisions
 		if (this.getParent() != null) {
@@ -801,7 +800,7 @@ public class Claim {
 			}
 		}
 	}
-	
+
 	public boolean hasExplicitEntryTrustEntry() {
 		for (final Integer value : this.permissionMapPlayers.values()) {
 			if ((value & ClaimPermission.ENTRY.perm) != 0) {
@@ -822,7 +821,7 @@ public class Claim {
 		}
 		return false;
 	}
-	
+
 	public String getTrustList() {
 		final ArrayList<String> builders = new ArrayList<String>();
 		final ArrayList<String> containers = new ArrayList<String>();
@@ -830,9 +829,9 @@ public class Claim {
 		final ArrayList<String> enters = new ArrayList<String>();
 		final ArrayList<String> managers = new ArrayList<String>();
 		this.getPermissions(builders, containers, accessors, enters, managers);
-		
+
 		StringBuilder permissions = new StringBuilder("Explicit permissions here:");
-		
+
 		permissions.append("\n" + ChatColor.GOLD + "M: ");
 		if (managers.size() > 0) {
 			for (int i = 0; i < managers.size(); i++) {
@@ -860,16 +859,16 @@ public class Claim {
 				permissions.append(accessors.get(i) + " ");
 			}
 		}
-		
+
 		permissions.append("\n" + ChatColor.RED + "E: ");
 		if (enters.size() > 0) {
 			for (int i = 0; i < enters.size(); i++) {
 				permissions.append(enters.get(i) + " ");
 			}
 		}
-		
+
 		permissions.append(ChatColor.RESET + "\n(" + ChatColor.GOLD + "M-anager" + ChatColor.RESET + ", " + ChatColor.YELLOW + "B-uilder" + ChatColor.RESET + ", " + ChatColor.GREEN + "C-ontainers" + ChatColor.RESET + ", " + ChatColor.BLUE + "A-ccess" + ChatColor.RESET + ", " + ChatColor.RED + "E-ntry)");
-		
+
 		return permissions.toString();
 	}
 
