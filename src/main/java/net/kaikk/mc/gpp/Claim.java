@@ -453,6 +453,12 @@ public class Claim {
 		if (this.hasExplicitPermission(player, ClaimPermission.MANAGE)) {
 			return null;
 		}
+		
+	      // players ignoring claims can do this
+        if (GriefPreventionPlus.getInstance().getDataStore().getPlayerData(player.getUniqueId()).ignoreClaims) {
+            return null;
+        }
+
 
 		// permission inheritance for subdivisions
 		if (this.getParent() != null) {
