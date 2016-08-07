@@ -116,8 +116,9 @@ public class CommandExec implements CommandExecutor {
 					GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.NewClaimTooSmall, String.valueOf(GriefPreventionPlus.getInstance().config.claims_minSize));
 					return true;
 				}
-				
-				this.createClaim(player, this.dataStore.getPlayerData(player.getUniqueId()), range);
+				PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
+				playerData.shovelMode = ShovelMode.Admin;
+				this.createClaim(player, playerData, range);
 				return true;
 			} catch (final NumberFormatException e) {
 				return false;
