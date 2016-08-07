@@ -1274,4 +1274,8 @@ public class Claim {
 		this.permissionMapPlayers.remove(playerID);
 	}
 
+	
+	public boolean isSubdivision() {
+		return this.parent!=null;
+	}
 }
