@@ -679,7 +679,7 @@ public class Claim {
 	}
 
 	public UUID getOwnerID() {
-		return this.ownerID;
+		return this.parent==null ? this.ownerID : this.parent.ownerID;
 	}
 
 	/**
