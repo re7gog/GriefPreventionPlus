@@ -111,8 +111,7 @@ public class CommandExec implements CommandExecutor {
 			}
 			try {
 				final int range = Integer.valueOf(args[0]);
-				final int side = (range * 2) + 1;
-				if (side < GriefPreventionPlus.getInstance().config.claims_minSize) {
+				if (range < 1) {
 					GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.NewClaimTooSmall, String.valueOf(GriefPreventionPlus.getInstance().config.claims_minSize));
 					return true;
 				}
