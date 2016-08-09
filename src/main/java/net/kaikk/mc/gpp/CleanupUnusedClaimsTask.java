@@ -64,11 +64,9 @@ class CleanupUnusedClaimsTask extends BukkitRunnable {
 				final OfflinePlayer player = this.instance.getServer().getOfflinePlayer(claim.getOwnerID());
 				if (player.getLastPlayed() != 0) {
 					final PlayerData playerData = this.instance.getDataStore().getPlayerData(claim.getOwnerID());
-					if (player.getLastPlayed() != 0) {
-						final long timeElapsed = System.currentTimeMillis() - player.getLastPlayed();
-						if ((this.claimsRemMillisecs > 0 && timeElapsed > this.claimsRemMillisecs) || (this.chestMillisecs > 0 && timeElapsed > this.chestMillisecs && claim.getArea() <= this.areaOfDefaultClaim && (playerData == null || playerData.getClaims().size() == 1))) {
-							this.claimsToRemove.add(claim);
-						}
+					final long timeElapsed = System.currentTimeMillis() - player.getLastPlayed();
+					if ((this.claimsRemMillisecs > 0 && timeElapsed > this.claimsRemMillisecs) || (this.chestMillisecs > 0 && timeElapsed > this.chestMillisecs && claim.getArea() <= this.areaOfDefaultClaim && (playerData == null || playerData.getClaims().size() == 1))) {
+						this.claimsToRemove.add(claim);
 					}
 				} else {
 					GriefPreventionPlus.addLogEntry(""+(player.getName()!=null?player.getName():"(UUID:"+claim.getOwnerID()+")") + "'s player data is invalid. Claim ID [" + claim.id + "] expiration skipped.");
