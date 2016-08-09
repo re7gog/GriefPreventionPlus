@@ -140,12 +140,12 @@ public class PlayerData {
 	UUID lastWorld;
 	int lastX, lastZ;
 
-	PlayerData(UUID playerID) {
+	public PlayerData(UUID playerID) {
 		this.playerID = playerID;
 		this.initLastLocation();
 	}
 
-	PlayerData(UUID playerID, Integer accruedClaimBlocks, Integer bonusClaimBlocks) {
+	public PlayerData(UUID playerID, Integer accruedClaimBlocks, Integer bonusClaimBlocks) {
 		this.playerID = playerID;
 		this.accruedClaimBlocks = accruedClaimBlocks;
 		this.bonusClaimBlocks = bonusClaimBlocks;
