@@ -139,16 +139,20 @@ public class PlayerData {
 	
 	UUID lastWorld;
 	int lastX, lastZ;
+	
+	public long lastSeen;
 
 	public PlayerData(UUID playerID) {
 		this.playerID = playerID;
+		this.lastSeen = System.currentTimeMillis();
 		this.initLastLocation();
 	}
 
-	public PlayerData(UUID playerID, Integer accruedClaimBlocks, Integer bonusClaimBlocks) {
+	public PlayerData(UUID playerID, Integer accruedClaimBlocks, Integer bonusClaimBlocks, long lastSeen) {
 		this.playerID = playerID;
 		this.accruedClaimBlocks = accruedClaimBlocks;
 		this.bonusClaimBlocks = bonusClaimBlocks;
+		this.lastSeen = lastSeen;
 		this.initLastLocation();
 	}
 	
@@ -233,7 +237,7 @@ public class PlayerData {
 	}
 
 	public Date getLastLogin() {
-		return new Date(GriefPreventionPlus.getInstance().getServer().getOfflinePlayer(this.playerID).getLastPlayed());
+		return new Date(this.lastSeen);
 	}
 
 	// the number of claim blocks a player has available for claiming land
@@ -289,7 +293,7 @@ public class PlayerData {
 			storageData = new PlayerData(this.playerID);
 
 			// shove that new player data into the hash map cache
-			GriefPreventionPlus.getInstance().getDataStore().playerNameToPlayerDataMap.put(this.playerID, storageData);
+			GriefPreventionPlus.getInstance().getDataStore().playersData.put(this.playerID, storageData);
 		}
 
 		if (this.accruedClaimBlocks == null) {

@@ -1907,6 +1907,7 @@ class PlayerEventHandler implements Listener {
 		final long now = nowDate.getTime();
 		final PlayerData playerData = this.dataStore.getPlayerData(playerID);
 		playerData.lastSpawn = now;
+		playerData.lastSeen = now;
 		this.lastLoginThisServerSessionMap.put(playerID, nowDate);
 
 		// if newish, prevent chat until he's moved a bit to prove he's not a

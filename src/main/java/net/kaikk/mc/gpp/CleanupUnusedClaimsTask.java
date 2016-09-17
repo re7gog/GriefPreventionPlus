@@ -19,8 +19,8 @@
 
 package net.kaikk.mc.gpp;
 
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.bukkit.Bukkit;
@@ -53,7 +53,7 @@ class CleanupUnusedClaimsTask extends BukkitRunnable {
 			this.areaOfDefaultClaim = (int) Math.pow((this.instance.config.claims_automaticClaimsForNewPlayersRadius * 2) + 1, 2);
 		}
 		
-		this.claimsToRemove = new LinkedList<Claim>();
+		this.claimsToRemove = new ArrayList<Claim>();
 		
 		GriefPreventionPlus.addLogEntry("Unused claims task start! Calculating claims to remove...");
 		
@@ -61,15 +61,20 @@ class CleanupUnusedClaimsTask extends BukkitRunnable {
 		
 		for (Claim claim : this.instance.getDataStore().claims.values()) {
 			if (!claim.isAdminClaim()) {
-				final OfflinePlayer player = this.instance.getServer().getOfflinePlayer(claim.getOwnerID());
-				if (player.getLastPlayed() != 0) {
-					final PlayerData playerData = this.instance.getDataStore().getPlayerData(claim.getOwnerID());
-					final long timeElapsed = System.currentTimeMillis() - player.getLastPlayed();
+				final PlayerData playerData = this.instance.getDataStore().getPlayerData(claim.getOwnerID());
+				if (playerData.lastSeen != 0) {
+					final long timeElapsed = System.currentTimeMillis() - playerData.lastSeen;
 					if ((this.claimsRemMillisecs > 0 && timeElapsed > this.claimsRemMillisecs) || (this.chestMillisecs > 0 && timeElapsed > this.chestMillisecs && claim.getArea() <= this.areaOfDefaultClaim && (playerData == null || playerData.getClaims().size() == 1))) {
-						this.claimsToRemove.add(claim);
+						final OfflinePlayer player = this.instance.getServer().getOfflinePlayer(claim.getOwnerID());
+						if (!instance.hasPermission(player, "griefprevention.skipclaimexpiration")) {
+							this.claimsToRemove.add(claim);
+							if (this.claimsToRemove.size() > 100) { // do not remove more than 100 claims every time
+								break;
+							}
+						}
 					}
 				} else {
-					GriefPreventionPlus.addLogEntry(""+(player.getName()!=null?player.getName():"(UUID:"+claim.getOwnerID()+")") + "'s player data is invalid. Claim ID [" + claim.id + "] expiration skipped.");
+					playerData.lastSeen = System.currentTimeMillis(); // reset the lastSeen to "today"
 				}
 			}
 		}

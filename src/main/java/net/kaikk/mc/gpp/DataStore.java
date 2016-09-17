@@ -54,7 +54,7 @@ import org.bukkit.entity.Player;
 //singleton class which manages all GriefPrevention data (except for config options)
 public class DataStore {
 	// in-memory cache for player data
-	protected Map<UUID, PlayerData> playerNameToPlayerDataMap = new HashMap<UUID, PlayerData>();
+	protected Map<UUID, PlayerData> playersData = new HashMap<UUID, PlayerData>();
 
 	// in-memory cache for group (permission-based) data
 	protected Map<String, Integer> permissionToBonusBlocksMap = new HashMap<String, Integer>();
@@ -108,15 +108,15 @@ public class DataStore {
 
 			ResultSet results = statement.executeQuery("SHOW TABLES LIKE 'gpp_claims'");
 			if (!results.next()) {
-				statement.execute("CREATE TABLE IF NOT EXISTS gpp_claims (" + "id int(11) NOT NULL AUTO_INCREMENT," + "owner binary(16) NOT NULL COMMENT 'UUID'," + "world binary(16) NOT NULL COMMENT 'UUID'," + "lesserX mediumint(9) NOT NULL," + "lesserZ mediumint(9) NOT NULL," + "greaterX mediumint(9) NOT NULL," + "greaterZ mediumint(9) NOT NULL," + "parentid int(11) NOT NULL," + "PRIMARY KEY (id));");
+				statement.execute("CREATE TABLE IF NOT EXISTS gpp_claims (id int(11) NOT NULL AUTO_INCREMENT,owner binary(16) NOT NULL COMMENT 'UUID',world binary(16) NOT NULL COMMENT 'UUID',lesserX mediumint(9) NOT NULL,lesserZ mediumint(9) NOT NULL,greaterX mediumint(9) NOT NULL,greaterZ mediumint(9) NOT NULL,parentid int(11) NOT NULL,PRIMARY KEY (id));");
 
-				statement.execute("CREATE TABLE IF NOT EXISTS gpp_groupdata (" + "gname varchar(100) NOT NULL," + "blocks int(11) NOT NULL," + "UNIQUE KEY gname (gname));");
+				statement.execute("CREATE TABLE IF NOT EXISTS gpp_groupdata (gname varchar(100) NOT NULL,blocks int(11) NOT NULL,UNIQUE KEY gname (gname));");
 
-				statement.execute("CREATE TABLE IF NOT EXISTS gpp_permsbukkit (" + "claimid int(11) NOT NULL," + "pname varchar(80) NOT NULL," + "perm tinyint(4) NOT NULL," + "PRIMARY KEY (claimid,pname)," + "KEY claimid (claimid));");
+				statement.execute("CREATE TABLE IF NOT EXISTS gpp_permsbukkit (claimid int(11) NOT NULL,pname varchar(80) NOT NULL,perm tinyint(4) NOT NULL,PRIMARY KEY (claimid,pname),KEY claimid (claimid));");
 
-				statement.execute("CREATE TABLE IF NOT EXISTS gpp_permsplayer (" + "claimid int(11) NOT NULL," + "player binary(16) NOT NULL COMMENT 'UUID'," + "perm tinyint(4) NOT NULL," + "PRIMARY KEY (claimid,player)," + "KEY claimid (claimid));");
+				statement.execute("CREATE TABLE IF NOT EXISTS gpp_permsplayer (claimid int(11) NOT NULL,player binary(16) NOT NULL COMMENT 'UUID',perm tinyint(4) NOT NULL,PRIMARY KEY (claimid,player),KEY claimid (claimid));");
 
-				statement.execute("CREATE TABLE IF NOT EXISTS gpp_playerdata (" + "player binary(16) NOT NULL COMMENT 'UUID'," + "accruedblocks int(11) NOT NULL," + "bonusblocks int(11) NOT NULL," + "PRIMARY KEY (player));");
+				statement.execute("CREATE TABLE IF NOT EXISTS gpp_playerdata (player binary(16) NOT NULL COMMENT 'UUID',accruedblocks int(11) NOT NULL,bonusblocks int(11) NOT NULL,lastseen bigint(20) NOT NULL, PRIMARY KEY (player));");
 
 				results = statement.executeQuery("SHOW TABLES LIKE 'griefprevention_claimdata';");
 				if (results.next()) {
@@ -288,6 +288,15 @@ public class DataStore {
 					statement2.close();
 					GriefPreventionPlus.addLogEntry("Migration complete. Claims: " + i + " - Permissions: " + j + " - PlayerData: " + k);
 				}
+			} else {
+				// database updates
+				
+				// v12.29 - added lastseen column on the playerdata table
+				Statement s = this.databaseConnection.createStatement();
+				ResultSet rs = s.executeQuery("SHOW COLUMNS FROM gpp_playerdata LIKE 'lastseen';");
+				if (!rs.next()) {
+					s.executeUpdate("ALTER TABLE gpp_playerdata ADD lastseen BIGINT NOT NULL DEFAULT '0' AFTER bonusblocks;");
+				}
 			}
 		} catch (final Exception e3) {
 			GriefPreventionPlus.addLogEntry("ERROR: Unable to create the necessary database table.  Details:");
@@ -354,6 +363,9 @@ public class DataStore {
 		}
 
 		GriefPreventionPlus.addLogEntry(this.claims.size() + " total claims loaded.");
+		
+		cachePlayersData();
+		GriefPreventionPlus.addLogEntry("Cached "+ this.playersData.size() + " players.");
 
 		// load up all the messages from messages.yml
 		this.loadMessages();
@@ -403,7 +415,7 @@ public class DataStore {
 			this.refreshDataConnection();
 
 			final Statement statement = this.databaseConnection.createStatement();
-			statement.executeUpdate("INSERT INTO gpp_playerdata VALUES (" + UUIDtoHexString(playerData.playerID) + ", \"" + playerData.getAccruedClaimBlocks() + "\", " + playerData.getBonusClaimBlocks() + ") ON DUPLICATE KEY UPDATE accruedblocks=" + playerData.getAccruedClaimBlocks() + ", bonusblocks=" + playerData.getBonusClaimBlocks() + ";");
+			statement.executeUpdate("INSERT INTO gpp_playerdata VALUES (" + UUIDtoHexString(playerData.playerID) + ", \"" + playerData.getAccruedClaimBlocks() + "\", " + playerData.getBonusClaimBlocks() + ", "+playerData.lastSeen+") ON DUPLICATE KEY UPDATE accruedblocks=" + playerData.getAccruedClaimBlocks() + ", bonusblocks=" + playerData.getBonusClaimBlocks() + ", lastseen = "+playerData.lastSeen+";");
 		} catch (final SQLException e) {
 			GriefPreventionPlus.addLogEntry("Unable to save data for player " + playerID.toString() + ".  Details:");
 			GriefPreventionPlus.addLogEntry(e.getMessage());
@@ -714,7 +726,7 @@ public class DataStore {
 	fresh player data with default values */
 	synchronized public PlayerData getPlayerData(UUID playerID) {
 		// first, look in memory
-		PlayerData playerData = this.playerNameToPlayerDataMap.get(playerID);
+		PlayerData playerData = this.playersData.get(playerID);
 
 		// if not there, build a fresh instance with some blanks for what may be
 		// in secondary storage
@@ -722,7 +734,7 @@ public class DataStore {
 			playerData = new PlayerData(playerID);
 
 			// shove that new player data into the hash map cache
-			this.playerNameToPlayerDataMap.put(playerID, playerData);
+			this.playersData.put(playerID, playerData);
 		}
 
 		return playerData;
@@ -1187,7 +1199,7 @@ public class DataStore {
 
 	// removes cached player data from memory
 	synchronized void clearCachedPlayerData(UUID playerID) {
-		this.playerNameToPlayerDataMap.remove(playerID);
+		this.playersData.remove(playerID);
 	}
 
 	int clearOrphanClaims() {
@@ -1231,7 +1243,7 @@ public class DataStore {
 			this.refreshDataConnection();
 			final Statement statement = this.databaseConnection.createStatement();
 
-			statement.executeUpdate("INSERT INTO gpp_claims (owner, world, lesserX, lesserZ, greaterX, greaterZ, parentid) " + "VALUES (" + UUIDtoHexString(claim.getOwnerID()) + ", " + UUIDtoHexString(claim.getLesserBoundaryCorner().getWorld().getUID()) + ", " + claim.getLesserBoundaryCorner().getBlockX() + ", " + claim.getLesserBoundaryCorner().getBlockZ() + ", " + claim.getGreaterBoundaryCorner().getBlockX() + ", " + claim.getGreaterBoundaryCorner().getBlockZ() + ", " + (claim.getParent() != null ? claim.getParent().id : -1) + ");", Statement.RETURN_GENERATED_KEYS);
+			statement.executeUpdate("INSERT INTO gpp_claims (owner, world, lesserX, lesserZ, greaterX, greaterZ, parentid) VALUES (" + UUIDtoHexString(claim.getOwnerID()) + ", " + UUIDtoHexString(claim.getLesserBoundaryCorner().getWorld().getUID()) + ", " + claim.getLesserBoundaryCorner().getBlockX() + ", " + claim.getLesserBoundaryCorner().getBlockZ() + ", " + claim.getGreaterBoundaryCorner().getBlockX() + ", " + claim.getGreaterBoundaryCorner().getBlockZ() + ", " + (claim.getParent() != null ? claim.getParent().id : -1) + ");", Statement.RETURN_GENERATED_KEYS);
 
 			final ResultSet result = statement.getGeneratedKeys();
 			result.next();
@@ -1419,7 +1431,7 @@ public class DataStore {
 
 			// if data for this player exists, use it
 			if (results.next()) {
-				return new PlayerData(playerID, results.getInt(2), results.getInt(3));
+				return new PlayerData(playerID, results.getInt(2), results.getInt(3), results.getLong(4));
 			}
 		} catch (final SQLException e) {
 			GriefPreventionPlus.addLogEntry("Unable to retrieve data for player " + playerID.toString() + ".  Details:");
@@ -1428,6 +1440,25 @@ public class DataStore {
 		}
 
 		return null;
+	}
+	
+	void cachePlayersData() {
+		try {
+			this.refreshDataConnection();
+
+			final Statement statement = this.databaseConnection.createStatement();
+			final ResultSet results = statement.executeQuery("SELECT * FROM gpp_playerdata WHERE lastseen > "+(System.currentTimeMillis()-(60*60*24*30*1000L))+";");
+
+			// if data for this player exists, use it
+			while(results.next()) {
+				UUID uuid = toUUID(results.getBytes(1));
+				this.playersData.put(uuid, new PlayerData(uuid, results.getInt(2), results.getInt(3), results.getLong(4)));
+			}
+		} catch (final SQLException e) {
+			GriefPreventionPlus.addLogEntry("Unable to cache players data. Details:");
+			GriefPreventionPlus.addLogEntry(e.getMessage());
+			e.printStackTrace();
+		}
 	}
 	
 	boolean isSoftMuted(UUID playerID) {

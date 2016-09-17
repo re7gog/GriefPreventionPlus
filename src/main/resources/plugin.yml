@@ -289,3 +289,6 @@ permissions:
     griefprevention.claiminfo:
         description: Allows players to check claims size and last seen of the claim owner.
         default: false
+    griefprevention.skipclaimexpiration:
+        description: Claims owned by a player with this permission will not expire
+        default: false

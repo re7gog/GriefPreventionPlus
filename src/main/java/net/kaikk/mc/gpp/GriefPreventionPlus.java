@@ -27,7 +27,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.permission.Permission;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.GameMode;
@@ -57,6 +59,8 @@ public class GriefPreventionPlus extends JavaPlugin {
 
 	// helper method to resolve a player by name
 	public HashMap<String, UUID> playerNameToIDMap = new HashMap<String, UUID>();
+	
+	private Permission provider;
 	
 	@Override
 	public void onLoad() {
@@ -110,6 +114,13 @@ public class GriefPreventionPlus extends JavaPlugin {
 		}
 
 		addLogEntry("Finished loading data.");
+		
+		
+		// initialize Vault permission provider
+		RegisteredServiceProvider<Permission> registeredService = Bukkit.getServicesManager().getRegistration(Permission.class);
+		if (registeredService!=null) {
+			provider = registeredService.getProvider();
+		}
 
 		// unless claim block accrual is disabled, start the recurring per 5
 		// minute event to give claim blocks to online players
@@ -173,21 +184,7 @@ public class GriefPreventionPlus extends JavaPlugin {
 				GriefPreventionPlus.addLogEntry("ERROR: Vault was unable to find a supported economy plugin.  Either install a Vault-compatible economy plugin, or set both of the economy config variables to zero.");
 			}
 		}
-
-		int playersCached = 0;
-		final OfflinePlayer[] offlinePlayers = this.getServer().getOfflinePlayers();
-		final long now = System.currentTimeMillis();
-		final long millisecondsPerDay = 1000 * 60 * 60 * 24;
-		for (final OfflinePlayer player : offlinePlayers) {
-			// if the player has been seen in the last 30 days, cache his
-			// name/UUID pair
-			if (((player.getUniqueId() != null) && (player.getName() != null) && (((now - player.getLastPlayed()) / millisecondsPerDay) <= 30))) {
-				this.playerNameToIDMap.put(player.getName().toLowerCase(), player.getUniqueId());
-				playersCached++;
-			}
-		}
-
-		addLogEntry("Cached " + playersCached + " recent players.");
+		
 		final CommandExec commandExec = new CommandExec();
 		for (String command : this.getDescription().getCommands().keySet()) {
 			this.getCommand(command).setExecutor(commandExec);
@@ -457,6 +454,12 @@ public class GriefPreventionPlus extends JavaPlugin {
 		final UUID bestMatchID = this.playerNameToIDMap.get(name.toLowerCase());
 
 		if (bestMatchID == null) {
+			OfflinePlayer offP = Bukkit.getOfflinePlayer(name);
+			if (offP.hasPlayedBefore() || offP.isOnline()) {
+				cacheUUIDNamePair(offP.getUniqueId(), offP.getName());
+				return offP;
+			}
+			
 			return null;
 		}
 
@@ -465,7 +468,15 @@ public class GriefPreventionPlus extends JavaPlugin {
 
 	public UUID resolvePlayerId(String name) {
 		// try online players first
-		return this.playerNameToIDMap.get(name.toLowerCase());
+		UUID uuid = this.playerNameToIDMap.get(name.toLowerCase());
+		if (uuid == null) {
+			OfflinePlayer offP = Bukkit.getOfflinePlayer(name);
+			if (offP.hasPlayedBefore() || offP.isOnline()) {
+				cacheUUIDNamePair(offP.getUniqueId(), offP.getName());
+				return offP.getUniqueId();
+			}
+		}
+		return uuid;
 	}
 
 	public void restoreChunk(Chunk chunk, int miny, boolean aggressiveMode, long delayInTicks, Player playerReceivingVisualization) {
@@ -671,6 +682,14 @@ public class GriefPreventionPlus extends JavaPlugin {
 			GriefPreventionPlus.getInstance().getServer().getScheduler().runTaskLater(GriefPreventionPlus.getInstance(), task, delayInTicks);
 		} else {
 			task.run();
+		}
+	}
+	
+	public boolean hasPermission(OfflinePlayer player, String permission) {
+		try {
+			return provider.playerHas(null, player, permission);
+		} catch (Exception e) {
+			return player.isOnline() ? player.getPlayer().hasPermission(permission) : false;
 		}
 	}
 }
