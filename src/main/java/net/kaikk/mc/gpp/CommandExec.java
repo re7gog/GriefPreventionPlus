@@ -167,7 +167,7 @@ public class CommandExec implements CommandExecutor {
 				return false;
 			}
 			OfflinePlayer oPlayer = Bukkit.getOfflinePlayer(args[0]);
-			if (oPlayer.getLastPlayed()==0) {
+			if (oPlayer.getLastPlayed()==0 && !oPlayer.isOnline()) {
 				GriefPreventionPlus.sendMessage(player, TextMode.Err, "The player has never played on this server.");
 				return true;
 			}
