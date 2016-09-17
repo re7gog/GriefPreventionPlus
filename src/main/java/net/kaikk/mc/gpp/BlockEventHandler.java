@@ -378,7 +378,7 @@ class BlockEventHandler implements Listener {
 	}
 
 	// when a player places a block...
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
 	public void onBlockPlace(BlockPlaceEvent placeEvent) {
 		final Player player = placeEvent.getPlayer();		
 		final Block block = placeEvent.getBlock();
@@ -536,7 +536,7 @@ class BlockEventHandler implements Listener {
 	}
 
 	// when a player places multiple blocks...
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
 	public void onBlocksPlace(BlockMultiPlaceEvent placeEvent) {
 		final Player player = placeEvent.getPlayer();
 
