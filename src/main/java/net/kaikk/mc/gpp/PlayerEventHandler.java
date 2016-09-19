@@ -83,7 +83,7 @@ class PlayerEventHandler implements Listener {
 	private final DataStore dataStore;
 
 	// regex pattern for the "how do i claim land?" scanner
-	private Pattern howToClaimPattern = Pattern.compile(this.dataStore.getMessage(Messages.HowToClaimRegex), Pattern.CASE_INSENSITIVE);
+	private Pattern howToClaimPattern;
 
 	// determines whether a block type is an inventory holder. uses a caching
 	// strategy to save cpu time
@@ -92,6 +92,7 @@ class PlayerEventHandler implements Listener {
 	// typical constructor, yawn
 	PlayerEventHandler(DataStore dataStore) {
 		this.dataStore = dataStore;
+		this.howToClaimPattern = Pattern.compile(this.dataStore.getMessage(Messages.HowToClaimRegex), Pattern.CASE_INSENSITIVE);
 	}
 
 	// when a player switches in-hand items
