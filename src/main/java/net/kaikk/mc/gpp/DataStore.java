@@ -1,4 +1,4 @@
-/*
+	/*
     GriefPreventionPlus Server Plugin for Minecraft
     Copyright (C) 2015 Antonino Kai Pocorobba
     (forked from GriefPrevention by Ryan Hamshire)
@@ -274,7 +274,7 @@ public class DataStore {
 					}
 
 					for (final Entry<String, Integer[]> gppbf : claimBlocksMap.entrySet()) {
-						statement2.executeUpdate("INSERT INTO gpp_playerdata VALUES (0x" + gppbf.getKey() + ", " + gppbf.getValue()[0] + ", " + gppbf.getValue()[1] + ");");
+						statement2.executeUpdate("INSERT INTO gpp_playerdata VALUES (0x" + gppbf.getKey() + ", " + gppbf.getValue()[0] + ", " + gppbf.getValue()[1] + ", 0);");
 						k++;
 					}
 
