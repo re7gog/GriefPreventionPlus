@@ -1113,11 +1113,6 @@ public class DataStore {
 		}
 	}
 
-	// removes cached player data from memory
-	synchronized void clearCachedPlayerData(UUID playerID) {
-		this.playersData.remove(playerID);
-	}
-
 	int clearOrphanClaims() {
 		int count = 0;
 		try {

@@ -843,11 +843,6 @@ class PlayerEventHandler implements Listener {
 					final long daysElapsed = (now.getTime() - otherPlayerData.getTimeLastLogin()) / (1000 * 60 * 60 * 24);
 
 					GriefPreventionPlus.sendMessage(player, TextMode.Info, Messages.PlayerOfflineTime, String.valueOf(daysElapsed));
-
-					// drop the data we just loaded, if the player isn't online
-					if (GriefPreventionPlus.getInstance().getServer().getPlayer(claim.getOwnerID()) == null) {
-						this.dataStore.clearCachedPlayerData(claim.getOwnerID());
-					}
 				}
 			}
 
@@ -1182,10 +1177,6 @@ class PlayerEventHandler implements Listener {
 							} else {
 								final PlayerData ownerData = this.dataStore.getPlayerData(ownerID);
 								claimBlocksRemaining = ownerData.getRemainingClaimBlocks();
-								final OfflinePlayer owner = GriefPreventionPlus.getInstance().getServer().getOfflinePlayer(ownerID);
-								if (!owner.isOnline()) {
-									this.dataStore.clearCachedPlayerData(ownerID);
-								}
 							}
 							// inform about success, communicate remaining blocks
 							// available
@@ -1528,9 +1519,6 @@ class PlayerEventHandler implements Listener {
 		// blocks while playing that were not saved immediately
 		
 		this.dataStore.savePlayerData(player.getUniqueId(), playerData);
-
-		// drop data about this player
-		this.dataStore.clearCachedPlayerData(playerID);
 	}
 
 	// when a player spawns, conditionally apply temporary pvp protection

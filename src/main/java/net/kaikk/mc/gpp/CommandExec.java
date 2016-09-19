@@ -926,10 +926,6 @@ public class CommandExec implements CommandExecutor {
 
 				GriefPreventionPlus.sendMessage(player, TextMode.Instr, " = " + playerData.getRemainingClaimBlocks() + " blocks left to spend");
 			}
-			// drop the data we just loaded, if the player isn't online
-			if (!otherPlayer.isOnline()) {
-				this.gpp.getDataStore().clearCachedPlayerData(otherPlayer.getUniqueId());
-			}
 
 			return true;
 		}
