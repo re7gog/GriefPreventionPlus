@@ -77,39 +77,20 @@ public class Claim {
 	private final List<Material> placeableFarmingBlocksList = Arrays.asList(Material.PUMPKIN_STEM, Material.CROPS, Material.MELON_STEM, Material.CARROT, Material.POTATO, Material.NETHER_WARTS);
 
 	long autoTrust;
+	
+	private long creationDate;
 
-	/**
-	 * use this constructor if you stored Location, otherwise use the other
-	 * constructor
-	 */
 	Claim(Location lesserCorner, Location greaterCorner, UUID ownerID, HashMap<UUID, Integer> permissionMapPlayers, HashMap<String, Integer> permissionMapBukkit, HashMap<String, Integer> permissionMapFakePlayer, Integer id) {
-		this.setModifiedDate(new Date());
-
-		this.id = id;
-
-		this.world = lesserCorner.getWorld().getUID();
-		this.lesserX = lesserCorner.getBlockX();
-		this.lesserZ = lesserCorner.getBlockZ();
-		this.greaterX = greaterCorner.getBlockX();
-		this.greaterZ = greaterCorner.getBlockZ();
-
-		// owner
-		this.setOwnerID(ownerID);
-		if (permissionMapPlayers != null) {
-			this.permissionMapPlayers.putAll(permissionMapPlayers);
-		}
-		if (permissionMapBukkit != null) {
-			this.permissionMapBukkit.putAll(permissionMapBukkit);
-		}
-
-		if (permissionMapFakePlayer != null) {
-			this.permissionMapFakePlayer.putAll(permissionMapFakePlayer);
-		}
+		this(lesserCorner.getWorld().getUID(), lesserCorner.getBlockX(), lesserCorner.getBlockZ(), greaterCorner.getBlockX(), greaterCorner.getBlockZ(), ownerID, permissionMapPlayers, permissionMapBukkit, permissionMapFakePlayer, id);
 	}
 
+	Claim(UUID world, int lesserX, int lesserZ, int greaterX, int greaterZ, UUID ownerID, HashMap<UUID, Integer> permissionMapPlayers, HashMap<String, Integer> permissionMapBukkit, HashMap<String, Integer> permissionMapFakePlayer, Integer id) {
+		this(world, lesserX, lesserZ, greaterX, greaterZ, ownerID, permissionMapPlayers, permissionMapBukkit, permissionMapFakePlayer, id, System.currentTimeMillis());
+	}
+	
 	// main constructor. note that only creating a claim instance does nothing -
 	// a claim must be added to the data store to be effective
-	Claim(UUID world, int lesserX, int lesserZ, int greaterX, int greaterZ, UUID ownerID, HashMap<UUID, Integer> permissionMapPlayers, HashMap<String, Integer> permissionMapBukkit, HashMap<String, Integer> permissionMapFakePlayer, Integer id) {
+	Claim(UUID world, int lesserX, int lesserZ, int greaterX, int greaterZ, UUID ownerID, HashMap<UUID, Integer> permissionMapPlayers, HashMap<String, Integer> permissionMapBukkit, HashMap<String, Integer> permissionMapFakePlayer, Integer id, long creationDate) {
 		this.setModifiedDate(new Date());
 
 		this.id = id;
@@ -119,6 +100,8 @@ public class Claim {
 		this.lesserZ = lesserZ;
 		this.greaterX = greaterX;
 		this.greaterZ = greaterZ;
+		
+		this.creationDate = creationDate;
 
 		// owner
 		this.setOwnerID(ownerID);
@@ -1271,5 +1254,9 @@ public class Claim {
 	
 	public boolean isSubdivision() {
 		return this.parent!=null;
+	}
+
+	public long getCreationDate() {
+		return creationDate;
 	}
 }

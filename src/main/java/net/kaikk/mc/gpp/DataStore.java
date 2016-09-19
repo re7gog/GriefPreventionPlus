@@ -102,7 +102,7 @@ public class DataStore {
 
 			ResultSet results = statement.executeQuery("SHOW TABLES LIKE 'gpp_claims'");
 			if (!results.next()) {
-				statement.execute("CREATE TABLE IF NOT EXISTS gpp_claims (id int(11) NOT NULL AUTO_INCREMENT,owner binary(16) NOT NULL COMMENT 'UUID',world binary(16) NOT NULL COMMENT 'UUID',lesserX mediumint(9) NOT NULL,lesserZ mediumint(9) NOT NULL,greaterX mediumint(9) NOT NULL,greaterZ mediumint(9) NOT NULL,parentid int(11) NOT NULL,PRIMARY KEY (id));");
+				statement.execute("CREATE TABLE IF NOT EXISTS gpp_claims (id int(11) NOT NULL AUTO_INCREMENT,owner binary(16) NOT NULL COMMENT 'UUID',world binary(16) NOT NULL COMMENT 'UUID',lesserX mediumint(9) NOT NULL,lesserZ mediumint(9) NOT NULL,greaterX mediumint(9) NOT NULL,greaterZ mediumint(9) NOT NULL,parentid int(11),creation bigint(20) NOT NULL,PRIMARY KEY (id));");
 
 				statement.execute("CREATE TABLE IF NOT EXISTS gpp_groupdata (gname varchar(100) NOT NULL,blocks int(11) NOT NULL,UNIQUE KEY gname (gname));");
 
@@ -175,7 +175,7 @@ public class DataStore {
 							continue;
 						}
 
-						statement2.executeUpdate("INSERT INTO gpp_claims (owner, world, lesserX, lesserZ, greaterX, greaterZ, parentid) VALUES (" + playerId + ", " + UUIDtoHexString(world.getUID()) + ", " + lesser[1] + ", " + lesser[3] + ", " + greater[1] + ", " + greater[3] + ", " + nextParentId + ");");
+						statement2.executeUpdate("INSERT INTO gpp_claims (owner, world, lesserX, lesserZ, greaterX, greaterZ, parentid, creation) VALUES (" + playerId + ", " + UUIDtoHexString(world.getUID()) + ", " + lesser[1] + ", " + lesser[3] + ", " + greater[1] + ", " + greater[3] + ", " + nextParentId + ", 0);");
 
 						i++;
 
@@ -285,11 +285,16 @@ public class DataStore {
 			} else {
 				// database updates
 				
-				// v12.29 - added lastseen column on the playerdata table
+				// v13.0 - added lastseen column to the playerdata table
 				Statement s = this.databaseConnection.createStatement();
 				ResultSet rs = s.executeQuery("SHOW COLUMNS FROM gpp_playerdata LIKE 'lastseen';");
 				if (!rs.next()) {
 					s.executeUpdate("ALTER TABLE gpp_playerdata ADD lastseen BIGINT NOT NULL DEFAULT '0' AFTER bonusblocks;");
+				}
+				// v13.0 - added creation date column to the claims table
+				rs = s.executeQuery("SHOW COLUMNS FROM gpp_claims LIKE 'creation';");
+				if (!rs.next()) {
+					s.executeUpdate("ALTER TABLE gpp_claims ADD creation BIGINT NOT NULL DEFAULT '0' AFTER parentid;");
 				}
 			}
 		} catch (final Exception e3) {
@@ -340,7 +345,7 @@ public class DataStore {
 				}
 			}
 
-			final Claim claim = new Claim(world, results.getInt(4), results.getInt(5), results.getInt(6), results.getInt(7), owner, permissionMapPlayers, permissionMapBukkit, permissionMapFakePlayer, id);
+			final Claim claim = new Claim(world, results.getInt(4), results.getInt(5), results.getInt(6), results.getInt(7), owner, permissionMapPlayers, permissionMapBukkit, permissionMapFakePlayer, id, results.getLong(9));
 
 			if (parentid == -1) {
 				this.addClaim(claim, false);
@@ -823,7 +828,7 @@ public class DataStore {
 	 */
 	synchronized public ClaimResult resizeClaim(Claim claim, int newx1, int newz1, int newx2, int newz2, Player resizingPlayer) {
 		// create a fake claim with new coords
-		final Claim newClaim = new Claim(claim.getWorldUID(), newx1, newz1, newx2, newz2, claim.getOwnerID(), null, null, null, claim.id);
+		final Claim newClaim = new Claim(claim.getWorldUID(), newx1, newz1, newx2, newz2, claim.getOwnerID(), null, null, null, claim.id, claim.getCreationDate());
 		newClaim.setParent(claim.getParent());
 		newClaim.setChildren(claim.getChildren());
 
@@ -1154,7 +1159,7 @@ public class DataStore {
 			this.refreshDataConnection();
 			final Statement statement = this.databaseConnection.createStatement();
 
-			statement.executeUpdate("INSERT INTO gpp_claims (owner, world, lesserX, lesserZ, greaterX, greaterZ, parentid) VALUES (" + UUIDtoHexString(claim.getOwnerID()) + ", " + UUIDtoHexString(claim.getLesserBoundaryCorner().getWorld().getUID()) + ", " + claim.getLesserBoundaryCorner().getBlockX() + ", " + claim.getLesserBoundaryCorner().getBlockZ() + ", " + claim.getGreaterBoundaryCorner().getBlockX() + ", " + claim.getGreaterBoundaryCorner().getBlockZ() + ", " + (claim.getParent() != null ? claim.getParent().id : -1) + ");", Statement.RETURN_GENERATED_KEYS);
+			statement.executeUpdate("INSERT INTO gpp_claims (owner, world, lesserX, lesserZ, greaterX, greaterZ, parentid, creation) VALUES (" + UUIDtoHexString(claim.getOwnerID()) + ", " + UUIDtoHexString(claim.getLesserBoundaryCorner().getWorld().getUID()) + ", " + claim.getLesserBoundaryCorner().getBlockX() + ", " + claim.getLesserBoundaryCorner().getBlockZ() + ", " + claim.getGreaterBoundaryCorner().getBlockX() + ", " + claim.getGreaterBoundaryCorner().getBlockZ() + ", " + (claim.getParent() != null ? claim.getParent().id : -1) + ", " + claim.getCreationDate() + ");", Statement.RETURN_GENERATED_KEYS);
 
 			final ResultSet result = statement.getGeneratedKeys();
 			result.next();

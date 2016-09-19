@@ -828,7 +828,7 @@ class PlayerEventHandler implements Listener {
 
 				// if can resize this claim or claiminfo permission, tell about the boundaries
 				if (claim.canEdit(player) == null || player.hasPermission("griefprevention.claiminfo")) {
-					GriefPreventionPlus.sendMessage(player, TextMode.Info, "ID: " + claim.id + " Area: " + claim.getWidth() + "x" + claim.getHeight() + "=" + claim.getArea());
+					GriefPreventionPlus.sendMessage(player, TextMode.Info, "ID: " + claim.id + " Area: " + claim.getWidth() + "x" + claim.getHeight() + "=" + claim.getArea() + (claim.getCreationDate() != 0 ? "\nCreated on: " + new Date(claim.getCreationDate()).toString() : ""));
 				}
 
 				// if deleteclaims permission or can see claim info permission, tell about the player's offline
