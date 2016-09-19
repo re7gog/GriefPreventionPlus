@@ -213,8 +213,21 @@ public class CommandExec implements CommandExecutor {
 				GriefPreventionPlus.sendMessage(player, TextMode.Err, "The player has never played on this server.");
 				return true;
 			}
-			this.gpp.getDataStore().deleteClaimsForPlayer(oPlayer.getUniqueId(), player, true);
-			GriefPreventionPlus.sendMessage(player, TextMode.Info, "Deleted "+oPlayer.getName()+" claims.");
+			
+			if (args.length>1) {
+				World world = Bukkit.getWorld(args[1]);
+				if (world == null) {
+					GriefPreventionPlus.sendMessage(player, TextMode.Err, "The specified world doesn't exist.");
+					return false;
+				}
+				
+				this.gpp.getDataStore().deleteClaimsForPlayer(oPlayer.getUniqueId(), player, world, true);
+				GriefPreventionPlus.sendMessage(player, TextMode.Info, "Deleted "+oPlayer.getName()+" claims in world \""+world.getName()+"\".");
+			} else {
+				this.gpp.getDataStore().deleteClaimsForPlayer(oPlayer.getUniqueId(), player, true);
+				GriefPreventionPlus.sendMessage(player, TextMode.Info, "Deleted "+oPlayer.getName()+" claims.");
+			}
+			
 			return true;
 		}
 		

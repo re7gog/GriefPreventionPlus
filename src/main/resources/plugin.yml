@@ -179,7 +179,7 @@ commands:
       permission: griefprevention.claims
    deleteplayerclaims:
       description: Delete all claims owned by the specified player
-      usage: /deleteplayerclaims [PlayerName]
+      usage: /deleteplayerclaims <PlayerName> [WorldName]
       permission: griefprevention.deleteclaims
    deleteclaimsinworld:
       description: Delete all claims on the specified world
