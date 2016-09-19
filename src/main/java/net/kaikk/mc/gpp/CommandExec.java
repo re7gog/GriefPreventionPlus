@@ -174,9 +174,34 @@ public class CommandExec implements CommandExecutor {
 					GriefPreventionPlus.sendMessage(otherPlayer, TextMode.Info, "Teleported "+otherPlayer.getName()+" to claim ("+claim.getID()+") at "+"[" + loc.getWorld().getName() + ", " + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() + "]");
 				}
 				GriefPreventionPlus.sendMessage(otherPlayer, TextMode.Info, "Teleported to claim ("+claim.getID()+") at "+"[" + loc.getWorld().getName() + ", " + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() + "]");
+				return true;
 			} catch (NumberFormatException e) {
 				GriefPreventionPlus.sendMessage(player, TextMode.Err, "Invalid id");
 				return false;
+			}
+		}
+		
+		if (cmd.getName().equalsIgnoreCase("amountofclaims")) {
+			if (args.length==0) {
+				GriefPreventionPlus.sendMessage(sender, TextMode.Info, "Total amount of claims: " + gpp.getDataStore().getClaims().size());
+			} else {
+				World w = Bukkit.getWorld(args[0]);
+				if (w == null) {
+					GriefPreventionPlus.sendMessage(sender, TextMode.Err, "Invalid world name");
+					return false;
+				}
+				
+				UUID uuid = w.getUID();
+				
+				int n = 0;
+				for (Claim c : gpp.getDataStore().getClaims().values()) {
+					if (c.getWorldUID().equals(uuid)) {
+						n++;
+					}
+				}
+				
+				GriefPreventionPlus.sendMessage(sender, TextMode.Info, "Total amount of claims on "+w.getName()+": " + n);
+				return true;
 			}
 		}
 		
