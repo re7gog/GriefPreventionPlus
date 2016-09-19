@@ -20,6 +20,7 @@
 package net.kaikk.mc.gpp;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -1043,6 +1044,40 @@ public class CommandExec implements CommandExecutor {
 
 			return true;
 		}
+		
+
+		else if(cmd.getName().equalsIgnoreCase("adjustbonusclaimblocksall"))
+		   {
+		       //requires exactly one parameter, the amount of adjustment
+		       if(args.length != 1) return false;
+		       
+		       //parse the adjustment amount
+		       int adjustment;         
+		       try
+		       {
+		           adjustment = Integer.parseInt(args[0]);
+		       }
+		       catch(NumberFormatException numberFormatException)
+		       {
+		           return false;  //causes usage to be displayed
+		       }
+		       
+		       //for each online player
+		       @SuppressWarnings("unchecked")
+		       Collection<Player> players = (Collection<Player>) gpp.getServer().getOnlinePlayers();
+		       for(Player onlinePlayer : players)
+		       {
+		           UUID playerID = onlinePlayer.getUniqueId();
+		           PlayerData playerData = this.dataStore.getPlayerData(playerID);
+		           playerData.setBonusClaimBlocks(playerData.getBonusClaimBlocks() + adjustment);
+		           this.dataStore.savePlayerData(playerID, playerData);
+		       }
+		       
+		       GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.AdjustBlocksAllSuccess, String.valueOf(adjustment));
+		       if(player != null) GriefPreventionPlus.addLogEntry(player.getName() + " adjusted all players' bonus claim blocks by " + adjustment + ".");
+		       
+		       return true;
+		   }
 		// setaccruedclaimblocks <player> <amount>
 		else if (cmd.getName().equalsIgnoreCase("setaccruedclaimblocks")) {
 			// requires exactly two parameters, the other player's name and the

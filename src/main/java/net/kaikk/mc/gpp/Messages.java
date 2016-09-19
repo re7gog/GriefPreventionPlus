@@ -70,5 +70,5 @@ public enum Messages {
 	BecomeMayor, ClaimCreationFailedOverClaimCountLimit,
 	CreateClaimFailOverlapRegion, ResizeFailOverlapRegion,
 	NoBuildPortalPermission, ShowNearbyClaims, NoChatUntilMove,
-	SetClaimBlocksSuccess
+	SetClaimBlocksSuccess, AdjustBlocksAllSuccess
 }
