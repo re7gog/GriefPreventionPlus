@@ -180,6 +180,9 @@ commands:
       description: Delete all claims on the specified world
       usage: /deleteclaimsinworld [WorldName]
       permission: griefprevention.deleteclaims
+   amountofclaims:
+      description: Shows the amount of claims, optionally in the specified world
+      usage: /AmountOfClaims [WorldName]
 permissions:
     griefprevention.createclaims:
         description: Grants permission to create claims.

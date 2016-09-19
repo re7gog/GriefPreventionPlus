@@ -201,8 +201,8 @@ public class CommandExec implements CommandExecutor {
 				}
 				
 				GriefPreventionPlus.sendMessage(sender, TextMode.Info, "Total amount of claims on "+w.getName()+": " + n);
-				return true;
 			}
+			return true;
 		}
 		
 		if (cmd.getName().equalsIgnoreCase("deleteplayerclaims")) {
