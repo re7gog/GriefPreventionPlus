@@ -383,7 +383,7 @@ public class DataStore {
 	
 	/** grants a group (players with a specific permission) bonus claim blocks as
 	    long as they're still members of the group */
-	synchronized public int adjustGroupBonusBlocks(String groupName, int amount) {
+	public int adjustGroupBonusBlocks(String groupName, int amount) {
 		Integer currentValue = this.permissionToBonusBlocksMap.get(groupName);
 		if (currentValue == null) {
 			currentValue = 0;
@@ -421,7 +421,7 @@ public class DataStore {
 	/** changes the claim owner
 	 *  @throws an exception if the claim is a subdivision
 	 * */
-	synchronized public void changeClaimOwner(Claim claim, UUID newOwnerID) throws Exception {
+	public void changeClaimOwner(Claim claim, UUID newOwnerID) throws Exception {
 		// if it's a subdivision, throw an exception
 		if (claim.getParent() != null) {
 			throw new Exception("Subdivisions can't be transferred.  Only top-level claims may change owners.");
@@ -471,7 +471,7 @@ public class DataStore {
 	}
 
 	/** @deprecated Use {@link #newClaim(UUID,int,int,int,int,UUID,Claim,Integer,Player)} instead*/
-	synchronized public ClaimResult createClaim(UUID world, int x1, int x2, int z1, int z2, UUID ownerID, Claim parent, Integer id, Player creatingPlayer) {
+	public ClaimResult createClaim(UUID world, int x1, int x2, int z1, int z2, UUID ownerID, Claim parent, Integer id, Player creatingPlayer) {
 		return newClaim(world, x1, z1, x2, z2, ownerID, parent, id, creatingPlayer);
 	}
 
@@ -491,7 +491,7 @@ public class DataStore {
 	blocks.
 	- does NOT check minimum claim size constraints
 	- does NOT visualize the new claim for any players */
-	synchronized public ClaimResult newClaim(UUID world, int x1, int z1, int x2, int z2, UUID ownerID, Claim parent, Integer id, Player creatingPlayer) {
+	public ClaimResult newClaim(UUID world, int x1, int z1, int x2, int z2, UUID ownerID, Claim parent, Integer id, Player creatingPlayer) {
 		final ClaimResult result = new ClaimResult();
 
 		int smallx, bigx, smallz, bigz;
@@ -566,7 +566,7 @@ public class DataStore {
 	}
 
 	/** deletes a claim or subdivision */
-	synchronized public void deleteClaim(Claim claim) {
+	public void deleteClaim(Claim claim) {
 		if (claim.getParent() != null) { // subdivision
 			final Claim parentClaim = claim.getParent();
 			parentClaim.getChildren().remove(claim);
@@ -596,7 +596,7 @@ public class DataStore {
 	}
 
 	/** deletes all claims owned by a player */
-	synchronized public void deleteClaimsForPlayer(UUID claimsOwner, Player sender, boolean deleteCreativeClaims) {
+	public void deleteClaimsForPlayer(UUID claimsOwner, Player sender, boolean deleteCreativeClaims) {
 		List<Claim> claimsToRemove = new ArrayList<Claim>();
 		for (final Claim claim : this.claims.values()) {
 			if (claimsOwner.equals(claim.getOwnerID()) && (deleteCreativeClaims || !GriefPreventionPlus.getInstance().creativeRulesApply(claim.getWorld()))) {
@@ -670,7 +670,7 @@ public class DataStore {
 	}
 
 	/** get a claim by ID */
-	public synchronized Claim getClaim(int id) {
+	public Claim getClaim(int id) {
 		return this.claims.get(id);
 	}
 	
@@ -724,7 +724,7 @@ public class DataStore {
 	/** get the message string
 	 * @param messageID: a Messages enum value
 	 * @param args: preformat the message with the specified strings */
-	synchronized public String getMessage(Messages messageID, String... args) {
+	public String getMessage(Messages messageID, String... args) {
 		String message = this.messages[messageID.ordinal()];
 
 		for (int i = 0; i < args.length; i++) {
@@ -743,7 +743,7 @@ public class DataStore {
 	/** retrieves player data from memory or secondary storage, as necessary
 	if the player has never been on the server before, this will return a
 	fresh player data with default values */
-	synchronized public PlayerData getPlayerData(UUID playerID) {
+	public PlayerData getPlayerData(UUID playerID) {
 		// first, look in memory
 		PlayerData playerData = this.playersData.get(playerID);
 
@@ -766,7 +766,7 @@ public class DataStore {
 	 * @return the overlapped claim (or itself if it would overlap a worldguard
 	 *         region), null if it doesn't overlap!
 	 */
-	public synchronized Claim overlapsClaims(Claim claim, Claim excludedClaim, Player creatingPlayer) {
+	public Claim overlapsClaims(Claim claim, Claim excludedClaim, Player creatingPlayer) {
 		if (claim.getParent() != null) {
 			// top claim contains this subclaim
 			if (!claim.getParent().contains(claim.getLesserBoundaryCorner(), true, false) || !claim.getParent().contains(claim.getGreaterBoundaryCorner(), true, false)) {
@@ -849,7 +849,7 @@ public class DataStore {
 	/**
 	 * tries to resize a claim see createClaim() for details on return value
 	 */
-	synchronized public ClaimResult resizeClaim(Claim claim, int newx1, int newz1, int newx2, int newz2, Player resizingPlayer) {
+	public ClaimResult resizeClaim(Claim claim, int newx1, int newz1, int newx2, int newz2, Player resizingPlayer) {
 		// create a fake claim with new coords
 		final Claim newClaim = new Claim(claim.getWorldUID(), newx1, newz1, newx2, newz2, claim.getOwnerID(), null, null, null, claim.id, claim.getCreationDate());
 		newClaim.setParent(claim.getParent());
@@ -1113,7 +1113,7 @@ public class DataStore {
 	}
 	
 	// adds a claim to the datastore, making it an effective claim
-	synchronized void addClaim(Claim newClaim, boolean writeToStorage) {
+	void addClaim(Claim newClaim, boolean writeToStorage) {
 		// subdivisions are easy
 		if (newClaim.getParent() != null) {
 			newClaim.getParent().getChildren().add(newClaim);
@@ -1164,7 +1164,7 @@ public class DataStore {
 		return count;
 	}
 
-	synchronized void close() {
+	void close() {
 		if (this.databaseConnection != null) {
 			try {
 				if (!this.databaseConnection.isClosed()) {
@@ -1178,7 +1178,7 @@ public class DataStore {
 		this.databaseConnection = null;
 	}
 
-	synchronized void dbNewClaim(Claim claim) {
+	void dbNewClaim(Claim claim) {
 		try {
 			this.refreshDataConnection();
 			final Statement statement = this.databaseConnection.createStatement();
@@ -1194,7 +1194,7 @@ public class DataStore {
 		}
 	}
 
-	synchronized void dbSetPerm(Integer claimId, String permString, int perm) {
+	void dbSetPerm(Integer claimId, String permString, int perm) {
 		try {
 			this.refreshDataConnection();
 			final Statement statement = this.databaseConnection.createStatement();
@@ -1206,7 +1206,7 @@ public class DataStore {
 		}
 	}
 
-	synchronized void dbSetPerm(Integer claimId, UUID playerId, int perm) {
+	void dbSetPerm(Integer claimId, UUID playerId, int perm) {
 		try {
 			this.refreshDataConnection();
 			final Statement statement = this.databaseConnection.createStatement();
@@ -1219,7 +1219,7 @@ public class DataStore {
 	}
 
 	/** Unset all claim's perms */
-	synchronized void dbUnsetPerm(Integer claimId) {
+	void dbUnsetPerm(Integer claimId) {
 		try {
 			this.refreshDataConnection();
 			final Statement statement = this.databaseConnection.createStatement();
@@ -1233,7 +1233,7 @@ public class DataStore {
 	}
 
 	/** Unset permBukkit's perm from claim */
-	synchronized void dbUnsetPerm(Integer claimId, String permString) {
+	void dbUnsetPerm(Integer claimId, String permString) {
 		try {
 			this.refreshDataConnection();
 			final Statement statement = this.databaseConnection.createStatement();
@@ -1246,7 +1246,7 @@ public class DataStore {
 	}
 
 	/** Unset playerId's perm from claim */
-	synchronized void dbUnsetPerm(Integer claimId, UUID playerId) {
+	void dbUnsetPerm(Integer claimId, UUID playerId) {
 		try {
 			this.refreshDataConnection();
 			final Statement statement = this.databaseConnection.createStatement();
@@ -1259,7 +1259,7 @@ public class DataStore {
 	}
 
 	/** Unset all player claims' perms */
-	synchronized void dbUnsetPerm(UUID playerId) {
+	void dbUnsetPerm(UUID playerId) {
 		try {
 			this.refreshDataConnection();
 			final Statement statement = this.databaseConnection.createStatement();
@@ -1273,7 +1273,7 @@ public class DataStore {
 	}
 
 	/** Unset permbukkit perms from all owner's claim */
-	synchronized void dbUnsetPerm(UUID owner, String permString) {
+	void dbUnsetPerm(UUID owner, String permString) {
 		try {
 			this.refreshDataConnection();
 			final Statement statement = this.databaseConnection.createStatement();
@@ -1286,7 +1286,7 @@ public class DataStore {
 	}
 
 	/** Unset playerId perms from all owner's claim */
-	synchronized void dbUnsetPerm(UUID owner, UUID playerId) {
+	void dbUnsetPerm(UUID owner, UUID playerId) {
 		try {
 			this.refreshDataConnection();
 			final Statement statement = this.databaseConnection.createStatement();
@@ -1298,7 +1298,7 @@ public class DataStore {
 		}
 	}
 
-	synchronized void dbUpdateLocation(Claim claim) {
+	void dbUpdateLocation(Claim claim) {
 		try {
 			this.refreshDataConnection();
 			final Statement statement = this.databaseConnection.createStatement();
@@ -1310,7 +1310,7 @@ public class DataStore {
 		}
 	}
 
-	synchronized void dbUpdateOwner(Claim claim) {
+	void dbUpdateOwner(Claim claim) {
 		try {
 			this.refreshDataConnection();
 			final Statement statement = this.databaseConnection.createStatement();
@@ -1323,7 +1323,7 @@ public class DataStore {
 	}
 
 	// deletes a claim from the database (this delete subclaims too)
-	synchronized void deleteClaimFromSecondaryStorage(Claim claim) {
+	void deleteClaimFromSecondaryStorage(Claim claim) {
 		try {
 			this.refreshDataConnection();
 
@@ -1347,7 +1347,7 @@ public class DataStore {
 	// gets the number of bonus blocks a player has from his permissions
 	// Bukkit doesn't allow for checking permissions of an offline player.
 	// this will return 0 when he's offline, and the correct number when online.
-	synchronized int getGroupBonusBlocks(UUID playerID) {
+	int getGroupBonusBlocks(UUID playerID) {
 		final Player player = GriefPreventionPlus.getInstance().getServer().getPlayer(playerID);
 		if (player != null) {
 			int bonusBlocks = 0;
@@ -1362,7 +1362,7 @@ public class DataStore {
 		}
 	}
 
-	synchronized PlayerData getPlayerDataFromStorage(UUID playerID) {
+	PlayerData getPlayerDataFromStorage(UUID playerID) {
 		try {
 			this.refreshDataConnection();
 
@@ -1449,7 +1449,7 @@ public class DataStore {
 		}
 	}
 
-	synchronized void refreshDataConnection() throws SQLException {
+	void refreshDataConnection() throws SQLException {
 		if ((this.databaseConnection == null) || this.databaseConnection.isClosed()) {
 			// set username/pass properties
 			final Properties connectionProps = new Properties();
@@ -1464,7 +1464,7 @@ public class DataStore {
 	}
 
 	// updates the database with a group's bonus blocks
-	synchronized void saveGroupBonusBlocks(String groupName, int currentValue) {
+	void saveGroupBonusBlocks(String groupName, int currentValue) {
 		// group bonus blocks are stored in the player data table, with player
 		// name = $groupName
 		try {
