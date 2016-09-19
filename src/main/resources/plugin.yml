@@ -136,9 +136,6 @@ commands:
       usage: /TransferClaim <player>
       aliases: giveclaim
       permission: griefprevention.transferclaim
-   unlockdrops:
-      description: Allows other players to pick up the items you dropped when you died.
-      usage: /UnlockDrops
    claimslist:
       description: Lists information about a player's claim blocks and claims.
       usage: /ClaimsList or /ClaimsList <player>
@@ -146,10 +143,6 @@ commands:
    claimexplosions:
       description: Toggles whether explosives may be used in a specific land claim.
       usage: /ClaimExplosions
-   softmute:
-      description: Toggles whether a player's messages will only reach other soft-muted players.
-      usage: /SoftMute <player>
-      permission: griefprevention.softmute
    gpreload:
       description: Reloads Grief Prevention's configuration settings.  Does NOT totally reload the entire plugin.
       usage: /gpreload
@@ -200,11 +193,8 @@ permissions:
             griefprevention.adminclaims: true
             griefprevention.adjustclaimblocks: true
             griefprevention.deleteclaims: true
-            griefprevention.spam: true
             griefprevention.lava: true
-            griefprevention.eavesdrop: true
             griefprevention.deathblow: true
-            griefprevention.softmute: true
             griefprevention.reload: true
             griefprevention.visualizenearbyclaims: true
             griefprevention.overrideclaimcountlimit: true
@@ -250,14 +240,8 @@ permissions:
     griefprevention.adjustclaimblocks:
         description: Grants permission to add or remove bonus blocks from a player's account.
         default: op
-    griefprevention.spam:
-        description: Grants permission to log in, send messages, and send commands rapidly.
-        default: op
     griefprevention.lava:
         description: Grants permission to place lava near the surface and outside of claims.
-        default: op
-    griefprevention.eavesdrop:
-        description: Allows a player to see whispered chat messages (/tell) and softmuted messages.
         default: op
     griefprevention.restorenatureaggressive:
         description: Grants access to /RestoreNatureAggressive and /RestoreNatureFill.
@@ -267,9 +251,6 @@ permissions:
         default: op
     griefprevention.reload:
         description: Grants access to /gpreload.
-        default: op
-    griefprevention.softmute:
-        description: Grants access to /SoftMute.
         default: op
     griefprevention.claims:
         description: Grants access to claim-related slash commands.

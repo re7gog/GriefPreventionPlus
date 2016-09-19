@@ -23,16 +23,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import net.milkbowl.vault.economy.Economy;
-import net.milkbowl.vault.permission.Permission;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
-import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -47,8 +41,35 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.BlockIterator;
 
+import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.permission.Permission;
+
 @SuppressWarnings("deprecation")
 public class GriefPreventionPlus extends JavaPlugin {
+	// for convenience, a reference to the instance of this plugin
+	private static GriefPreventionPlus instance;
+
+	// for logging to the console and log file
+	private static Logger log = Logger.getLogger("Minecraft");
+
+	/** UUID 0 is used for "public" permission and subclaims */
+	public final static UUID UUID0 = new UUID(0, 0);
+
+	/** UUID 1 is used for administrative claims */
+	public final static UUID UUID1 = new UUID(0, 1);
+
+	public static boolean isBukkit18 = false;
+
+	// reference to the economy plugin, if economy integration is enabled
+	public static Economy economy = null;
+
+	// how far away to search from a tree trunk for its branch blocks
+	public static final int TREE_RADIUS = 5;
+
+	// how long to wait before deciding a player is staying online or staying
+	// offline, for notication messages
+	public static final int NOTIFICATION_SECONDS = 20;
+	
 	// this handles data storage, like player and region data
 	private DataStore dataStore;
 
@@ -283,44 +304,6 @@ public class GriefPreventionPlus extends JavaPlugin {
 		}
 	}
 
-	public void checkPvpProtectionNeeded(Player player) {
-		// if anti spawn camping feature is not enabled, do nothing
-		if (!this.config.pvp_protectFreshSpawns) {
-			return;
-		}
-
-		// if pvp is disabled, do nothing
-		if (!this.config.pvp_enabledWorlds.contains(player.getWorld().getUID())) {
-			return;
-		}
-
-		// if player is in creative mode, do nothing
-		if (player.getGameMode() == GameMode.CREATIVE) {
-			return;
-		}
-
-		// if the player has the damage any player permission enabled, do
-		// nothing
-		if (player.hasPermission("griefprevention.nopvpimmunity")) {
-			return;
-		}
-
-		// check inventory for well, anything
-		if (GriefPreventionPlus.isInventoryEmpty(player)) {
-			// if empty, apply immunity
-			final PlayerData playerData = this.getDataStore().getPlayerData(player.getUniqueId());
-			playerData.pvpImmune = true;
-
-			// inform the player after he finishes respawning
-			GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.PvPImmunityStart, 5L);
-
-			// start a task to re-check this player's inventory every minute
-			// until his immunity is gone
-			final PvPImmunityValidationTask task = new PvPImmunityValidationTask(player);
-			this.getServer().getScheduler().scheduleSyncDelayedTask(this, task, 1200L);
-		}
-	}
-
 	// checks whether players can create claims in a world
 	public boolean claimsEnabledForWorld(World world) {
 		return this.claimsEnabledForWorld(world.getName());
@@ -328,22 +311,6 @@ public class GriefPreventionPlus extends JavaPlugin {
 	
 	public boolean claimsEnabledForWorld(String world) {
 		return !this.config.disabledWorlds.contains(world);
-	}
-
-	public boolean containsBlockedIP(String message) {
-		message = message.replace("\r\n", "");
-		final Pattern ipAddressPattern = Pattern.compile("([0-9]{1,3}\\.){3}[0-9]{1,3}");
-		final Matcher matcher = ipAddressPattern.matcher(message);
-
-		// if it looks like an IP address
-		if (matcher.find()) {
-			// and it's not in the list of allowed IP addresses
-			if (!this.config.spam_allowedIpAddresses.contains(matcher.group())) {
-				return true;
-			}
-		}
-
-		return false;
 	}
 
 	// moves a player from the claim he's in to a nearby wilderness location
@@ -541,29 +508,6 @@ public class GriefPreventionPlus extends JavaPlugin {
 		return this.config.creativeRulesWorlds.contains(world);
 	}
 	
-	// for convenience, a reference to the instance of this plugin
-	private static GriefPreventionPlus instance;
-
-	// for logging to the console and log file
-	private static Logger log = Logger.getLogger("Minecraft");
-
-	/** UUID 0 is used for "public" permission and subclaims */
-	public final static UUID UUID0 = new UUID(0, 0);
-
-	/** UUID 1 is used for administrative claims */
-	public final static UUID UUID1 = new UUID(0, 1);
-
-	public static boolean isBukkit18 = false;
-
-	// reference to the economy plugin, if economy integration is enabled
-	public static Economy economy = null;
-
-	// how far away to search from a tree trunk for its branch blocks
-	public static final int TREE_RADIUS = 5;
-
-	// how long to wait before deciding a player is staying online or staying
-	// offline, for notication messages
-	public static final int NOTIFICATION_SECONDS = 20;
 
 	// adds a server log entry
 	public static synchronized void addLogEntry(String entry) {

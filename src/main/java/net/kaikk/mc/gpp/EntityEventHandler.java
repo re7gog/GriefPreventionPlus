@@ -21,7 +21,6 @@ package net.kaikk.mc.gpp;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -30,7 +29,6 @@ import java.util.UUID;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Animals;
@@ -59,7 +57,6 @@ import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
-import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.entity.ExpBottleEvent;
@@ -223,21 +220,6 @@ class EntityEventHandler implements Listener {
 			if (attacker != defender) {
 				final PlayerData defenderData = this.dataStore.getPlayerData(((Player) event.getEntity()).getUniqueId());
 				final PlayerData attackerData = this.dataStore.getPlayerData(attacker.getUniqueId());
-
-				// otherwise if protecting spawning players
-				if (GriefPreventionPlus.getInstance().config.pvp_protectFreshSpawns) {
-					if (defenderData.pvpImmune) {
-						event.setCancelled(true);
-						GriefPreventionPlus.sendMessage(attacker, TextMode.Err, Messages.ThatPlayerPvPImmune);
-						return;
-					}
-
-					if (attackerData.pvpImmune) {
-						event.setCancelled(true);
-						GriefPreventionPlus.sendMessage(attacker, TextMode.Err, Messages.CantFightWhileImmune);
-						return;
-					}
-				}
 
 				// FEATURE: prevent players from engaging in PvP combat inside
 				// land claims (when it's disabled)
@@ -412,121 +394,6 @@ class EntityEventHandler implements Listener {
 					}
 				}
 			}
-		}
-	}
-
-	// when an entity is damaged
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
-	public void onEntityDamageMonitor(EntityDamageEvent event) {
-		// FEATURE: prevent players who very recently participated in pvp combat
-		// from hiding inventory to protect it from looting
-		// FEATURE: prevent players who are in pvp combat from logging out to
-		// avoid being defeated
-
-		if (event.getEntity().getType() != EntityType.PLAYER) {
-			return;
-		}
-
-		final Player defender = (Player) event.getEntity();
-
-		// only interested in entities damaging entities (ignoring environmental
-		// damage)
-		if (!(event instanceof EntityDamageByEntityEvent)) {
-			return;
-		}
-
-		final EntityDamageByEntityEvent subEvent = (EntityDamageByEntityEvent) event;
-
-		// if not in a pvp rules world, do nothing
-		if (!GriefPreventionPlus.getInstance().config.pvp_enabledWorlds.contains(defender.getWorld().getUID())) {
-			return;
-		}
-
-		// determine which player is attacking, if any
-		Player attacker = null;
-		Projectile arrow = null;
-		final Entity damageSource = subEvent.getDamager();
-
-		if (damageSource != null) {
-			if (damageSource instanceof Player) {
-				attacker = (Player) damageSource;
-			} else if (damageSource instanceof Projectile) {
-				arrow = (Projectile) damageSource;
-				if (arrow.getShooter() instanceof Player) {
-					attacker = (Player) arrow.getShooter();
-				}
-			}
-		}
-
-		// if attacker not a player, do nothing
-		if (attacker == null) {
-			return;
-		}
-
-		final PlayerData defenderData = this.dataStore.getPlayerData(defender.getUniqueId());
-		final PlayerData attackerData = this.dataStore.getPlayerData(attacker.getUniqueId());
-		if (attacker != defender) {
-			final long now = Calendar.getInstance().getTimeInMillis();
-			defenderData.lastPvpTimestamp = now;
-			defenderData.lastPvpPlayer = attacker.getName();
-			attackerData.lastPvpTimestamp = now;
-			attackerData.lastPvpPlayer = defender.getName();
-		}
-	}
-
-	// when an entity dies...
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
-	public void onEntityDeath(EntityDeathEvent event) {
-		final LivingEntity entity = event.getEntity();
-
-		// don't do the rest in worlds where claims are not enabled
-		if (!GriefPreventionPlus.getInstance().claimsEnabledForWorld(entity.getWorld())) {
-			return;
-		}
-
-		// special rule for creative worlds: killed entities don't drop items or
-		// experience orbs
-		if (GriefPreventionPlus.getInstance().creativeRulesApply(entity.getLocation().getWorld())) {
-			event.setDroppedExp(0);
-			event.getDrops().clear();
-		}
-
-		// FEATURE: when a player is involved in a siege (attacker or defender
-		// role)
-		// his death will end the siege
-
-		if (!(entity instanceof Player)) {
-			return; // only tracking players
-		}
-
-		final Player player = (Player) entity;
-		final PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
-
-		// FEATURE: lock dropped items to player who dropped them
-
-		final World world = entity.getWorld();
-
-		// decide whether or not to apply this feature to this situation
-		// (depends on the world where it happens)
-		final boolean isPvPWorld = GriefPreventionPlus.getInstance().config.pvp_enabledWorlds.contains(world.getUID());
-		if ((isPvPWorld && GriefPreventionPlus.getInstance().config.lockDeathDropsInPvpWorlds) || (!isPvPWorld && GriefPreventionPlus.getInstance().config.lockDeathDropsInNonPvpWorlds)) {
-			// remember information about these drops so that they can be marked
-			// when they spawn as items
-			final long expirationTime = System.currentTimeMillis() + 3000; // now
-			// +
-			// 3
-			// seconds
-			final Location deathLocation = player.getLocation();
-			final UUID playerID = player.getUniqueId();
-			final List<ItemStack> drops = event.getDrops();
-			for (final ItemStack stack : drops) {
-				GriefPreventionPlus.getInstance().pendingItemWatchList.add(new PendingItemProtection(deathLocation, playerID, expirationTime, stack));
-			}
-
-			// allow the player to receive a message about how to unlock any
-			// drops
-			playerData.dropsAreUnlocked = false;
-			playerData.receivedDropUnlockAdvertisement = false;
 		}
 	}
 

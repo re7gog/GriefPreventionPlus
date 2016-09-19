@@ -19,11 +19,7 @@
 
 package net.kaikk.mc.gpp;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -38,18 +34,18 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.UUID;
 
-import net.kaikk.mc.gpp.ClaimResult.Result;
-import net.kaikk.mc.gpp.events.ClaimCreateEvent;
-import net.kaikk.mc.gpp.events.ClaimDeleteEvent;
-import net.kaikk.mc.gpp.events.ClaimDeleteEvent.Reason;
-import net.kaikk.mc.gpp.events.ClaimResizeEvent;
-
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+
+import net.kaikk.mc.gpp.ClaimResult.Result;
+import net.kaikk.mc.gpp.events.ClaimCreateEvent;
+import net.kaikk.mc.gpp.events.ClaimDeleteEvent;
+import net.kaikk.mc.gpp.events.ClaimDeleteEvent.Reason;
+import net.kaikk.mc.gpp.events.ClaimResizeEvent;
 
 //singleton class which manages all GriefPrevention data (except for config options)
 public class DataStore {
@@ -70,8 +66,6 @@ public class DataStore {
 	// protected final static Pattern uuidpattern =
 	// Pattern.compile("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
 
-	// list of UUIDs which are soft-muted
-	HashMap<UUID, Boolean> softMuteMap = new HashMap<UUID, Boolean>();
 	// world guard reference, if available
 	private WorldGuardWrapper worldGuard = null;
 	private Connection databaseConnection = null;
@@ -370,9 +364,6 @@ public class DataStore {
 		// load up all the messages from messages.yml
 		this.loadMessages();
 		GriefPreventionPlus.addLogEntry("Customizable messages loaded.");
-
-		// load list of soft mutes
-		this.loadSoftMutes();
 
 		// try to hook into world guard
 		try {
@@ -1091,82 +1082,7 @@ public class DataStore {
 		defaults.clear();
 		System.gc();
 	}
-
-	private void loadSoftMutes() {
-		final File softMuteFile = new File(softMuteFilePath);
-		if (softMuteFile.exists()) {
-			BufferedReader inStream = null;
-			try {
-				// open the file
-				inStream = new BufferedReader(new FileReader(softMuteFile.getAbsolutePath()));
-
-				// while there are lines left
-				String nextID = inStream.readLine();
-				while (nextID != null) {
-					// parse line into a UUID
-					UUID playerID;
-					try {
-						playerID = UUID.fromString(nextID);
-					} catch (final Exception e) {
-						playerID = null;
-						GriefPreventionPlus.addLogEntry("Failed to parse soft mute entry as a UUID: " + nextID);
-					}
-
-					// push it into the map
-					if (playerID != null) {
-						this.softMuteMap.put(playerID, true);
-					}
-
-					// move to the next
-					nextID = inStream.readLine();
-				}
-			} catch (final Exception e) {
-				GriefPreventionPlus.addLogEntry("Failed to read from the soft mute data file: " + e.toString());
-				e.printStackTrace();
-			}
-
-			try {
-				if (inStream != null) {
-					inStream.close();
-				}
-			} catch (final IOException exception) {
-			}
-		}
-	}
-
-	private void saveSoftMutes() {
-		BufferedWriter outStream = null;
-
-		try {
-			// open the file and write the new value
-			final File softMuteFile = new File(softMuteFilePath);
-			softMuteFile.createNewFile();
-			outStream = new BufferedWriter(new FileWriter(softMuteFile));
-
-			for (final Map.Entry<UUID, Boolean> entry : this.softMuteMap.entrySet()) {
-				if (entry.getValue().booleanValue()) {
-					outStream.write(entry.getKey().toString());
-					outStream.newLine();
-				}
-			}
-
-		}
-
-		// if any problem, log it
-		catch (final Exception e) {
-			GriefPreventionPlus.addLogEntry("Unexpected exception saving soft mute data: " + e.getMessage());
-			e.printStackTrace();
-		}
-
-		// close the file
-		try {
-			if (outStream != null) {
-				outStream.close();
-			}
-		} catch (final IOException exception) {
-		}
-	}
-
+	
 	// adds a claim to the datastore, making it an effective claim
 	synchronized void addClaim(Claim newClaim, boolean writeToStorage) {
 		// subdivisions are easy
@@ -1461,15 +1377,6 @@ public class DataStore {
 		}
 	}
 	
-	boolean isSoftMuted(UUID playerID) {
-		final Boolean mapEntry = this.softMuteMap.get(playerID);
-		if ((mapEntry == null) || (mapEntry == Boolean.FALSE)) {
-			return false;
-		}
-
-		return true;
-	}
-
 	void posClaimsAdd(Claim claim) {
 		final int lx = claim.getLesserBoundaryCorner().getBlockX() >> 8;
 		final int lz = claim.getLesserBoundaryCorner().getBlockZ() >> 8;
@@ -1547,24 +1454,12 @@ public class DataStore {
 		}
 	}
 
-	// updates soft mute map and data file
-	boolean toggleSoftMute(UUID playerID) {
-		final boolean newValue = !this.isSoftMuted(playerID);
-
-		this.softMuteMap.put(playerID, newValue);
-		this.saveSoftMutes();
-
-		return newValue;
-	}
-
 	// path information, for where stuff stored on disk is well... stored
 	protected final static String dataLayerFolderPath = "plugins" + File.separator + "GriefPreventionData";
 
 	final static String configFilePath = dataLayerFolderPath + File.separator + "config.yml";
 
 	final static String messagesFilePath = dataLayerFolderPath + File.separator + "messages.yml";
-
-	final static String softMuteFilePath = dataLayerFolderPath + File.separator + "softMute.txt";
 
 	// video links
 	static final String SURVIVAL_VIDEO_URL = "" + ChatColor.DARK_AQUA + ChatColor.UNDERLINE + "bit.ly/mcgpuser";

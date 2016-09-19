@@ -332,12 +332,6 @@ public class Claim {
 			}
 		}
 
-		// no building while in pvp combat
-		final PlayerData playerData = GriefPreventionPlus.getInstance().getDataStore().getPlayerData(player.getUniqueId());
-		if (playerData.inPvpCombat()) {
-			return GriefPreventionPlus.getInstance().getDataStore().getMessage(Messages.NoBuildPvP);
-		}
-
 		// owners can make changes, or admins with ignore claims mode enabled
 		if (player.getUniqueId().equals(this.getOwnerID()) || GriefPreventionPlus.getInstance().getDataStore().getPlayerData(player.getUniqueId()).ignoreClaims) {
 			return null;

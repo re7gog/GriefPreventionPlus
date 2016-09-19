@@ -89,45 +89,10 @@ public class Config {
 
 	public ArrayList<String> claims_commandsRequiringAccessTrust; // the list of
 
-	// slash
-	// commands
-	// requiring
-	// access
-	// trust
-	// when in a
-	// claim
-	public boolean spam_enabled; // whether or not to monitor for spam
-	public int spam_loginCooldownSeconds; // how long players must wait between
-	// logins. combats login spam.
-	public ArrayList<String> spam_monitorSlashCommands; // the list of slash
-	// commands monitored
-	// for spam
-	public boolean spam_banOffenders; // whether or not to ban spammers
-										// automatically
-	public String spam_banMessage; // message to show an automatically banned
-									// player
-	public String spam_warningMessage; // message to show a player who is close
-										// to spam level
-	public String spam_allowedIpAddresses; // IP addresses which will not be
-	// censored
-	public int spam_deathMessageCooldownSeconds; // cooldown period for death
-
-	// messages (per player) in
-	// seconds
+	// messages (per player) in seconds
 	public ArrayList<UUID> pvp_enabledWorlds; // list of worlds where pvp
 												// anti-grief rules apply
-	public boolean pvp_protectFreshSpawns; // whether to make newly spawned
-											// players immune until they pick up
-	// an item
-	public boolean pvp_punishLogout; // whether to kill players who log out
-										// during PvP combat
-	public int pvp_combatTimeoutSeconds; // how long combat is considered to
-											// continue after the most recent
-	// damage
-	public boolean pvp_allowCombatItemDrop; // whether a player can drop items
-	// during combat to hide them
-	public ArrayList<String> pvp_blockedCommands; // list of commands which may
-	// not be used during pvp
+
 	// combat
 	public boolean pvp_noCombatInPlayerLandClaims; // whether players may fight
 	// in player-owned land
@@ -136,14 +101,9 @@ public class Config {
 	// in admin-owned land
 	// claims
 	public boolean pvp_noCombatInAdminSubdivisions; // whether players may fight
-
 	// in subdivisions of
 	// admin-owned land claims
-	public boolean lockDeathDropsInPvpWorlds; // whether players' dropped on
-	// death items are protected in
-	// pvp worlds
-	public boolean lockDeathDropsInNonPvpWorlds; // whether players' dropped on
-
+	
 	// death items are protected
 	// in non-pvp worlds
 	public double economy_claimBlocksPurchaseCost; // cost to purchase a claim
@@ -165,18 +125,6 @@ public class Config {
 	// platforms in the sky
 	public boolean fireSpreads; // whether fire spreads outside of claims
 	public boolean fireDestroys; // whether fire destroys blocks outside of
-
-	// claims
-	public boolean whisperNotifications; // whether whispered messages will
-	// broadcast to administrators in
-	// game
-	public boolean signNotifications; // whether sign content will broadcast to
-	// administrators in game
-	public ArrayList<String> eavesdrop_whisperCommands; // list of whisper
-	// commands to eavesdrop
-	// on
-
-	public boolean smartBan; // whether to ban accounts which very likely owned
 
 	// by a banned player
 	public boolean endermenMoveBlocks; // whether or not endermen may move
@@ -284,26 +232,8 @@ public class Config {
 		this.claims_portalsRequirePermission = config.getBoolean("GriefPrevention.Claims.PortalGenerationRequiresPermission", false);
 		final String accessTrustSlashCommands = config.getString("GriefPrevention.Claims.CommandsRequiringAccessTrust", "/sethome");
 
-		this.spam_enabled = config.getBoolean("GriefPrevention.Spam.Enabled", true);
-		this.spam_loginCooldownSeconds = config.getInt("GriefPrevention.Spam.LoginCooldownSeconds", 60);
-		this.spam_warningMessage = config.getString("GriefPrevention.Spam.WarningMessage", "Please reduce your noise level.  Spammers will be banned.");
-		this.spam_allowedIpAddresses = config.getString("GriefPrevention.Spam.AllowedIpAddresses", "1.2.3.4; 5.6.7.8");
-		this.spam_banOffenders = config.getBoolean("GriefPrevention.Spam.BanOffenders", true);
-		this.spam_banMessage = config.getString("GriefPrevention.Spam.BanMessage", "Banned for spam.");
-		final String slashCommandsToMonitor = config.getString("GriefPrevention.Spam.MonitorSlashCommands", "/me;/tell;/global;/local;/w;/msg;/r;/t");
-		this.spam_deathMessageCooldownSeconds = config.getInt("GriefPrevention.Spam.DeathMessageCooldownSeconds", 60);
-
-		this.pvp_protectFreshSpawns = config.getBoolean("GriefPrevention.PvP.ProtectFreshSpawns", true);
-		this.pvp_punishLogout = config.getBoolean("GriefPrevention.PvP.PunishLogout", true);
-		this.pvp_combatTimeoutSeconds = config.getInt("GriefPrevention.PvP.CombatTimeoutSeconds", 15);
-		this.pvp_allowCombatItemDrop = config.getBoolean("GriefPrevention.PvP.AllowCombatItemDrop", false);
-		final String bannedPvPCommandsList = config.getString("GriefPrevention.PvP.BlockedSlashCommands", "/home;/vanish;/spawn;/tpa");
-
 		this.economy_claimBlocksPurchaseCost = config.getDouble("GriefPrevention.Economy.ClaimBlocksPurchaseCost", 0);
 		this.economy_claimBlocksSellValue = config.getDouble("GriefPrevention.Economy.ClaimBlocksSellValue", 0);
-
-		this.lockDeathDropsInPvpWorlds = config.getBoolean("GriefPrevention.ProtectItemsDroppedOnDeath.PvPWorlds", false);
-		this.lockDeathDropsInNonPvpWorlds = config.getBoolean("GriefPrevention.ProtectItemsDroppedOnDeath.NonPvPWorlds", true);
 
 		this.blockClaimExplosions = config.getBoolean("GriefPrevention.BlockLandClaimExplosions", true);
 		this.blockSurfaceCreeperExplosions = config.getBoolean("GriefPrevention.BlockSurfaceCreeperExplosions", true);
@@ -314,12 +244,6 @@ public class Config {
 
 		this.fireSpreads = config.getBoolean("GriefPrevention.FireSpreads", false);
 		this.fireDestroys = config.getBoolean("GriefPrevention.FireDestroys", false);
-
-		this.whisperNotifications = config.getBoolean("GriefPrevention.AdminsGetWhispers", true);
-		this.signNotifications = config.getBoolean("GriefPrevention.AdminsGetSignNotifications", true);
-		final String whisperCommandsToMonitor = config.getString("GriefPrevention.WhisperCommands", "/tell;/pm;/r;/w;/whisper;/t;/msg");
-
-		this.smartBan = config.getBoolean("GriefPrevention.SmartBan", true);
 
 		this.endermenMoveBlocks = config.getBoolean("GriefPrevention.EndermenMoveBlocks", false);
 		this.silverfishBreakBlocks = config.getBoolean("GriefPrevention.SilverfishBreakBlocks", false);
@@ -419,32 +343,15 @@ public class Config {
 		outConfig.set("GriefPrevention.Claims.PortalGenerationRequiresPermission", this.claims_portalsRequirePermission);
 		outConfig.set("GriefPrevention.Claims.CommandsRequiringAccessTrust", accessTrustSlashCommands);
 
-		outConfig.set("GriefPrevention.Spam.Enabled", this.spam_enabled);
-		outConfig.set("GriefPrevention.Spam.LoginCooldownSeconds", this.spam_loginCooldownSeconds);
-		outConfig.set("GriefPrevention.Spam.MonitorSlashCommands", slashCommandsToMonitor);
-		outConfig.set("GriefPrevention.Spam.WarningMessage", this.spam_warningMessage);
-		outConfig.set("GriefPrevention.Spam.BanOffenders", this.spam_banOffenders);
-		outConfig.set("GriefPrevention.Spam.BanMessage", this.spam_banMessage);
-		outConfig.set("GriefPrevention.Spam.AllowedIpAddresses", this.spam_allowedIpAddresses);
-		outConfig.set("GriefPrevention.Spam.DeathMessageCooldownSeconds", this.spam_deathMessageCooldownSeconds);
-
 		for (final World world : worlds) {
 			outConfig.set("GriefPrevention.PvP.RulesEnabledInWorld." + world.getName(), this.pvp_enabledWorlds.contains(world.getUID()));
 		}
-		outConfig.set("GriefPrevention.PvP.ProtectFreshSpawns", this.pvp_protectFreshSpawns);
-		outConfig.set("GriefPrevention.PvP.PunishLogout", this.pvp_punishLogout);
-		outConfig.set("GriefPrevention.PvP.CombatTimeoutSeconds", this.pvp_combatTimeoutSeconds);
-		outConfig.set("GriefPrevention.PvP.AllowCombatItemDrop", this.pvp_allowCombatItemDrop);
-		outConfig.set("GriefPrevention.PvP.BlockedSlashCommands", bannedPvPCommandsList);
 		outConfig.set("GriefPrevention.PvP.ProtectPlayersInLandClaims.PlayerOwnedClaims", this.pvp_noCombatInPlayerLandClaims);
 		outConfig.set("GriefPrevention.PvP.ProtectPlayersInLandClaims.AdministrativeClaims", this.pvp_noCombatInAdminLandClaims);
 		outConfig.set("GriefPrevention.PvP.ProtectPlayersInLandClaims.AdministrativeSubdivisions", this.pvp_noCombatInAdminSubdivisions);
 
 		outConfig.set("GriefPrevention.Economy.ClaimBlocksPurchaseCost", this.economy_claimBlocksPurchaseCost);
 		outConfig.set("GriefPrevention.Economy.ClaimBlocksSellValue", this.economy_claimBlocksSellValue);
-
-		outConfig.set("GriefPrevention.ProtectItemsDroppedOnDeath.PvPWorlds", this.lockDeathDropsInPvpWorlds);
-		outConfig.set("GriefPrevention.ProtectItemsDroppedOnDeath.NonPvPWorlds", this.lockDeathDropsInNonPvpWorlds);
 
 		outConfig.set("GriefPrevention.BlockLandClaimExplosions", this.blockClaimExplosions);
 		outConfig.set("GriefPrevention.BlockSurfaceCreeperExplosions", this.blockSurfaceCreeperExplosions);
@@ -455,12 +362,6 @@ public class Config {
 
 		outConfig.set("GriefPrevention.FireSpreads", this.fireSpreads);
 		outConfig.set("GriefPrevention.FireDestroys", this.fireDestroys);
-
-		outConfig.set("GriefPrevention.AdminsGetWhispers", this.whisperNotifications);
-		outConfig.set("GriefPrevention.AdminsGetSignNotifications", this.signNotifications);
-
-		outConfig.set("GriefPrevention.WhisperCommands", whisperCommandsToMonitor);
-		outConfig.set("GriefPrevention.SmartBan", this.smartBan);
 
 		outConfig.set("GriefPrevention.EndermenMoveBlocks", this.endermenMoveBlocks);
 		outConfig.set("GriefPrevention.SilverfishBreakBlocks", this.silverfishBreakBlocks);
@@ -493,29 +394,6 @@ public class Config {
 		String[] commands = accessTrustSlashCommands.split(";");
 		for (int i = 0; i < commands.length; i++) {
 			this.claims_commandsRequiringAccessTrust.add(commands[i].trim());
-		}
-
-		// try to parse the list of commands which should be monitored for spam
-		this.spam_monitorSlashCommands = new ArrayList<String>();
-		commands = slashCommandsToMonitor.split(";");
-		for (int i = 0; i < commands.length; i++) {
-			this.spam_monitorSlashCommands.add(commands[i].trim());
-		}
-
-		// try to parse the list of commands which should be included in
-		// eavesdropping
-		this.eavesdrop_whisperCommands = new ArrayList<String>();
-		commands = whisperCommandsToMonitor.split(";");
-		for (int i = 0; i < commands.length; i++) {
-			this.eavesdrop_whisperCommands.add(commands[i].trim());
-		}
-
-		// try to parse the list of commands which should be banned during pvp
-		// combat
-		this.pvp_blockedCommands = new ArrayList<String>();
-		commands = bannedPvPCommandsList.split(";");
-		for (int i = 0; i < commands.length; i++) {
-			this.pvp_blockedCommands.add(commands[i].trim());
 		}
 	}
 

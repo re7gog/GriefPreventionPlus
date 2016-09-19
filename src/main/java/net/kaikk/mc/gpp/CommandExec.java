@@ -934,14 +934,6 @@ public class CommandExec implements CommandExecutor {
 			return true;
 		}
 
-		// unlockItems
-		else if (cmd.getName().equalsIgnoreCase("unlockdrops") && (player != null)) {
-			final PlayerData playerData = this.gpp.getDataStore().getPlayerData(player.getUniqueId());
-			playerData.dropsAreUnlocked = true;
-			GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.DropUnlockConfirmation);
-
-			return true;
-		}
 
 		// deletealladminclaims
 		else if ((player != null) && cmd.getName().equalsIgnoreCase("deletealladminclaims")) {
@@ -1090,31 +1082,6 @@ public class CommandExec implements CommandExecutor {
 																								// ~
 																								// 1
 																								// second
-
-			return true;
-		}
-
-		// siege
-		else if (cmd.getName().equalsIgnoreCase("softmute")) {
-			// requires one parameter
-			if (args.length != 1) {
-				return false;
-			}
-
-			// find the specified player
-			final OfflinePlayer targetPlayer = this.gpp.resolvePlayer(args[0]);
-			if (targetPlayer == null) {
-				GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.PlayerNotFound2);
-				return true;
-			}
-
-			// toggle mute for player
-			final boolean isMuted = this.gpp.getDataStore().toggleSoftMute(targetPlayer.getUniqueId());
-			if (isMuted) {
-				GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.SoftMuted, targetPlayer.getName());
-			} else {
-				GriefPreventionPlus.sendMessage(player, TextMode.Success, Messages.UnSoftMuted, targetPlayer.getName());
-			}
 
 			return true;
 		}

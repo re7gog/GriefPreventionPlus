@@ -22,7 +22,6 @@ package net.kaikk.mc.gpp;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World.Environment;
@@ -47,7 +46,6 @@ import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
-import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.InventoryHolder;
@@ -645,56 +643,6 @@ class BlockEventHandler implements Listener {
 			if ((data != null) && (data.size() > 0)) {
 				// don't allow the pickup
 				event.setCancelled(true);
-			}
-		}
-	}
-
-	// when a player places a sign...
-	@EventHandler
-	public void onSignChanged(SignChangeEvent event) {
-		// send sign content to online administrators
-		if (!GriefPreventionPlus.getInstance().config.signNotifications) {
-			return;
-		}
-
-		final Player player = event.getPlayer();
-		if (player == null) {
-			return;
-		}
-
-		final StringBuilder lines = new StringBuilder();
-		boolean notEmpty = false;
-		for (int i = 0; i < event.getLines().length; i++) {
-			final String withoutSpaces = event.getLine(i).replace(" ", "");
-			if (!withoutSpaces.isEmpty()) {
-				notEmpty = true;
-				lines.append(" " + event.getLine(i));
-			}
-		}
-
-		final String signMessage = lines.toString();
-
-		// prevent signs with blocked IP addresses
-		if (!player.hasPermission("griefprevention.spam") && GriefPreventionPlus.getInstance().containsBlockedIP(signMessage)) {
-			event.setCancelled(true);
-			return;
-		}
-
-		// if not empty and wasn't the same as the last sign, log it and
-		// remember it for later
-		final PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
-		if (notEmpty && (playerData.lastMessage != null) && !playerData.lastMessage.equals(signMessage)) {
-			GriefPreventionPlus.addLogEntry(player.getName() + " placed at " + GriefPreventionPlus.getfriendlyLocationString(event.getBlock().getLocation()) + " this sign: \n" + lines.toString());
-			playerData.lastMessage = signMessage;
-
-			if (!player.hasPermission("griefprevention.eavesdrop")) {
-				// Player [] players =
-				// GriefPreventionPlus.instance.getServer().getOnlinePlayers();
-				for (final Player targetPlayer : GriefPreventionPlus.getInstance().getServer().getOnlinePlayers()) {
-					if (targetPlayer.hasPermission("griefprevention.eavesdrop")) {
-						targetPlayer.sendMessage(ChatColor.AQUA + player.getName() + " placed at " + GriefPreventionPlus.getfriendlyLocationString(event.getBlock().getLocation()) + " this sign: \n" + lines.toString());
-					}
-				}
 			}
 		}
 	}

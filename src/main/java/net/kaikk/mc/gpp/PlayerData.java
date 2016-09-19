@@ -19,17 +19,15 @@
 
 package net.kaikk.mc.gpp;
 
-import java.net.InetAddress;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.UUID;
 import java.util.Vector;
 
-import net.kaikk.mc.gpp.visualization.Visualization;
-
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+
+import net.kaikk.mc.gpp.visualization.Visualization;
 
 //holds all of GriefPrevention's player-tied data
 public class PlayerData {
@@ -77,28 +75,8 @@ public class PlayerData {
 	// claims
 	boolean warnedAboutBuildingOutsideClaims = false;
 
-	// timestamp of last death, for use in preventing death message spam
-	long lastDeathTimeStamp = 0;
-
-	// whether the player was kicked (set and used during logout)
-	boolean wasKicked = false;
-
-	// spam
-	public String lastMessage = ""; // the player's last chat message, or slash
-	// command complete with parameters
-	public Date lastMessageTimestamp = new Date(); // last time the player sent
-	// a chat message or used a
-	// monitored slash command
-	public int spamCount = 0; // number of consecutive "spams"
-	public boolean spamWarned = false; // whether the player recently received a
-	// warning
-
 	// visualization
 	public Visualization currentVisualization = null;
-
-	// anti-camping pvp protection
-	public boolean pvpImmune = false;
-	public long lastSpawn = 0;
 
 	// ignore claims mode
 	public boolean ignoreClaims = false;
@@ -106,22 +84,8 @@ public class PlayerData {
 	// the last claim this player was in, that we know of
 	public Claim lastClaim = null;
 
-	// pvp
-	public long lastPvpTimestamp = 0;
-	public String lastPvpPlayer = "";
-
 	// safety confirmation for deleting multi-subdivision claims
 	public boolean warnedAboutMajorDeletion = false;
-
-	public InetAddress ipAddress;
-
-	// whether or not this player has received a message about unlocking death
-	// drops since his last death
-	boolean receivedDropUnlockAdvertisement = false;
-
-	// whether or not this player's dropped items (on death) are unlocked for
-	// other players to pick up
-	boolean dropsAreUnlocked = false;
 
 	// message to send to player after he respawns
 	String messageOnRespawn = null;
@@ -132,11 +96,6 @@ public class PlayerData {
 	// timestamp for last "you're building outside your land claims" message
 	Long buildWarningTimestamp = null;
 
-	// spot where a player can't talk, used to mute new players until they've
-	// moved a little
-	// this is an anti-bot strategy.
-	Location noChatLocation = null;
-	
 	UUID lastWorld;
 	int lastX, lastZ;
 	
@@ -253,26 +212,6 @@ public class PlayerData {
 
 	public long getTimeLastLogin() {
 		return GriefPreventionPlus.getInstance().getServer().getOfflinePlayer(this.playerID).getLastPlayed();
-	}
-
-	// whether or not this player is "in" pvp combat
-	public boolean inPvpCombat() {
-		if (this.lastPvpTimestamp == 0) {
-			return false;
-		}
-
-		final long now = Calendar.getInstance().getTimeInMillis();
-
-		final long elapsed = now - this.lastPvpTimestamp;
-
-		if (elapsed > (GriefPreventionPlus.getInstance().config.pvp_combatTimeoutSeconds * 1000)) // X
-			// seconds
-		{
-			this.lastPvpTimestamp = 0;
-			return false;
-		}
-
-		return true;
 	}
 
 	public void setAccruedClaimBlocks(Integer accruedClaimBlocks) {
