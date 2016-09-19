@@ -242,7 +242,7 @@ public class CommandExec implements CommandExecutor {
 				return true;
 			}
 			
-			GriefPreventionPlus.sendMessage(player, TextMode.Info, "Deleted "+this.gpp.getDataStore().deleteClaimsInWorld(world)+" claims in world \""+world.getName()+"\".");
+			GriefPreventionPlus.sendMessage(player, TextMode.Info, "Deleted "+this.gpp.getDataStore().deleteClaimsInWorld(world, player)+" claims in world \""+world.getName()+"\".");
 			return true;
 		}
 		

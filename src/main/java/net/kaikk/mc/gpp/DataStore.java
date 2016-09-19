@@ -622,11 +622,16 @@ public class DataStore {
 	
 	/** delete all claims in the specified world.
 	 * @return amount of claims deleted */
-	public int deleteClaimsInWorld(World world) {
+	public int deleteClaimsInWorld(World world, Player sender) {
 		List<Claim> claimsToDelete = new ArrayList<Claim>();
 		for (Claim claim : this.claims.values()) {
 			if (world.getUID().equals(claim.getWorldUID())) {
-				claimsToDelete.add(claim);
+				// fire event
+				final ClaimDeleteEvent event = new ClaimDeleteEvent(claim, sender, Reason.DELETEALL);
+				GriefPreventionPlus.getInstance().getServer().getPluginManager().callEvent(event);
+				if (!event.isCancelled()) {
+					claimsToDelete.add(claim);
+				}
 			}
 		}
 		
