@@ -19,9 +19,7 @@
 
 package net.kaikk.mc.gpp;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -231,23 +229,7 @@ public class CommandExec implements CommandExecutor {
 				return true;
 			}
 			
-			List<Claim> claimsToDelete = new ArrayList<Claim>();
-			for (Claim claim : this.gpp.getDataStore().claims.values()) {
-				if (world.getUID().equals(claim.getWorldUID())) {
-					claimsToDelete.add(claim);
-				}
-			}
-			
-			for (final Claim claim : claimsToDelete) {
-				claim.removeSurfaceFluids(null);
-				this.gpp.getDataStore().deleteClaim(claim);
-
-				// if in a creative mode world, delete the claim content
-				if (GriefPreventionPlus.getInstance().creativeRulesApply(claim.getWorld())) {
-					GriefPreventionPlus.getInstance().restoreClaim(claim, 0);
-				}
-			}
-			GriefPreventionPlus.sendMessage(player, TextMode.Info, "Deleted "+claimsToDelete.size()+" claims in world \""+world.getName()+"\".");
+			GriefPreventionPlus.sendMessage(player, TextMode.Info, "Deleted "+this.gpp.getDataStore().deleteClaimsInWorld(world)+" claims in world \""+world.getName()+"\".");
 			return true;
 		}
 		

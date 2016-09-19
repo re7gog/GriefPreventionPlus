@@ -620,6 +620,29 @@ public class DataStore {
 		}
 	}
 	
+	/** delete all claims in the specified world.
+	 * @return amount of claims deleted */
+	public int deleteClaimsInWorld(World world) {
+		List<Claim> claimsToDelete = new ArrayList<Claim>();
+		for (Claim claim : this.claims.values()) {
+			if (world.getUID().equals(claim.getWorldUID())) {
+				claimsToDelete.add(claim);
+			}
+		}
+		
+		for (final Claim claim : claimsToDelete) {
+			claim.removeSurfaceFluids(null);
+			this.deleteClaim(claim);
+
+			// if in a creative mode world, delete the claim content
+			if (GriefPreventionPlus.getInstance().creativeRulesApply(claim.getWorld())) {
+				GriefPreventionPlus.getInstance().restoreClaim(claim, 0);
+			}
+		}
+		
+		return claimsToDelete.size();
+	}
+	
 	/** removes a permission node from all claims owned by the specified player */
 	public void dropPermissionOnPlayerClaims(UUID ownerId, String permBukkit) {
 		final PlayerData ownerData = this.getPlayerData(ownerId);
