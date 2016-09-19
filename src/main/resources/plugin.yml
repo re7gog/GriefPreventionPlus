@@ -273,3 +273,6 @@ permissions:
     griefprevention.skipclaimexpiration:
         description: Claims owned by a player with this permission will not expire
         default: false
+    griefprevention.tpclaim.others:
+        description: Allows tping other players to a claim corner
+        default: op

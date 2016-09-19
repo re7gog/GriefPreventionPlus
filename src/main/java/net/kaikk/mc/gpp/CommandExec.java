@@ -141,7 +141,12 @@ public class CommandExec implements CommandExecutor {
 				return true;
 			}
 			
-			if (args.length!=1) {
+			if (args.length<1) {
+				return false;
+			}
+			
+			if (args.length>1 && !player.hasPermission("griefprevention.tpclaim.others")) {
+				GriefPreventionPlus.sendMessage(player, TextMode.Err, Messages.NoPermissionForCommand);
 				return false;
 			}
 			
@@ -154,8 +159,21 @@ public class CommandExec implements CommandExecutor {
 				
 				Location loc = claim.getLesserBoundaryCorner();
 				loc = loc.getWorld().getHighestBlockAt(loc).getLocation();
-				player.teleport(loc);
-				GriefPreventionPlus.sendMessage(player, TextMode.Info, "Teleported to claim ("+claim.getID()+") at "+"[" + loc.getWorld().getName() + ", " + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() + "]");
+				Player otherPlayer;
+				if (args.length==1) {
+					otherPlayer = player;
+				} else {
+					otherPlayer = Bukkit.getPlayer(args[1]);
+					if (otherPlayer == null) {
+						GriefPreventionPlus.sendMessage(player, TextMode.Err, "Player not found");
+						return false;
+					}
+				}
+				otherPlayer.teleport(loc);
+				if (player != otherPlayer) {
+					GriefPreventionPlus.sendMessage(otherPlayer, TextMode.Info, "Teleported "+otherPlayer.getName()+" to claim ("+claim.getID()+") at "+"[" + loc.getWorld().getName() + ", " + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() + "]");
+				}
+				GriefPreventionPlus.sendMessage(otherPlayer, TextMode.Info, "Teleported to claim ("+claim.getID()+") at "+"[" + loc.getWorld().getName() + ", " + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() + "]");
 			} catch (NumberFormatException e) {
 				GriefPreventionPlus.sendMessage(player, TextMode.Err, "Invalid id");
 				return false;
