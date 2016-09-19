@@ -337,6 +337,7 @@ public class Claim {
 
 		// autotrust
 		if (System.currentTimeMillis()<this.autoTrust) {
+			this.autoTrust = 0;
 			String trustMessage;
 			if (Utils.isFakePlayer(player)) {
 				this.setPermission("#"+player.getName(), ClaimPermission.BUILD);

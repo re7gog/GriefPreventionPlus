@@ -257,8 +257,8 @@ public class CommandExec implements CommandExecutor {
 				return true;
 			}
 			
-			claim.autoTrust = System.currentTimeMillis()+10000;
-			player.sendMessage(ChatColor.GREEN+"All players that breaks or places a block in the next 10 seconds on this claim will get automatically trusted."); // TODO move to messages
+			claim.autoTrust = System.currentTimeMillis()+30000;
+			player.sendMessage(ChatColor.GREEN+"The next player that breaks or places a block in the next 30 seconds on this claim will get automatically trusted."); // TODO move to messages
 			return true;
 		}
 
