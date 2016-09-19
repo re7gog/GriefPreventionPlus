@@ -69,7 +69,7 @@
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
-	<version>12.28</version>
+	<version>13.0</version>
 	<properties>
 		<package>net.kaikk.mc.gpp</package>
 		<developer>KaiNoMood</developer>
