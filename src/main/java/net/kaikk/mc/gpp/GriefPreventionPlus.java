@@ -33,6 +33,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -608,7 +609,7 @@ public class GriefPreventionPlus extends JavaPlugin {
 	}
 
 	// sends a color-coded message to a player
-	static void sendMessage(Player player, ChatColor color, String message) {
+	static void sendMessage(CommandSender player, ChatColor color, String message) {
 		if ((message == null) || (message.length() == 0)) {
 			return;
 		}
