@@ -839,11 +839,19 @@ class PlayerEventHandler implements Listener {
 						claim = claim.getParent();
 					}
 					final PlayerData otherPlayerData = this.dataStore.getPlayerData(claim.getOwnerID());
-
-					final Date now = new Date();
-					final long daysElapsed = (now.getTime() - otherPlayerData.getTimeLastLogin()) / (1000 * 60 * 60 * 24);
-
-					GriefPreventionPlus.sendMessage(player, TextMode.Info, Messages.PlayerOfflineTime, String.valueOf(daysElapsed));
+					if (otherPlayerData.getTimeLastLogin() == 0) {
+						otherPlayerData.lastSeen = GriefPreventionPlus.getInstance().getServer().getOfflinePlayer(claim.getOwnerID()).getLastPlayed();
+						if (otherPlayerData.lastSeen != 0) {
+							this.dataStore.savePlayerData(claim.getOwnerID(), otherPlayerData);
+						}
+					}
+					
+					if (otherPlayerData.lastSeen == 0) {
+						GriefPreventionPlus.sendMessage(player, TextMode.Info, Messages.PlayerOfflineTime, "N/A");
+					} else {
+						final long daysElapsed = (System.currentTimeMillis() - otherPlayerData.getTimeLastLogin()) / (1000 * 60 * 60 * 24);
+						GriefPreventionPlus.sendMessage(player, TextMode.Info, Messages.PlayerOfflineTime, String.valueOf(daysElapsed));
+					}
 				}
 			}
 
