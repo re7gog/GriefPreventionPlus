@@ -69,10 +69,7 @@ public class Config {
 	public int claims_chestClaimExpirationDays; // number of days of inactivity
 	// before an automatic chest
 	// claim will be deleted
-	public int claims_unusedClaimExpirationDays; // number of days of inactivity
-	// before an unused (nothing
-	// build) claim will be
-	// deleted
+
 	public boolean claims_survivalAutoNatureRestoration; // whether survival
 
 	// claims will be
@@ -224,7 +221,6 @@ public class Config {
 		this.claims_minSize = config.getInt("GriefPrevention.Claims.MinimumSize", 10);
 		this.claims_maxDepth = config.getInt("GriefPrevention.Claims.MaximumDepth", 0);
 		this.claims_chestClaimExpirationDays = config.getInt("GriefPrevention.Claims.Expiration.ChestClaimDays", 7);
-		this.claims_unusedClaimExpirationDays = config.getInt("GriefPrevention.Claims.Expiration.UnusedClaimDays", 14);
 		this.claims_expirationDays = config.getInt("GriefPrevention.Claims.Expiration.AllClaimDays", 0);
 		this.claims_survivalAutoNatureRestoration = config.getBoolean("GriefPrevention.Claims.Expiration.AutomaticNatureRestoration.SurvivalWorlds", false);
 		this.claims_maxClaimsPerPlayer = config.getInt("GriefPrevention.Claims.MaximumNumberOfClaimsPerPlayer", 0);
@@ -335,7 +331,6 @@ public class Config {
 		outConfig.set("GriefPrevention.Claims.InvestigationTool", this.claims_investigationTool.name());
 		outConfig.set("GriefPrevention.Claims.ModificationTool", this.claims_modificationTool.name());
 		outConfig.set("GriefPrevention.Claims.Expiration.ChestClaimDays", this.claims_chestClaimExpirationDays);
-		outConfig.set("GriefPrevention.Claims.Expiration.UnusedClaimDays", this.claims_unusedClaimExpirationDays);
 		outConfig.set("GriefPrevention.Claims.Expiration.AllClaimDays", this.claims_expirationDays);
 		outConfig.set("GriefPrevention.Claims.Expiration.AutomaticNatureRestoration.SurvivalWorlds", this.claims_survivalAutoNatureRestoration);
 		outConfig.set("GriefPrevention.Claims.MaximumNumberOfClaimsPerPlayer", this.claims_maxClaimsPerPlayer);
