@@ -199,6 +199,10 @@ public class PlayerData {
 		return new Date(this.lastSeen);
 	}
 
+	public long getTimeLastLogin() {
+		return this.lastSeen;
+	}
+
 	// the number of claim blocks a player has available for claiming land
 	public int getRemainingClaimBlocks() {
 		// accrued blocks + bonus blocks + permission bonus blocks
@@ -208,10 +212,6 @@ public class PlayerData {
 		}
 
 		return remainingBlocks;
-	}
-
-	public long getTimeLastLogin() {
-		return GriefPreventionPlus.getInstance().getServer().getOfflinePlayer(this.playerID).getLastPlayed();
 	}
 
 	public void setAccruedClaimBlocks(Integer accruedClaimBlocks) {
