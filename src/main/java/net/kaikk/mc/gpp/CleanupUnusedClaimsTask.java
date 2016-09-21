@@ -64,7 +64,7 @@ class CleanupUnusedClaimsTask extends BukkitRunnable {
 				final PlayerData playerData = this.instance.getDataStore().getPlayerData(claim.getOwnerID());
 				if (playerData.lastSeen != 0) {
 					final long timeElapsed = System.currentTimeMillis() - playerData.lastSeen;
-					if ((this.claimsRemMillisecs > 0 && timeElapsed > this.claimsRemMillisecs) || (this.chestMillisecs > 0 && timeElapsed > this.chestMillisecs && claim.getArea() <= this.areaOfDefaultClaim && (playerData == null || playerData.getClaims().size() == 1))) {
+					if ((this.claimsRemMillisecs > 0 && timeElapsed > this.claimsRemMillisecs) || (this.chestMillisecs > 0 && timeElapsed > this.chestMillisecs && claim.getArea() <= this.areaOfDefaultClaim)) {
 						final OfflinePlayer player = this.instance.getServer().getOfflinePlayer(claim.getOwnerID());
 						if (!instance.hasPermission(player, "griefprevention.skipclaimexpiration")) {
 							this.claimsToRemove.add(claim);
