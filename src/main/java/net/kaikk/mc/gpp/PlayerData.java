@@ -103,7 +103,6 @@ public class PlayerData {
 
 	public PlayerData(UUID playerID) {
 		this.playerID = playerID;
-		this.lastSeen = System.currentTimeMillis();
 		this.initLastLocation();
 	}
 

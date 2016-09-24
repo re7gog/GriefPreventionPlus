@@ -781,7 +781,7 @@ public class DataStore {
 		// in secondary storage
 		if (playerData == null) {
 			playerData = new PlayerData(playerID);
-
+			
 			// shove that new player data into the hash map cache
 			this.playersData.put(playerID, playerData);
 		}

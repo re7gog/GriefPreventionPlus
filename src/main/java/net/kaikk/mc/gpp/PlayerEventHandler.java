@@ -1441,10 +1441,9 @@ class PlayerEventHandler implements Listener {
 		final UUID playerID = player.getUniqueId();
 
 		// note login time
-		final Date nowDate = new Date();
-		final long now = nowDate.getTime();
 		final PlayerData playerData = this.dataStore.getPlayerData(playerID);
-		playerData.lastSeen = now;
+		playerData.lastSeen = System.currentTimeMillis();
+		this.dataStore.savePlayerData(playerID, playerData);
 		
 		// if player has never played on the server before...
 		if (!player.hasPlayedBefore()) {
