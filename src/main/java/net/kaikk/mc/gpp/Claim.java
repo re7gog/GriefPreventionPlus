@@ -977,6 +977,11 @@ public class Claim {
 		if (this.getArea() > 10000) {
 			return;
 		}
+		
+		// can't do this if the world is not loaded or doesn't exist
+		if (this.getWorld() == null) {
+			return;
+		}
 
 		// only in creative mode worlds
 		if (!GriefPreventionPlus.getInstance().creativeRulesApply(this.getWorld())) {
