@@ -89,7 +89,7 @@ class CleanupUnusedClaimsTask extends BukkitRunnable {
 					claim.removeSurfaceFluids(null);
 					this.instance.getDataStore().deleteClaim(claim);
 					this.removed++;
-					if (this.instance.creativeRulesApply(claim.getWorld()) || this.instance.config.claims_survivalAutoNatureRestoration) {
+					if (claim.getWorld() != null && (this.instance.creativeRulesApply(claim.getWorld()) || this.instance.config.claims_survivalAutoNatureRestoration)) {
 						this.instance.restoreClaim(claim, 0);
 					}
 					
