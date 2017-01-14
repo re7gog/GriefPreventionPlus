@@ -561,7 +561,7 @@ class PlayerEventHandler implements Listener {
 
 			if ((action == Action.LEFT_CLICK_BLOCK) && (clickedBlock != null)) {
 				// exception for blocks on a specific watch list
-				if (!this.onLeftClickWatchList(clickedBlockType) && !GriefPreventionPlus.getInstance().config.mods_accessTrustIds.contains(new MaterialInfo(clickedBlock.getTypeId(), clickedBlock.getData(), null))) {
+				if (!this.onLeftClickWatchList(clickedBlockType) && !GriefPreventionPlus.getInstance().config.mods_accessTrustIds.contains(new MaterialInfo(clickedBlock.getType(), clickedBlock.getData(), null))) {
 					// and an exception for putting our fires
 					if (GriefPreventionPlus.getInstance().config.claims_protectFires && (event.getClickedBlock() != null)) {
 						final Block adjacentBlock = event.getClickedBlock().getRelative(event.getBlockFace());
@@ -587,7 +587,7 @@ class PlayerEventHandler implements Listener {
 			}
 
 			// apply rules for containers and crafting blocks
-			if ((clickedBlock != null) && GriefPreventionPlus.getInstance().config.claims_preventTheft && ((event.getAction() == Action.RIGHT_CLICK_BLOCK) && (this.isInventoryHolder(clickedBlock) || (clickedBlockType == Material.CAULDRON) || (clickedBlockType == Material.JUKEBOX) || (clickedBlockType == Material.ANVIL) || (clickedBlockType == Material.CAKE_BLOCK) || GriefPreventionPlus.getInstance().config.mods_containerTrustIds.contains(new MaterialInfo(clickedBlock.getTypeId(), clickedBlock.getData(), null))))) {
+			if ((clickedBlock != null) && GriefPreventionPlus.getInstance().config.claims_preventTheft && ((event.getAction() == Action.RIGHT_CLICK_BLOCK) && (this.isInventoryHolder(clickedBlock) || (clickedBlockType == Material.CAULDRON) || (clickedBlockType == Material.JUKEBOX) || (clickedBlockType == Material.ANVIL) || (clickedBlockType == Material.CAKE_BLOCK) || GriefPreventionPlus.getInstance().config.mods_containerTrustIds.contains(new MaterialInfo(clickedBlock.getType(), clickedBlock.getData(), null))))) {
 				if (playerData == null) {
 					playerData = this.dataStore.getPlayerData(player.getUniqueId());
 				}
@@ -644,7 +644,7 @@ class PlayerEventHandler implements Listener {
 			}
 
 			// otherwise apply rules for buttons and switches
-			else if ((clickedBlock != null) && GriefPreventionPlus.getInstance().config.claims_preventButtonsSwitches && ((clickedBlockType == null) || (clickedBlockType == Material.STONE_BUTTON) || (clickedBlockType == Material.WOOD_BUTTON) || (clickedBlockType == Material.LEVER) || GriefPreventionPlus.getInstance().config.mods_accessTrustIds.contains(new MaterialInfo(clickedBlock.getTypeId(), clickedBlock.getData(), null)))) {
+			else if ((clickedBlock != null) && GriefPreventionPlus.getInstance().config.claims_preventButtonsSwitches && ((clickedBlockType == null) || (clickedBlockType == Material.STONE_BUTTON) || (clickedBlockType == Material.WOOD_BUTTON) || (clickedBlockType == Material.LEVER) || GriefPreventionPlus.getInstance().config.mods_accessTrustIds.contains(new MaterialInfo(clickedBlock.getType(), clickedBlock.getData(), null)))) {
 				if (playerData == null) {
 					playerData = this.dataStore.getPlayerData(player.getUniqueId());
 				}

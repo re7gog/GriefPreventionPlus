@@ -1327,7 +1327,7 @@ public class CommandExec implements CommandExecutor {
 			final ClaimDeleteEvent event = new ClaimDeleteEvent(claim, player, Reason.ABANDON);
 			GriefPreventionPlus.getInstance().getServer().getPluginManager().callEvent(event);
 			if (event.isCancelled()) {
-				return false;
+				return true;
 			}
 
 			// delete it

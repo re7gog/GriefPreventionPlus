@@ -262,7 +262,7 @@ public class Config {
 
 		// default values for container trust mod blocks
 		if ((containerTrustStrings == null) || (containerTrustStrings.size() == 0)) {
-			containerTrustStrings.add(new MaterialInfo(99999, "Example - ID 99999, all data values.").toString());
+			containerTrustStrings.add(new MaterialInfo(Material.CHEST, "Chest").toString());
 		}
 
 		// parse the strings from the config file

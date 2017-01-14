@@ -18,38 +18,57 @@
 
 package net.kaikk.mc.gpp;
 
+import org.bukkit.Material;
+
 //represents a material or collection of materials
 public class MaterialInfo {
-	int typeID;
-
+	Material material;
 	byte data;
-	boolean allDataValues;
 	String description;
 
-	public MaterialInfo(int typeID, byte data, String description) {
-		this.typeID = typeID;
+	public MaterialInfo(Material material, byte data, String description) {
+		this.material = material;
 		this.data = data;
-		this.allDataValues = false;
 		this.description = description;
 	}
 
-	public MaterialInfo(int typeID, String description) {
-		this.typeID = typeID;
+	public MaterialInfo(Material material, String description) {
+		this.material = material;
 		this.data = 0;
-		this.allDataValues = true;
-		this.description = description;
-	}
-
-	private MaterialInfo(int typeID, byte data, boolean allDataValues, String description) {
-		this.typeID = typeID;
-		this.data = data;
-		this.allDataValues = allDataValues;
 		this.description = description;
 	}
 
 	@Override
+	public int hashCode() {
+		int result = 31 * 1 + ((material == null) ? 0 : material.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (!(obj instanceof MaterialInfo)) {
+			return false;
+		}
+		MaterialInfo other = (MaterialInfo) obj;
+		if (material != other.material) {
+			return false;
+		}
+		if (data != -1 && other.data != -1 && data != other.data) {
+			return false;
+		}
+		
+		return true;
+	}
+
+	@Override
 	public String toString() {
-		String returnValue = String.valueOf(this.typeID) + ":" + (this.allDataValues ? "*" : String.valueOf(this.data));
+		String returnValue = this.material + ":" + (data == -1 ? "*" : String.valueOf(this.data));
 		if (this.description != null) {
 			returnValue += ":" + this.description;
 		}
@@ -68,19 +87,16 @@ public class MaterialInfo {
 		}
 
 		try {
-			final int typeID = Integer.parseInt(parts[0]);
+			final Material material = Material.matchMaterial(parts[0]);
 
 			byte data;
-			boolean allDataValues;
 			if (parts[1].equals("*")) {
-				allDataValues = true;
-				data = 0;
+				data = -1;
 			} else {
-				allDataValues = false;
 				data = Byte.parseByte(parts[1]);
 			}
 
-			return new MaterialInfo(typeID, data, allDataValues, parts[2]);
+			return new MaterialInfo(material, data, parts[2]);
 		} catch (final NumberFormatException exception) {
 			return null;
 		}

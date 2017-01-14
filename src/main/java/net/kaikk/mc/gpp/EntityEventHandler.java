@@ -416,7 +416,7 @@ class EntityEventHandler implements Listener {
 		if ((location.getWorld().getEnvironment() == Environment.NORMAL) && GriefPreventionPlus.getInstance().claimsEnabledForWorld(location.getWorld()) && ((isCreeper && GriefPreventionPlus.getInstance().config.blockSurfaceCreeperExplosions) || (!isCreeper && GriefPreventionPlus.getInstance().config.blockSurfaceOtherExplosions))) {
 			for (int i = 0; i < blocks.size(); i++) {
 				final Block block = blocks.get(i);
-				if (GriefPreventionPlus.getInstance().config.mods_explodableIds.contains(new MaterialInfo(block.getTypeId(), block.getData(), null))) {
+				if (GriefPreventionPlus.getInstance().config.mods_explodableIds.contains(new MaterialInfo(block.getType(), block.getData(), null))) {
 					continue;
 				}
 
@@ -437,7 +437,7 @@ class EntityEventHandler implements Listener {
 		if (GriefPreventionPlus.getInstance().creativeRulesApply(explodeEvent.getLocation().getWorld())) {
 			for (int i = 0; i < blocks.size(); i++) {
 				final Block block = blocks.get(i);
-				if (GriefPreventionPlus.getInstance().config.mods_explodableIds.contains(new MaterialInfo(block.getTypeId(), block.getData(), null))) {
+				if (GriefPreventionPlus.getInstance().config.mods_explodableIds.contains(new MaterialInfo(block.getType(), block.getData(), null))) {
 					continue;
 				}
 
@@ -454,7 +454,7 @@ class EntityEventHandler implements Listener {
 				continue; // if it's air, we don't care
 			}
 
-			if (GriefPreventionPlus.getInstance().config.mods_explodableIds.contains(new MaterialInfo(block.getTypeId(), block.getData(), null))) {
+			if (GriefPreventionPlus.getInstance().config.mods_explodableIds.contains(new MaterialInfo(block.getType(), block.getData(), null))) {
 				continue;
 			}
 

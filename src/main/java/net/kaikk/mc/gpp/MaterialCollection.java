@@ -18,11 +18,14 @@
 
 package net.kaikk.mc.gpp;
 
-import java.util.ArrayList;
+import org.bukkit.Material;
+
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 
 //ordered list of material info objects, for fast searching
 public class MaterialCollection {
-	ArrayList<MaterialInfo> materials = new ArrayList<MaterialInfo>();
+	Multimap<Material,MaterialInfo> materials = HashMultimap.create();
 
 	public void clear() {
 		this.materials.clear();
@@ -35,31 +38,18 @@ public class MaterialCollection {
 	@Override
 	public String toString() {
 		final StringBuilder stringBuilder = new StringBuilder();
-		for (int i = 0; i < this.materials.size(); i++) {
-			stringBuilder.append(this.materials.get(i).toString() + " ");
+		for (MaterialInfo mi : materials.values()) {
+			stringBuilder.append(mi.toString() + " ");
 		}
 
 		return stringBuilder.toString();
 	}
 
-	void add(MaterialInfo material) {
-		int i;
-		for (i = 0; (i < this.materials.size()) && (this.materials.get(i).typeID <= material.typeID); i++) {
-			;
-		}
-		this.materials.add(i, material);
+	void add(MaterialInfo materialInfo) {
+		this.materials.put(materialInfo.material, materialInfo);
 	}
 
 	boolean contains(MaterialInfo material) {
-		for (int i = 0; i < this.materials.size(); i++) {
-			final MaterialInfo thisMaterial = this.materials.get(i);
-			if ((material.typeID == thisMaterial.typeID) && (thisMaterial.allDataValues || (material.data == thisMaterial.data))) {
-				return true;
-			} else if (thisMaterial.typeID > material.typeID) {
-				return false;
-			}
-		}
-
-		return false;
+		return materials.containsEntry(material.material, material);
 	}
 }
