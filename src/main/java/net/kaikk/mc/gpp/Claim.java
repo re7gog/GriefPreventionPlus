@@ -960,7 +960,7 @@ public class Claim {
 	}
 
 	public String locationToString() {
-		return "[" + this.getWorld().getName() + ", " + this.lesserX + "," + this.lesserZ + "~" + this.greaterX + "," + this.greaterZ + "]";
+		return "[" + (this.getWorld() != null ? this.getWorld().getName() : "(Invalid world "+this.getWorldUID()+")") + ", " + this.lesserX + "," + this.lesserZ + "~" + this.greaterX + "," + this.greaterZ + "]";
 	}
 
 	// removes any lava above sea level in a claim
