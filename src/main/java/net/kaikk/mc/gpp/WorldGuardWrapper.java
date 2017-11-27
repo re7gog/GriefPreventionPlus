@@ -1,9 +1,9 @@
 package net.kaikk.mc.gpp;
 
+import com.sk89q.worldedit.BlockVector;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldguard.LocalPlayer;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.bukkit.permission.RegionPermissionModel;

@@ -502,7 +502,7 @@ public class GriefPreventionPlus extends JavaPlugin {
 	}
 	// determines whether creative anti-grief rules apply at a location
 	boolean creativeRulesApply(World world) {
-		return this.creativeRulesApply(world.getName());
+		return world != null && this.creativeRulesApply(world.getName());
 	}	
 
 	public boolean creativeRulesApply(String world) {
