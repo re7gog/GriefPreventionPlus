@@ -236,6 +236,7 @@ public class GriefPreventionPlus extends JavaPlugin {
 	}
 	
 	public String allowBreak(Player player, Block block, Location location) {
+		if (config.blockBlacklist.contains(block.getType().toString())) return null;
 		final PlayerData playerData = this.getDataStore().getPlayerData(player.getUniqueId());
 		final Claim claim = this.getDataStore().getClaimAt(location, false, playerData.lastClaim);
 

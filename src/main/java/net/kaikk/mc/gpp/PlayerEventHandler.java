@@ -554,6 +554,10 @@ class PlayerEventHandler implements Listener {
 			clickedBlockType = Material.AIR;
 		}
 
+		if (GriefPreventionPlus.getInstance().config.blockBlacklist.contains(clickedBlockType.toString())) {
+		    return;
+        }
+
 		PlayerData playerData = null;
 		if (!event.isCancelled()) {
 			// don't care about left-clicking on most blocks, this is probably a

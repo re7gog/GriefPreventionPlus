@@ -169,6 +169,7 @@ public class Config {
 	public List<String> disabledWorlds;
 	public List<String> claimRequiredWorlds;
 	public List<String> creativeRulesWorlds;
+	public List<String> blockBlacklist;
 	
 	Config() {
 		// load the config if it exists
@@ -187,6 +188,12 @@ public class Config {
 		
 		this.claimRequiredWorlds = config.getStringList("GriefPrevention.Claims.ClaimRequiredWorlds");
 		outConfig.set("GriefPrevention.Claims.ClaimRequiredWorlds", this.claimRequiredWorlds);
+
+		this.blockBlacklist = config.getStringList("GriefPrevention.Mods.BlockMaterialsIgnored");
+		if (this.blockBlacklist == null || this.blockBlacklist.isEmpty()) {
+		    this.blockBlacklist.add("OPENBLOCKS_GRAVESTONE");
+        }
+		outConfig.set("GriefPrevention.Mods.BlockMaterialsIgnored", this.blockBlacklist);
 		
 		// pvp worlds list
 		this.pvp_enabledWorlds = new ArrayList<UUID>();
