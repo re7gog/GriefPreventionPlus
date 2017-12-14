@@ -19,9 +19,9 @@
 
 package net.kaikk.mc.gpp;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import net.kaikk.mc.gpp.ClaimResult.Result;
+import net.kaikk.mc.gpp.visualization.Visualization;
+import net.kaikk.mc.gpp.visualization.VisualizationType;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World.Environment;
@@ -35,17 +35,8 @@ import org.bukkit.entity.minecart.HopperMinecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockBurnEvent;
-import org.bukkit.event.block.BlockDispenseEvent;
-import org.bukkit.event.block.BlockFromToEvent;
-import org.bukkit.event.block.BlockIgniteEvent;
+import org.bukkit.event.block.*;
 import org.bukkit.event.block.BlockIgniteEvent.IgniteCause;
-import org.bukkit.event.block.BlockMultiPlaceEvent;
-import org.bukkit.event.block.BlockPistonExtendEvent;
-import org.bukkit.event.block.BlockPistonRetractEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.InventoryHolder;
@@ -53,9 +44,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Dispenser;
 import org.bukkit.metadata.MetadataValue;
 
-import net.kaikk.mc.gpp.ClaimResult.Result;
-import net.kaikk.mc.gpp.visualization.Visualization;
-import net.kaikk.mc.gpp.visualization.VisualizationType;
+import java.util.ArrayList;
+import java.util.List;
 
 //event handlers related to blocks
 @SuppressWarnings("deprecation")
@@ -695,4 +685,5 @@ class BlockEventHandler implements Listener {
 			}
 		}
 	}
+
 }
