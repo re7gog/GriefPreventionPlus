@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
+import net.heyzeer0.mgh.api.bukkit.IBukkitEntity;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -166,11 +167,17 @@ class EntityEventHandler implements Listener {
 
 		// protect pets from environmental damage types which could be easily
 		// caused by griefers
-		if ((event.getEntity() instanceof Tameable) && !GriefPreventionPlus.getInstance().config.pvp_enabledWorlds.contains(event.getEntity().getWorld().getUID())) {
+		if ((event.getEntity() instanceof Tameable) &&
+                !GriefPreventionPlus.getInstance().config.pvp_enabledWorlds.contains(event.getEntity().getWorld().getUID())) {
 			final Tameable tameable = (Tameable) event.getEntity();
 			if (tameable.isTamed()) {
 				final DamageCause cause = event.getCause();
-				if ((cause != null) && ((cause == DamageCause.ENTITY_EXPLOSION) || (cause == DamageCause.FALLING_BLOCK) || (cause == DamageCause.FIRE) || (cause == DamageCause.FIRE_TICK) || (cause == DamageCause.LAVA) || (cause == DamageCause.SUFFOCATION))) {
+				if ((cause != null) && ((cause == DamageCause.ENTITY_EXPLOSION) ||
+                        (cause == DamageCause.FALLING_BLOCK) ||
+                        (cause == DamageCause.FIRE) ||
+                        (cause == DamageCause.FIRE_TICK) ||
+                        (cause == DamageCause.LAVA) ||
+                        (cause == DamageCause.SUFFOCATION))) {
 					event.setCancelled(true);
 					return;
 				}
@@ -195,14 +202,34 @@ class EntityEventHandler implements Listener {
 				attacker = (Player) damageSource;
 			} else if (damageSource instanceof Projectile) {
 				arrow = (Projectile) damageSource;
-				if (arrow.getShooter() instanceof Player) {
-					attacker = (Player) arrow.getShooter();
-				}
-			}
+				if (arrow.getShooter() != null) {
+                    if (arrow.getShooter() instanceof Player) {
+                        attacker = (Player) arrow.getShooter();
+                    }
+                } else {
+				    try {
+                        Object entity = arrow.getClass().getDeclaredMethod("getHandle").invoke(arrow);
+                        Player player = ((IBukkitEntity) entity).getBukkitOwner();
+                        if (player != null) {
+                            attacker = player;
+                        }
+                    } catch (Exception e) {}
+                }
+			} else {
+			    try {
+                    Object entity = damageSource.getClass().getDeclaredMethod("getHandle").invoke(damageSource);
+                    Player player = ((IBukkitEntity) entity).getBukkitOwner();
+                    if (player != null) {
+                        attacker = player;
+                    }
+                } catch (Exception e) {}
+            }
 		}
 
 		// if the attacker is a player and defender is a player (pvp combat)
-		if ((attacker != null) && (event.getEntity() instanceof Player) && GriefPreventionPlus.getInstance().config.pvp_enabledWorlds.contains(attacker.getWorld().getUID())) {
+		if ((attacker != null) &&
+                (event.getEntity() instanceof Player) &&
+                GriefPreventionPlus.getInstance().config.pvp_enabledWorlds.contains(attacker.getWorld().getUID())) {
 			// FEATURE: prevent pvp in the first minute after spawn, and prevent
 			// pvp when one or both players have no inventory
 
@@ -402,6 +429,26 @@ class EntityEventHandler implements Listener {
 	public void onEntityExplode(EntityExplodeEvent explodeEvent) {
 		final List<Block> blocks = explodeEvent.blockList();
 		final Location location = explodeEvent.getLocation();
+		Player cause = null;
+
+		try {
+            Object entity = explodeEvent.getEntity().getClass()
+                    .getDeclaredMethod("getHandle")
+                    .invoke(explodeEvent.getEntity());
+            cause = ((IBukkitEntity) entity).getBukkitOwner();
+        } catch (Exception e) { e.printStackTrace(); }
+
+		if (cause != null) {
+		    for (Block b : blocks) {
+		        String reason = GriefPreventionPlus.getInstance().allowBuild(cause, b.getLocation());
+		        if (reason != null) {
+		            explodeEvent.setCancelled(true);
+		            GriefPreventionPlus.sendMessage(cause, TextMode.Err, reason);
+		            explodeEvent.blockList().clear();
+		            return;
+		        }
+            }
+        }
 
 		// FEATURE: explosions don't destroy blocks when they explode near or
 		// above sea level in standard worlds
@@ -423,12 +470,15 @@ class EntityEventHandler implements Listener {
 				// in survival worlds, if claim explosions are enabled for the
 				// source claim, allow non-creeper explosions to destroy blocks
 				// in and under that claim even above sea level.
-				if (!isCreeper && (originationClaim != null) && originationClaim.areExplosivesAllowed() && originationClaim.contains(block.getLocation(), true, false)) {
+				if (!isCreeper &&
+						(originationClaim != null) &&
+                        originationClaim.areExplosivesAllowed() &&
+                        originationClaim.contains(block.getLocation(), true, false)) {
 					continue;
 				}
 
 				if (block.getLocation().getBlockY() > (GriefPreventionPlus.getInstance().getSeaLevel(location.getWorld()) - 7)) {
-					blocks.remove(i--);
+					blocks.remove(block);
 				}
 			}
 		}
@@ -509,7 +559,11 @@ class EntityEventHandler implements Listener {
 		// chicken eggs and breeding could potentially make a mess in the
 		// wilderness, once griefers get involved
 		final SpawnReason reason = event.getSpawnReason();
-		if ((reason != SpawnReason.SPAWNER_EGG) && (reason != SpawnReason.BUILD_IRONGOLEM) && (reason != SpawnReason.BUILD_SNOWMAN) && (GriefPreventionPlus.isBukkit18 && MC18Helper.isArmorStatue(event.getEntityType()))) {
+		if ((reason != SpawnReason.SPAWNER_EGG) &&
+                (reason != SpawnReason.BUILD_IRONGOLEM) &&
+                (reason != SpawnReason.BUILD_SNOWMAN) &&
+                (GriefPreventionPlus.isBukkit18 &&
+                        MC18Helper.isArmorStatue(event.getEntityType()))) {
 			event.setCancelled(true);
 			return;
 		}
