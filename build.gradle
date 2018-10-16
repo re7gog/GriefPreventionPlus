@@ -1,0 +1,23 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+
+group = 'net.kaikk.mc'
+version = '13.3'
+
+description = """"""
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+     maven { url "https://hub.spigotmc.org/nexus/content/groups/public/" }
+     maven { url "http://repo.maven.apache.org/maven2" }
+     maven { url "https://jitpack.io" }
+}
+dependencies {
+    compileOnly files('vault.jar')
+    compileOnly files('spigot.jar')
+    compileOnly files('worldguard.jar')
+    compileOnly files('worldedit.jar')
+    compileOnly files('mghapi.jar')
+}

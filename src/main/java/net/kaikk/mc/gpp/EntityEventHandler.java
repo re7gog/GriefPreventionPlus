@@ -19,50 +19,19 @@
 
 package net.kaikk.mc.gpp;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
-
 import net.heyzeer0.mgh.api.bukkit.IBukkitEntity;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Animals;
-import org.bukkit.entity.Creature;
-import org.bukkit.entity.Creeper;
-import org.bukkit.entity.Enderman;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Explosive;
-import org.bukkit.entity.FallingBlock;
-import org.bukkit.entity.Item;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Monster;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
-import org.bukkit.entity.Tameable;
-import org.bukkit.entity.ThrownPotion;
-import org.bukkit.entity.Villager;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
-import org.bukkit.event.entity.EntityBreakDoorEvent;
-import org.bukkit.event.entity.EntityChangeBlockEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
-import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.entity.EntityInteractEvent;
-import org.bukkit.event.entity.ExpBottleEvent;
-import org.bukkit.event.entity.ItemSpawnEvent;
-import org.bukkit.event.entity.PotionSplashEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.hanging.HangingBreakEvent.RemoveCause;
@@ -75,6 +44,8 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
+
+import java.util.*;
 
 //handles events related to entities
 @SuppressWarnings("deprecation")
@@ -209,18 +180,22 @@ class EntityEventHandler implements Listener {
                 } else {
 				    try {
                         Object entity = arrow.getClass().getDeclaredMethod("getHandle").invoke(arrow);
-                        Player player = ((IBukkitEntity) entity).getBukkitOwner();
-                        if (player != null) {
-                            attacker = player;
+						if (((IBukkitEntity) entity).hasOwner()) {
+							Player player = ((IBukkitEntity) entity).getBukkitOwner();
+							if (player != null && player.getUniqueId() != event.getEntity().getUniqueId()) {
+								attacker = player;
+							}
                         }
                     } catch (Exception e) {}
                 }
 			} else {
 			    try {
                     Object entity = damageSource.getClass().getDeclaredMethod("getHandle").invoke(damageSource);
-                    Player player = ((IBukkitEntity) entity).getBukkitOwner();
-                    if (player != null) {
-                        attacker = player;
+					if (((IBukkitEntity) entity).hasOwner()) {
+						Player player = ((IBukkitEntity) entity).getBukkitOwner();
+						if (player != null && player.getUniqueId() != event.getEntity().getUniqueId()) {
+							attacker = player;
+						}
                     }
                 } catch (Exception e) {}
             }
@@ -245,24 +220,40 @@ class EntityEventHandler implements Listener {
 			final Player defender = (Player) (event.getEntity());
 
 			if (attacker != defender) {
-				final PlayerData defenderData = this.dataStore.getPlayerData(((Player) event.getEntity()).getUniqueId());
+				final PlayerData defenderData = this.dataStore.getPlayerData(event.getEntity().getUniqueId());
 				final PlayerData attackerData = this.dataStore.getPlayerData(attacker.getUniqueId());
 
 				// FEATURE: prevent players from engaging in PvP combat inside
 				// land claims (when it's disabled)
 				if (GriefPreventionPlus.getInstance().config.pvp_noCombatInPlayerLandClaims || GriefPreventionPlus.getInstance().config.pvp_noCombatInAdminLandClaims) {
 					final Claim attackerClaim = this.dataStore.getClaimAt(attacker.getLocation(), false, attackerData.lastClaim);
-					if ((attackerClaim != null) && ((attackerClaim.isAdminClaim() && (attackerClaim.getParent() == null) && GriefPreventionPlus.getInstance().config.pvp_noCombatInAdminLandClaims) || (attackerClaim.isAdminClaim() && (attackerClaim.getParent() != null) && GriefPreventionPlus.getInstance().config.pvp_noCombatInAdminSubdivisions) || (!attackerClaim.isAdminClaim() && GriefPreventionPlus.getInstance().config.pvp_noCombatInPlayerLandClaims))) {
+					if ((attackerClaim != null) &&
+							((attackerClaim.isAdminClaim() &&
+									(attackerClaim.getParent() == null)
+									&& GriefPreventionPlus.getInstance().config.pvp_noCombatInAdminLandClaims) ||
+									(attackerClaim.isAdminClaim() &&
+											(attackerClaim.getParent() != null) &&
+											GriefPreventionPlus.getInstance().config.pvp_noCombatInAdminSubdivisions))) {
 						event.setCancelled(true);
 						GriefPreventionPlus.sendMessage(attacker, TextMode.Err, Messages.CantFightWhileImmune);
 						return;
 					}
 
 					final Claim defenderClaim = this.dataStore.getClaimAt(defender.getLocation(), false, defenderData.lastClaim);
-					if ((defenderClaim != null) && ((defenderClaim.isAdminClaim() && (defenderClaim.getParent() == null) && GriefPreventionPlus.getInstance().config.pvp_noCombatInAdminLandClaims) || (defenderClaim.isAdminClaim() && (defenderClaim.getParent() != null) && GriefPreventionPlus.getInstance().config.pvp_noCombatInAdminSubdivisions) || (!defenderClaim.isAdminClaim() && GriefPreventionPlus.getInstance().config.pvp_noCombatInPlayerLandClaims))) {
+					if ((defenderClaim != null) && ((defenderClaim.isAdminClaim() && (defenderClaim.getParent() == null) && GriefPreventionPlus.getInstance().config.pvp_noCombatInAdminLandClaims))) {
 						event.setCancelled(true);
 						GriefPreventionPlus.sendMessage(attacker, TextMode.Err, Messages.PlayerInPvPSafeZone);
 						return;
+					}
+
+					if (defenderClaim != null) {
+						String reason = defenderClaim.canAccess(attacker);
+						if (reason != null) {
+							event.setCancelled(true);
+							Location l = defender.getLocation();
+							GriefPreventionPlus.sendMessage(attacker, TextMode.Err, reason + " (loc: x=" + l.getBlockX() + ", y=" + l.getBlockY() + ", z=" + l.getBlockZ() + ")");
+							return;
+						}
 					}
 				}
 			}
@@ -311,7 +302,8 @@ class EntityEventHandler implements Listener {
 					final String failureReason = claim.canBuild(attacker, Material.AIR);
 					if (failureReason != null) {
 						event.setCancelled(true);
-						GriefPreventionPlus.sendMessage(attacker, TextMode.Err, failureReason);
+						Location l = event.getEntity().getLocation();
+						GriefPreventionPlus.sendMessage(attacker, TextMode.Err, failureReason + " (loc: x=" + l.getBlockX() + ", y=" + l.getBlockY() + ", z=" + l.getBlockZ() + ")");
 						return;
 					}
 				}
@@ -352,7 +344,8 @@ class EntityEventHandler implements Listener {
 								if (attacker.hasPermission("griefprevention.ignoreclaims")) {
 									message += "  " + GriefPreventionPlus.getInstance().getDataStore().getMessage(Messages.IgnoreClaimsAdvertisement);
 								}
-								GriefPreventionPlus.sendMessage(attacker, TextMode.Err, message);
+								Location l = subEvent.getEntity().getLocation();
+								GriefPreventionPlus.sendMessage(attacker, TextMode.Err, message + " (loc: x=" + l.getBlockX() + ", y=" + l.getBlockY() + ", z=" + l.getBlockZ() + ")");
 								event.setCancelled(true);
 								return;
 							}
@@ -415,7 +408,8 @@ class EntityEventHandler implements Listener {
 							if (attacker.hasPermission("griefprevention.ignoreclaims")) {
 								message += "  " + GriefPreventionPlus.getInstance().getDataStore().getMessage(Messages.IgnoreClaimsAdvertisement);
 							}
-							GriefPreventionPlus.sendMessage(attacker, TextMode.Err, message);
+							Location l = event.getEntity().getLocation();
+							GriefPreventionPlus.sendMessage(attacker, TextMode.Err, message + " (loc: x=" + l.getBlockX() + ", y=" + l.getBlockY() + ", z=" + l.getBlockZ() + ")");
 							event.setCancelled(true);
 						}
 					}
@@ -435,7 +429,9 @@ class EntityEventHandler implements Listener {
             Object entity = explodeEvent.getEntity().getClass()
                     .getDeclaredMethod("getHandle")
                     .invoke(explodeEvent.getEntity());
-            cause = ((IBukkitEntity) entity).getBukkitOwner();
+			if (((IBukkitEntity) entity).hasOwner()) {
+				cause = ((IBukkitEntity) entity).getBukkitOwner();
+			}
         } catch (Exception e) { e.printStackTrace(); }
 
 		if (cause != null) {
@@ -443,7 +439,8 @@ class EntityEventHandler implements Listener {
 		        String reason = GriefPreventionPlus.getInstance().allowBuild(cause, b.getLocation());
 		        if (reason != null) {
 		            explodeEvent.setCancelled(true);
-		            GriefPreventionPlus.sendMessage(cause, TextMode.Err, reason);
+					Location l = b.getLocation();
+					GriefPreventionPlus.sendMessage(cause, TextMode.Err, reason + " (loc: x=" + l.getBlockX() + ", y=" + l.getBlockY() + ", z=" + l.getBlockZ() + ")");
 		            explodeEvent.blockList().clear();
 		            return;
 		        }
@@ -479,6 +476,7 @@ class EntityEventHandler implements Listener {
 
 				if (block.getLocation().getBlockY() > (GriefPreventionPlus.getInstance().getSeaLevel(location.getWorld()) - 7)) {
 					blocks.remove(block);
+					explodeEvent.setCancelled(true);
 				}
 			}
 		}
@@ -490,16 +488,14 @@ class EntityEventHandler implements Listener {
 				if (GriefPreventionPlus.getInstance().config.mods_explodableIds.contains(new MaterialInfo(block.getType(), block.getData(), null))) {
 					continue;
 				}
-
-				blocks.remove(i--);
+				blocks.remove(block);
 			}
 		}
 
 		// FEATURE: explosions don't damage claimed blocks
 		Claim claim = null;
-		for (int i = 0; i < blocks.size(); i++) // for each destroyed block
+		for (Block block : new ArrayList<>(blocks)) // for each destroyed block
 		{
-			final Block block = blocks.get(i);
 			if (block.getType() == Material.AIR) {
 				continue; // if it's air, we don't care
 			}
@@ -512,7 +508,7 @@ class EntityEventHandler implements Listener {
 			// if the block is claimed, remove it from the list of destroyed
 			// blocks
 			if ((claim != null) && !claim.areExplosivesAllowed() && GriefPreventionPlus.getInstance().config.blockClaimExplosions) {
-				blocks.remove(i--);
+				blocks.remove(block);
 			}
 		}
 	}
@@ -626,7 +622,8 @@ class EntityEventHandler implements Listener {
 		final String noBuildReason = GriefPreventionPlus.getInstance().allowBuild(playerRemover, event.getEntity().getLocation(), Material.AIR);
 		if (noBuildReason != null) {
 			event.setCancelled(true);
-			GriefPreventionPlus.sendMessage(playerRemover, TextMode.Err, noBuildReason);
+			Location l = event.getEntity().getLocation();
+			GriefPreventionPlus.sendMessage(playerRemover, TextMode.Err, noBuildReason + " (loc: x=" + l.getBlockX() + ", y=" + l.getBlockY() + ", z=" + l.getBlockZ() + ")");
 		}
 	}
 
@@ -689,7 +686,8 @@ class EntityEventHandler implements Listener {
 		final String noBuildReason = GriefPreventionPlus.getInstance().allowBuild(event.getPlayer(), event.getEntity().getLocation(), Material.PAINTING);
 		if (noBuildReason != null) {
 			event.setCancelled(true);
-			GriefPreventionPlus.sendMessage(event.getPlayer(), TextMode.Err, noBuildReason);
+			Location l = event.getEntity().getLocation();
+			GriefPreventionPlus.sendMessage(event.getPlayer(), TextMode.Err, noBuildReason + " (loc: x=" + l.getBlockX() + ", y=" + l.getBlockY() + ", z=" + l.getBlockZ() + ")");
 			return;
 		}
 
@@ -853,7 +851,8 @@ class EntityEventHandler implements Listener {
 					if (attacker.hasPermission("griefprevention.ignoreclaims")) {
 						message += "  " + GriefPreventionPlus.getInstance().getDataStore().getMessage(Messages.IgnoreClaimsAdvertisement);
 					}
-					GriefPreventionPlus.sendMessage(attacker, TextMode.Err, message);
+					Location l = event.getVehicle().getLocation();
+					GriefPreventionPlus.sendMessage(attacker, TextMode.Err, message + " (loc: x=" + l.getBlockX() + ", y=" + l.getBlockY() + ", z=" + l.getBlockZ() + ")");
 					event.setCancelled(true);
 				}
 			}

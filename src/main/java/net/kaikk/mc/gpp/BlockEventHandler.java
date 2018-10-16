@@ -84,7 +84,8 @@ class BlockEventHandler implements Listener {
 		// make sure the player is allowed to break at the location
 		final String noBuildReason = GriefPreventionPlus.getInstance().allowBreak(player, block, block.getLocation());
 		if (noBuildReason != null) {
-			GriefPreventionPlus.sendMessage(player, TextMode.Err, noBuildReason);
+			Location l = block.getLocation();
+			GriefPreventionPlus.sendMessage(player, TextMode.Err, noBuildReason + " (loc: x=" + l.getBlockX() + ", y=" + l.getBlockY() + ", z=" + l.getBlockZ() + ")");
 			breakEvent.setCancelled(true);
 			return;
 		}
@@ -399,7 +400,9 @@ class BlockEventHandler implements Listener {
 		// make sure the player is allowed to build at the location
 		final String noBuildReason = GriefPreventionPlus.getInstance().allowBuild(player, block.getLocation(), block.getType());
 		if (noBuildReason != null) {
-			GriefPreventionPlus.sendMessage(player, TextMode.Err, noBuildReason);
+			Location l = block.getLocation();
+			//GriefPreventionPlus.getInstance().getLogger().info("Cancelling place event, player: " + player.getName());
+			GriefPreventionPlus.sendMessage(player, TextMode.Err, noBuildReason + " (loc: x=" + l.getBlockX() + ", y=" + l.getBlockY() + ", z=" + l.getBlockZ() + ")");
 			placeEvent.setCancelled(true);
 			return;
 		}
@@ -537,7 +540,8 @@ class BlockEventHandler implements Listener {
 		for (final BlockState block : placeEvent.getReplacedBlockStates()) {
 			final String noBuildReason = GriefPreventionPlus.getInstance().allowBuild(player, block.getLocation(), block.getType());
 			if (noBuildReason != null) {
-				GriefPreventionPlus.sendMessage(player, TextMode.Err, noBuildReason);
+				Location l = block.getLocation();
+				GriefPreventionPlus.sendMessage(player, TextMode.Err, noBuildReason + " (loc: x=" + l.getBlockX() + ", y=" + l.getBlockY() + ", z=" + l.getBlockZ() + ")");
 				placeEvent.setCancelled(true);
 				return;
 			}

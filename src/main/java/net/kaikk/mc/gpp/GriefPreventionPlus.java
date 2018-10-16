@@ -19,18 +19,9 @@
 
 package net.kaikk.mc.gpp;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.UUID;
-import java.util.logging.Logger;
-
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Chunk;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
+import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.permission.Permission;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
@@ -42,8 +33,10 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.BlockIterator;
 
-import net.milkbowl.vault.economy.Economy;
-import net.milkbowl.vault.permission.Permission;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.UUID;
+import java.util.logging.Logger;
 
 @SuppressWarnings("deprecation")
 public class GriefPreventionPlus extends JavaPlugin {
@@ -622,6 +615,10 @@ public class GriefPreventionPlus extends JavaPlugin {
 		}
 	}
 
+	static void sendMessage(CommandSender player, ChatColor color, String message, Location l) {
+		sendMessage(player, color, message + " (loc: x=" + l.getBlockX() + ", y=" + l.getBlockY() + ", z=" + l.getBlockZ() + ")");
+	}
+
 	static void sendMessage(Player player, ChatColor color, String message, long delayInTicks) {
 		final SendPlayerMessageTask task = new SendPlayerMessageTask(player, color, message);
 		if (delayInTicks > 0) {
@@ -635,7 +632,7 @@ public class GriefPreventionPlus extends JavaPlugin {
 		try {
 			return provider.playerHas(null, player, permission);
 		} catch (Exception e) {
-			return player.isOnline() ? player.getPlayer().hasPermission(permission) : false;
+			return player.isOnline() && player.getPlayer().hasPermission(permission);
 		}
 	}
 }

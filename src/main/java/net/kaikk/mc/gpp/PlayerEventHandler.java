@@ -19,64 +19,31 @@
 
 package net.kaikk.mc.gpp;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
-import java.util.regex.Pattern;
-
-import org.bukkit.ChatColor;
-import org.bukkit.Chunk;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.TravelAgent;
+import net.heyzeer0.mgh.api.bukkit.BukkitAPI;
+import net.kaikk.mc.gpp.events.ClaimEnterEvent;
+import net.kaikk.mc.gpp.events.ClaimExitEvent;
+import net.kaikk.mc.gpp.events.ClaimFromToEvent;
+import net.kaikk.mc.gpp.visualization.Visualization;
+import net.kaikk.mc.gpp.visualization.VisualizationType;
+import org.bukkit.*;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.Animals;
-import org.bukkit.entity.Boat;
-import org.bukkit.entity.Creature;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Hanging;
-import org.bukkit.entity.Horse;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Tameable;
-import org.bukkit.entity.Vehicle;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerBucketEmptyEvent;
-import org.bukkit.event.player.PlayerBucketFillEvent;
-import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.event.player.PlayerEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerItemHeldEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerPortalEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.util.BlockIterator;
 
-import net.kaikk.mc.gpp.events.ClaimEnterEvent;
-import net.kaikk.mc.gpp.events.ClaimExitEvent;
-import net.kaikk.mc.gpp.events.ClaimFromToEvent;
-import net.kaikk.mc.gpp.visualization.Visualization;
-import net.kaikk.mc.gpp.visualization.VisualizationType;
+import java.util.*;
+import java.util.regex.Pattern;
 
 @SuppressWarnings("deprecation")
 class PlayerEventHandler implements Listener {
@@ -139,7 +106,8 @@ class PlayerEventHandler implements Listener {
 		// make sure the player is allowed to build at the location
 		final String noBuildReason = GriefPreventionPlus.getInstance().allowBuild(player, block.getLocation(), Material.WATER);
 		if (noBuildReason != null) {
-			GriefPreventionPlus.sendMessage(player, TextMode.Err, noBuildReason);
+			Location l = block.getLocation();
+			GriefPreventionPlus.sendMessage(player, TextMode.Err, noBuildReason + " (loc: x=" + l.getBlockX() + ", y=" + l.getBlockY() + ", z=" + l.getBlockZ() + ")");
 			bucketEvent.setCancelled(true);
 			return;
 		}
@@ -197,8 +165,8 @@ class PlayerEventHandler implements Listener {
 			if ((blockType == Material.AIR) || blockType.isSolid()) {
 				return;
 			}
-
-			GriefPreventionPlus.sendMessage(player, TextMode.Err, noBuildReason);
+			Location l = block.getLocation();
+			GriefPreventionPlus.sendMessage(player, TextMode.Err, noBuildReason + " (loc: x=" + l.getBlockX() + ", y=" + l.getBlockY() + ", z=" + l.getBlockZ() + ")");
 			bucketEvent.setCancelled(true);
 			return;
 		}
@@ -253,7 +221,8 @@ class PlayerEventHandler implements Listener {
 					if (player.hasPermission("griefprevention.ignoreclaims")) {
 						message += "  " + GriefPreventionPlus.getInstance().getDataStore().getMessage(Messages.IgnoreClaimsAdvertisement);
 					}
-					GriefPreventionPlus.sendMessage(player, TextMode.Err, message);
+					Location l = entity.getLocation();
+					GriefPreventionPlus.sendMessage(player, TextMode.Err, message + " (loc: x=" + l.getBlockX() + ", y=" + l.getBlockY() + ", z=" + l.getBlockZ() + ")");
 					event.setCancelled(true);
 					return;
 				}
@@ -265,7 +234,8 @@ class PlayerEventHandler implements Listener {
 		if ((GriefPreventionPlus.isBukkit18 && MC18Helper.isArmorStatue(entity)) || (entity instanceof Hanging)) {
 			final String noBuildReason = GriefPreventionPlus.getInstance().allowBuild(player, entity.getLocation(), Material.ITEM_FRAME);
 			if (noBuildReason != null) {
-				GriefPreventionPlus.sendMessage(player, TextMode.Err, noBuildReason);
+				Location l = entity.getLocation();
+				GriefPreventionPlus.sendMessage(player, TextMode.Err, noBuildReason + " (loc: x=" + l.getBlockX() + ", y=" + l.getBlockY() + ", z=" + l.getBlockZ() + ")");
 				event.setCancelled(true);
 				return;
 			}
@@ -286,7 +256,8 @@ class PlayerEventHandler implements Listener {
 				if (entity instanceof InventoryHolder) {
 					final String noContainersReason = claim.canOpenContainers(player);
 					if (noContainersReason != null) {
-						GriefPreventionPlus.sendMessage(player, TextMode.Err, noContainersReason);
+						Location l = entity.getLocation();
+						GriefPreventionPlus.sendMessage(player, TextMode.Err, noContainersReason + " (loc: x=" + l.getBlockX() + ", y=" + l.getBlockY() + ", z=" + l.getBlockZ() + ")");
 						event.setCancelled(true);
 						return;
 					}
@@ -314,7 +285,8 @@ class PlayerEventHandler implements Listener {
 					if (player.hasPermission("griefprevention.ignoreclaims")) {
 						message += "  " + GriefPreventionPlus.getInstance().getDataStore().getMessage(Messages.IgnoreClaimsAdvertisement);
 					}
-					GriefPreventionPlus.sendMessage(player, TextMode.Err, message);
+					Location l = entity.getLocation();
+					GriefPreventionPlus.sendMessage(player, TextMode.Err, message + " (loc: x=" + l.getBlockX() + ", y=" + l.getBlockY() + ", z=" + l.getBlockZ() + ")");
 					event.setCancelled(true);
 					return;
 				}
@@ -328,7 +300,7 @@ class PlayerEventHandler implements Listener {
 				final String failureReason = claim.canOpenContainers(player);
 				if (failureReason != null) {
 					event.setCancelled(true);
-					GriefPreventionPlus.sendMessage(player, TextMode.Err, failureReason);
+					GriefPreventionPlus.sendMessage(player, TextMode.Err, failureReason, entity.getLocation());
 					return;
 				}
 			}
@@ -514,7 +486,7 @@ class PlayerEventHandler implements Listener {
 			if (claim != null) {
 				final String reason = claim.canAccess(player);
 				if (reason != null) {
-					GriefPreventionPlus.sendMessage(player, TextMode.Err, reason);
+					GriefPreventionPlus.sendMessage(player, TextMode.Err, reason, player.getLocation());
 					event.setCancelled(true);
 				}
 			}
@@ -578,7 +550,7 @@ class PlayerEventHandler implements Listener {
 								final String noBuildReason = claim.canBuild(player, Material.AIR);
 								if (noBuildReason != null) {
 									event.setCancelled(true);
-									GriefPreventionPlus.sendMessage(player, TextMode.Err, noBuildReason);
+									GriefPreventionPlus.sendMessage(player, TextMode.Err, noBuildReason, clickedBlock.getLocation());
 									player.sendBlockChange(adjacentBlock.getLocation(), adjacentBlock.getTypeId(), adjacentBlock.getData());
 									return;
 								}
@@ -602,7 +574,8 @@ class PlayerEventHandler implements Listener {
 					final String noContainersReason = claim.canOpenContainers(player);
 					if (noContainersReason != null) {
 						event.setCancelled(true);
-						GriefPreventionPlus.sendMessage(player, TextMode.Err, noContainersReason);
+						BukkitAPI.getMain().closeInventory(player);
+						GriefPreventionPlus.sendMessage(player, TextMode.Err, noContainersReason, clickedBlock.getLocation());
 						return;
 					}
 				}
@@ -641,7 +614,7 @@ class PlayerEventHandler implements Listener {
 					final String noAccessReason = claim.canAccess(player);
 					if (noAccessReason != null) {
 						event.setCancelled(true);
-						GriefPreventionPlus.sendMessage(player, TextMode.Err, noAccessReason);
+						GriefPreventionPlus.sendMessage(player, TextMode.Err, noAccessReason, clickedBlock.getLocation());
 						return;
 					}
 				}
@@ -657,7 +630,7 @@ class PlayerEventHandler implements Listener {
 					final String noAccessReason = claim.canAccess(player);
 					if (noAccessReason != null) {
 						event.setCancelled(true);
-						GriefPreventionPlus.sendMessage(player, TextMode.Err, noAccessReason);
+						GriefPreventionPlus.sendMessage(player, TextMode.Err, noAccessReason, clickedBlock.getLocation());
 						return;
 					}
 				}
@@ -673,7 +646,7 @@ class PlayerEventHandler implements Listener {
 					final String noContainerReason = claim.canAccess(player);
 					if (noContainerReason != null) {
 						event.setCancelled(true);
-						GriefPreventionPlus.sendMessage(player, TextMode.Err, noContainerReason);
+						GriefPreventionPlus.sendMessage(player, TextMode.Err, noContainerReason, clickedBlock.getLocation());
 						return;
 					}
 				}
@@ -689,7 +662,8 @@ class PlayerEventHandler implements Listener {
 					final String noBuildReason = claim.canBuild(player, clickedBlockType);
 					if (noBuildReason != null) {
 						event.setCancelled(true);
-						GriefPreventionPlus.sendMessage(player, TextMode.Err, noBuildReason);
+						Location l = clickedBlock.getLocation();
+						GriefPreventionPlus.sendMessage(player, TextMode.Err, noBuildReason + " (loc: x=" + l.getBlockX() + ", y=" + l.getBlockY() + ", z=" + l.getBlockZ() + ")");
 						return;
 					}
 				}
@@ -711,7 +685,7 @@ class PlayerEventHandler implements Listener {
 				if ((clickedBlock != null) && ((materialInHand == Material.INK_SACK) || (GriefPreventionPlus.isBukkit18 && MC18Helper.isArmorStatue(materialInHand)))) {
 					final String noBuildReason = GriefPreventionPlus.getInstance().allowBuild(player, clickedBlock.getLocation(), clickedBlockType);
 					if (noBuildReason != null) {
-						GriefPreventionPlus.sendMessage(player, TextMode.Err, noBuildReason);
+						GriefPreventionPlus.sendMessage(player, TextMode.Err, noBuildReason, clickedBlock.getLocation());
 						event.setCancelled(true);
 					}
 
@@ -726,7 +700,7 @@ class PlayerEventHandler implements Listener {
 					if (claim != null) {
 						final String noAccessReason = claim.canAccess(player);
 						if (noAccessReason != null) {
-							GriefPreventionPlus.sendMessage(player, TextMode.Err, noAccessReason);
+							GriefPreventionPlus.sendMessage(player, TextMode.Err, noAccessReason, clickedBlock.getLocation());
 							event.setCancelled(true);
 						}
 					}
@@ -740,7 +714,7 @@ class PlayerEventHandler implements Listener {
 					// player needs build permission at this location
 					final String noBuildReason = GriefPreventionPlus.getInstance().allowBuild(player, clickedBlock.getLocation(), Material.MINECART);
 					if (noBuildReason != null) {
-						GriefPreventionPlus.sendMessage(player, TextMode.Err, noBuildReason);
+						GriefPreventionPlus.sendMessage(player, TextMode.Err, noBuildReason, clickedBlock.getLocation());
 						event.setCancelled(true);
 						return;
 					}
