@@ -60,13 +60,29 @@
 			<artifactId>bukkit</artifactId>
 			<version>1.8-R0.1-SNAPSHOT</version>
 			<type>jar</type>
-			<scope>provided</scope>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/libs/craftbukkit-1.8-R0.1-SNAPSHOT-latest.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>net.milkbowl.vault</groupId>
 			<artifactId>VaultAPI</artifactId>
 			<version>1.5</version>
-			<scope>provided</scope>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/libs/Vault-1.5.jar</systemPath>
+		</dependency>
+		<dependency>
+			<groupId>com.sk89q.worldedit</groupId>
+			<artifactId>WorldEdit</artifactId>
+			<version>6.1.1</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/libs/WorldEdit_6.1.1-SNAPSHOT-3482.jar</systemPath>
+		</dependency>
+		<dependency>
+			<groupId>com.sk89q.worldguard</groupId>
+			<artifactId>WorldGuard</artifactId>
+			<version>6.1.1</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/libs/worldguard-6.1.1-SNAPSHOT.jar</systemPath>
 		</dependency>
 	</dependencies>
 	<version>13.3</version>
